@@ -1,5 +1,5 @@
 using System;
-
+using UnityEngine;
 public sealed class CoreSlot
 {
     public int SlotNumber { get; }
@@ -15,6 +15,7 @@ public sealed class CoreSlot
 
     public bool TryPlaceTower(Tower tower)
     {
+        Debug.Log($"TryPlaceTower 호출 - 슬롯: {SlotNumber}, Tower null: {tower == null}, 점유 상태: {IsOccupied}");
         if (tower == null)
             return false;
 
@@ -22,6 +23,9 @@ public sealed class CoreSlot
             return false;
 
         CurrentTower = tower;
+
+        Debug.Log($"타워 배치 완료 - 슬롯: {SlotNumber}, CurrentTower null: {CurrentTower == null}, 점유 상태: {IsOccupied}");
+
         return true;
     }
 

@@ -379,6 +379,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleBootstrapper
   _lifecycleRunner: {fileID: 1811950889}
+  _gameStartData: {fileID: 11400000, guid: 16e7b1173981c5d488ebdd05e3e8c3ab, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "TowerPartData", menuName = "Scriptable Objects/TowerPartData")]
@@ -9,9 +10,11 @@ public class TowerPartData : ScriptableObject
     [SerializeField] private float _attackRange;
     [SerializeField] private float _attackRate;
     [SerializeField] private Sprite _sprite;
-    [SerializeReference]
-    private TowerAttackDefinition _attackDefinition;
+    [SerializeReference] private TowerAttackDefinition _attackDefinition;
 
+    [SerializeReference, HideInInspector]
+    private List<TowerAttackDefinition> _attackDefinitions = new();
+        
     public int MaxHp => _maxHp;
     public float AttackDamage => _attackDamage;
     public float AttackSpeed => _attackSpeed;
