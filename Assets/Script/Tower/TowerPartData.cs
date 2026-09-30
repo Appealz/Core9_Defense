@@ -11,6 +11,9 @@ public class TowerPartData : ScriptableObject
     [SerializeField] private float _attackRate;
     [SerializeField] private Sprite _sprite;
     [SerializeReference] private TowerAttackDefinition _attackDefinition;
+    [SerializeField] private string _prefabKey;
+
+    
 
     [SerializeReference, HideInInspector]
     private List<TowerAttackDefinition> _attackDefinitions = new();
@@ -22,4 +25,5 @@ public class TowerPartData : ScriptableObject
     public float AttackRate => _attackRate;
     public Sprite Sprite => _sprite;
     public TowerAttackDefinition AttackDefinition => _attackDefinition;
+    public string PrefabKey => _prefabKey;
 }

@@ -20,6 +20,7 @@ MonoBehaviour:
   _sprite: {fileID: 0}
   _attackDefinition:
     rid: 8566528603791294539
+  _prefabKey: Tower_Default
   _attackDefinitions:
   - rid: 8566528603791294539
   references:

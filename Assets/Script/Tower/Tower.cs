@@ -1,12 +1,12 @@
-public class Tower
+using UnityEngine;
+
+public class Tower : MonoBehaviour
 {
-    public TowerHealth Health { get; }
+    public TowerHealth Health { get; private set; }
+    public TowerStats Stats { get; private set; }
+    public TowerAttack Attack { get; private set; }
 
-    public TowerStats Stats { get; }
-
-    public TowerAttack Attack { get; }
-
-    public Tower(TowerHealth health, TowerStats stats, TowerAttack attack)
+    public void Initialize(TowerHealth health, TowerStats stats, TowerAttack attack)
     {
         Health = health;
         Stats = stats;

@@ -1,0 +1,38 @@
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+
+public class WaveManager
+{
+    private readonly SpawnManager _spawnManager;
+
+    public WaveManager(SpawnManager spawnManager)
+    {
+        _spawnManager = spawnManager;
+    }
+
+    public async UniTask PlayWaveAsync(WaveData waveData,CancellationToken cancellationToken = default)
+    {
+        foreach (WaveSpawnEntry entry in waveData.SpawnEntries)
+        {
+            await SpawnEntryAsync(entry, cancellationToken);
+        }
+    }
+
+    private async UniTask SpawnEntryAsync(WaveSpawnEntry entry, CancellationToken cancellationToken)
+    {
+        for (int i = 0; i < entry.SpawnCount; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await _spawnManager.SpawnEnemyAsync(entry.EnemyConfig);
+
+            bool isLastSpawn = i == entry.SpawnCount - 1;
+
+            if (isLastSpawn)
+                continue;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(entry.SpawnInterval), cancellationToken: cancellationToken);
+        }
+    }
+}
