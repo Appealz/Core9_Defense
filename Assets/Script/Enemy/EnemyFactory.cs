@@ -1,10 +1,16 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 public class EnemyFactory
 {
+    private readonly ObjectPool<Enemy> _enemyPool;
+
+    public EnemyFactory(ObjectPool<Enemy> enemyPool)
+    {
+        _enemyPool = enemyPool ?? throw new ArgumentNullException(nameof(enemyPool));
+    }
+
     public async UniTask<Enemy> CreateAsync(EnemyConfig config, Transform moveTarget)
     {
         if (config == null)
@@ -19,8 +25,7 @@ public class EnemyFactory
         if (config.AttackDefinition == null)
             throw new InvalidOperationException("AttackDefinition이 설정되지 않았습니다.");
 
-        if (string.IsNullOrWhiteSpace(config.PrefabKey))
-            throw new InvalidOperationException($"{config.name}: PrefabKey가 설정되지 않았습니다.");
+        Enemy enemy = await _enemyPool.GetAsync();
 
         EnemyHealth health = new EnemyHealth(config.MaxHp);
         EnemyStats stats = new EnemyStats(config.MoveSpeed, config.AttackDamage, config.AttackRange, config.AttackCooldown);
@@ -30,16 +35,7 @@ public class EnemyFactory
 
         EnemyController controller = new EnemyController(stats, movement);
 
-        GameObject enemyObject = await Addressables.InstantiateAsync(config.PrefabKey).Task;
-        Enemy enemy = enemyObject.GetComponent<Enemy>();
-
-        if (enemy == null)
-        {
-            Addressables.ReleaseInstance(enemyObject);
-            throw new InvalidOperationException($"{config.PrefabKey} Prefab에 Enemy 컴포넌트가 없습니다.");
-        }
-
-        enemy.Initialize(health, stats, controller, attack, moveTarget);
+        enemy.Initialize(health, stats, controller, attack, moveTarget, config.Sprite);
 
         return enemy;
     }
@@ -49,6 +45,6 @@ public class EnemyFactory
         if (enemy == null)
             return;
 
-        Addressables.ReleaseInstance(enemy.gameObject);
+        _enemyPool.Return(enemy);
     }
 }

@@ -1,10 +1,13 @@
 using UnityEngine;
+using System;
 
 public class EnemyHealth
 {
     public float MaxHp { get; }
     public float CurrentHp { get; private set; }
     public bool IsAlive => CurrentHp > 0f;
+
+    public event Action Died;
 
     public EnemyHealth(float maxHp)
     {
@@ -22,7 +25,10 @@ public class EnemyHealth
 
         CurrentHp -= damage;
 
-        if (CurrentHp < 0f)
-            CurrentHp = 0f;
+        if (CurrentHp > 0f)
+            return;
+
+        CurrentHp = 0f;
+        Died?.Invoke();
     }
 }

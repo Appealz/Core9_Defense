@@ -4,10 +4,10 @@ public enum GameState
 {
     Initializing,
     Playing,
+    WaveClear,
     RewardSelection,
     Rearrangement,
     Paused,
-    Victory,
     GameOver
 }
 
