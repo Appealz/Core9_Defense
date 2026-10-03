@@ -12,9 +12,7 @@ public class EnemyConfig : ScriptableObject
 
     [SerializeReference] private EnemyMovementDefinition _movementDefinition;
     [SerializeReference] private EnemyAttackDefinition _attackDefinition;
-    [SerializeField] private string _prefabKey;
 
-    
     public float MaxHp => _maxHp;
     public float MoveSpeed => _moveSpeed;
     public float AttackDamage => _attackDamage;
@@ -24,5 +22,4 @@ public class EnemyConfig : ScriptableObject
 
     public EnemyMovementDefinition MovementDefinition => _movementDefinition;
     public EnemyAttackDefinition AttackDefinition => _attackDefinition;
-    public string PrefabKey => _prefabKey;
 }

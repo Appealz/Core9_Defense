@@ -35,6 +35,19 @@ public class Enemy : MonoBehaviour
         Health.Died += OnDied;
     }
 
+    public void ReachCore(CoreManager coreManager)
+    {
+        if (Health == null || !Health.IsAlive || Stats == null || Attack == null)
+            return;
+
+        if (!coreManager.TryFindHitTargetTower(out Tower targetTower))
+            return;
+
+        Attack.Attack(targetTower, Stats.AttackDamage);
+
+        Health.TakeDamage(Health.CurrentHp);
+    }
+
     private void Update()
     {
         if (_controller == null || _moveTarget == null)

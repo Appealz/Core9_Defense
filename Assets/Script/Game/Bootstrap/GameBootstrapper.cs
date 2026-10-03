@@ -15,6 +15,16 @@ public sealed class GameBootstrapper : SceneBootstrapper
         var coreBoard = new CoreBoard();
         var coreManager = new CoreManager(coreBoard);
 
+        CoreBoundary coreBoundary = _coreLayout.GetComponentInChildren<CoreBoundary>();
+
+        if (coreBoundary == null)
+        {
+            Debug.LogError("CoreBoundary를 찾을 수 없습니다.", this);
+            return;
+        }
+
+        coreBoundary.Initialize(coreManager);
+
         var towerFactory = new TowerFactory();
         var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
 

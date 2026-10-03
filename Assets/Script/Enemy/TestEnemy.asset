@@ -13,16 +13,15 @@ MonoBehaviour:
   m_Name: TestEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
   _maxHp: 10
-  _moveSpeed: 3
+  _moveSpeed: 20
   _attackDamage: 1
   _attackRange: 1
   _attackCooldown: 1
-  _sprite: {fileID: -6685421513473703928, guid: 7cebcc6e84ff07d4faf42f0340f35616, type: 3}
+  _sprite: {fileID: -3320418183320529682, guid: bc3560275901d9546813b8ffac246806, type: 3}
   _movementDefinition:
     rid: 1776078544303292491
   _attackDefinition:
     rid: 1776078544303292492
-  _prefabKey: Melee
   references:
     version: 2
     RefIds:
