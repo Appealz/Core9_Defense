@@ -1,7 +1,9 @@
-using UnityEngine;
+using System;
 
 public class TowerHealth
 {
+    public event Action Died;
+
     public float MaxHp { get; }
 
     public float CurrentHp { get; private set; }
@@ -24,7 +26,10 @@ public class TowerHealth
 
         CurrentHp -= damage;
 
-        if (CurrentHp < 0f)
-            CurrentHp = 0f;
+        if (CurrentHp > 0f)
+            return;
+
+        CurrentHp = 0f;
+        Died?.Invoke();
     }
 }

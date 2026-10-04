@@ -21,6 +21,18 @@ public class CoreManager
         return slot.TryPlaceTower(tower);
     }
 
+    public bool TryFindPlacementSlotNumber(out int slotNumber)
+    {
+        if (!_coreBoard.TryFindPlacementSlot(out CoreSlot slot))
+        {
+            slotNumber = 0;
+            return false;
+        }
+
+        slotNumber = slot.SlotNumber;
+        return true;
+    }
+
     public bool TryFindHitTargetTower(out Tower targetTower)
     {
         if (!_coreBoard.TryFindHitTargetSlot(out CoreSlot targetSlot))
@@ -49,5 +61,10 @@ public class CoreManager
 
         removedTower = slot.RemoveTower();
         return true;
+    }
+
+    public bool HasAnyTower()
+    {
+        return _coreBoard.HasAnyTower();
     }
 }

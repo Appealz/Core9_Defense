@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5658b5a87081c514abf45502bca679ac, type: 3}
-  m_Name: basicTowerPartData
+  m_Name: RapidTowerPartData
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
-  _towerName: basic
-  _maxHp: 3
+  _towerName: Rapid
+  _maxHp: 1
   _attackDamage: 0
   _attackRange: 0
   _attackRate: 0
-  _sprite: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
+  _sprite: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
   _attackDefinition:
-    rid: 8566528603791294539
+    rid: 1776078617033572352
   _attackDefinitions:
-  - rid: 8566528603791294539
+  - rid: 1776078617033572352
   references:
     version: 2
     RefIds:
-    - rid: 8566528603791294539
+    - rid: 1776078617033572352
       type: {class: SingleProjectileAttackDefinition, ns: , asm: Assembly-CSharp}
       data: 

@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+
 public class TowerFactory
 {
     public async UniTask<Tower> CreateAsync(TowerPartData partData)
@@ -17,10 +18,11 @@ public class TowerFactory
         ITowerAttack attack = partData.AttackDefinition.CreateAttack();
         TowerAttack towerAttack = new TowerAttack(stats, attack);
 
-        GameObject towerObject = await Addressables.InstantiateAsync(partData.PrefabKey).Task;
+        GameObject towerObject = await Addressables.InstantiateAsync(AddressableKeys.TowerPrefab).Task;
         Tower tower = towerObject.GetComponent<Tower>();
 
-        tower.Initialize(health, stats, towerAttack);
+        tower.gameObject.name = partData.TowerName;
+        tower.Initialize(health, stats, towerAttack, partData.Sprite);
 
         return tower;
     }

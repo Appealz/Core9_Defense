@@ -4,14 +4,18 @@ public class CoreBoard
 {
     private const int SlotCount = 9;
 
+    private readonly int[] _placementPriority =
+    {
+        5, 6, 4, 8, 2, 1, 3, 7, 9
+    };
+
     private readonly int[] _hitTargetPriority =
     {
         9, 7, 3, 1, 8, 6, 4, 2, 5
     };
 
     private readonly CoreSlot[] _slots;
-   
-    
+
     public CoreBoard()
     {
         _slots = new CoreSlot[SlotCount];
@@ -20,8 +24,6 @@ public class CoreBoard
         {
             _slots[i] = new CoreSlot(i + 1);
         }
-
-        
     }
 
     public bool TryGetSlot(int slotNumber, out CoreSlot slot)
@@ -34,6 +36,24 @@ public class CoreBoard
 
         slot = _slots[slotNumber - 1];
         return true;
+    }
+
+    public bool TryFindPlacementSlot(out CoreSlot targetSlot)
+    {
+        for (int i = 0; i < _placementPriority.Length; i++)
+        {
+            int slotNumber = _placementPriority[i];
+            CoreSlot slot = _slots[slotNumber - 1];
+
+            if (slot.IsOccupied)
+                continue;
+
+            targetSlot = slot;
+            return true;
+        }
+
+        targetSlot = null;
+        return false;
     }
 
     public bool TryFindHitTargetSlot(out CoreSlot targetSlot)
@@ -51,6 +71,17 @@ public class CoreBoard
         }
 
         targetSlot = null;
+        return false;
+    }
+
+    public bool HasAnyTower()
+    {
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            if (_slots[i].IsOccupied)
+                return true;
+        }
+
         return false;
     }
 }

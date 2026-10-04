@@ -11,6 +11,7 @@ public class MeleeAttack : IEnemyAttack
 
         target.Health.TakeDamage(damage);
 
-        Debug.Log($"[MeleeAttack] Damage: {damage} / HP: {beforeHp} -> {target.Health.CurrentHp}");
+        Debug.Log(
+            $"[Tower Hit] {target.name} / Damage: {damage} / HP: {beforeHp} ¡æ {target.Health.CurrentHp}");
     }
 }

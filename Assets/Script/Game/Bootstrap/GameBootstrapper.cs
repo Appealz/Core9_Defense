@@ -45,6 +45,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         var gameManager = new GameManager(gameStateManager, waveManager, _gameStartData.WaveDataList);
 
+        towerManager.AllTowersDestroyed += gameManager.GameOver;
+
         bool isPlaced = await towerManager.TryPlaceTowerAsync(_gameStartData.InitialTowerSlotNumber, _gameStartData.BasicTowerPartData);
 
         if (!isPlaced)
@@ -58,6 +60,16 @@ public sealed class GameBootstrapper : SceneBootstrapper
             Debug.LogError("WaveDataList가 비어 있습니다.", this);
             return;
         }
+
+        TowerSpawnTester towerSpawnTester = GetComponent<TowerSpawnTester>();
+
+        if (towerSpawnTester == null)
+        {
+            Debug.LogError("TowerSpawnTester를 찾을 수 없습니다.", this);
+            return;
+        }
+
+        towerSpawnTester.Initialize(towerManager);
 
         Register(gameManager);
         gameManager.StartGame();

@@ -29,4 +29,5 @@ public class AddressableProvider
 public static class AddressableKeys
 {
     public const string EnemyPrefab = "Enemy";
+    public const string TowerPrefab = "Tower";
 }

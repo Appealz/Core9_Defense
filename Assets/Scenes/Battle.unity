@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &171230615
 SpriteRenderer:
   serializedVersion: 3
@@ -306,7 +306,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &331108203
 SpriteRenderer:
   serializedVersion: 3
@@ -398,7 +398,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &651697636
 SpriteRenderer:
   serializedVersion: 3
@@ -534,7 +534,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &1305790425
 SpriteRenderer:
   serializedVersion: 3
@@ -797,7 +797,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &1462714737
 SpriteRenderer:
   serializedVersion: 3
@@ -980,7 +980,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &1608328327
 SpriteRenderer:
   serializedVersion: 3
@@ -1072,7 +1072,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &1642116616
 SpriteRenderer:
   serializedVersion: 3
@@ -1250,6 +1250,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1845550278}
   - component: {fileID: 1845550279}
+  - component: {fileID: 1845550280}
   m_Layer: 0
   m_Name: GameBootstrapper
   m_TagString: Untagged
@@ -1289,6 +1290,23 @@ MonoBehaviour:
   _coreLayout: {fileID: 1684882821}
   _mainCamera: {fileID: 1414058850}
   _enemySpawnMargin: 1
+--- !u!114 &1845550280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845550277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7167cdc1b3bc1747b698b4584447a84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TowerSpawnTester
+  _basicTower: {fileID: 11400000, guid: c63c52fefe850a14fa32b783d1537da5, type: 2}
+  _rapidTower: {fileID: 11400000, guid: 2c5b8ac52fc1fe941a201b0eebb1da35, type: 2}
+  _razerTower: {fileID: 11400000, guid: 81d5d6289cfa60f4491dd20fe1a25381, type: 2}
+  _bombMissileTower: {fileID: 11400000, guid: e3ab288cedfb61e4286d719a01e1235f, type: 2}
+  _areaTower: {fileID: 11400000, guid: a6b5fb62d9640b04b947f1985df2b0ee, type: 2}
 --- !u!1 &2072120485
 GameObject:
   m_ObjectHideFlags: 0
@@ -1305,7 +1323,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &2072120486
 SpriteRenderer:
   serializedVersion: 3
@@ -1397,7 +1415,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &2140824439
 SpriteRenderer:
   serializedVersion: 3

@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5658b5a87081c514abf45502bca679ac, type: 3}
-  m_Name: basicTowerPartData
+  m_Name: BombMissileTowerPartData
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
-  _towerName: basic
-  _maxHp: 3
+  _towerName: BombMissile
+  _maxHp: 2
   _attackDamage: 0
   _attackRange: 0
   _attackRate: 0
-  _sprite: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
+  _sprite: {fileID: 2901242061184369422, guid: 153c120c6536f4542b66cb7df4f1f1f9, type: 3}
   _attackDefinition:
-    rid: 8566528603791294539
+    rid: 1776078617994592332
   _attackDefinitions:
-  - rid: 8566528603791294539
+  - rid: 1776078617994592332
   references:
     version: 2
     RefIds:
-    - rid: 8566528603791294539
-      type: {class: SingleProjectileAttackDefinition, ns: , asm: Assembly-CSharp}
+    - rid: 1776078617994592332
+      type: {class: BombMissileAttackDefinition, ns: , asm: Assembly-CSharp}
       data: 

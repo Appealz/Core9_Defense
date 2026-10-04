@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+
 public class GameManager : IUpdatable
 {
     private readonly GameStateManager _gameStateManager;
@@ -26,10 +27,22 @@ public class GameManager : IUpdatable
 
     public void StartNextWave()
     {
+        if (_gameStateManager.CurrentState == GameState.GameOver)
+            return;
+
         _currentWaveNumber++;
 
         _gameStateManager.ChangeState(GameState.Playing);
         PlayCurrentWaveAsync().Forget();
+    }
+
+    public void GameOver()
+    {
+        if (_gameStateManager.CurrentState == GameState.GameOver)
+            return;
+
+        _gameStateManager.ChangeState(GameState.GameOver);
+        Debug.Log("Game Over");
     }
 
     public void Update(float deltaTime)
@@ -53,6 +66,9 @@ public class GameManager : IUpdatable
         WaveData waveData = _waveDataList[waveDataIndex];
 
         await _waveManager.PlayWaveAsync(waveData);
+
+        if (_gameStateManager.CurrentState == GameState.GameOver)
+            return;
 
         _gameStateManager.ChangeState(GameState.WaveClear);
         Debug.Log($"Wave {_currentWaveNumber} Clear");
