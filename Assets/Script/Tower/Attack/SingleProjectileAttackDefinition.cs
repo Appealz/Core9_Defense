@@ -3,15 +3,11 @@ using UnityEngine;
 
 [Serializable]
 public class SingleProjectileAttackDefinition : TowerAttackDefinition
-{    
-    public SingleProjectileAttackDefinition()
-    {
-        
-    }
+{
+    [SerializeField] private float _projectileSpeed = 10f;
 
-    public override ITowerAttack CreateAttack()
+    public override ITowerAttack CreateAttack(ProjectileManager projectileManager)
     {
-
-        return new SingleProjectileAttack();
+        return new SingleProjectileAttack(projectileManager, _projectileSpeed);
     }
 }

@@ -15,7 +15,8 @@ public class ObjectPoolManager
 
     public async UniTask InitializeAsync()
     {
-        await CreatePoolAsync<Enemy>(AddressableKeys.EnemyPrefab,10, onReturn: enemy => enemy.gameObject.SetActive(false));
+        await CreatePoolAsync<Enemy>(AddressableKeys.EnemyPrefab, 10, onReturn: enemy => enemy.gameObject.SetActive(false));
+        await CreatePoolAsync<Projectile>(AddressableKeys.ProjectilePrefab, 30, onReturn: projectile => projectile.gameObject.SetActive(false));
     }
 
     private async UniTask CreatePoolAsync<T>(string key, int prewarmCount, Action<T> onGet = null, Action<T> onReturn = null) where T : Component

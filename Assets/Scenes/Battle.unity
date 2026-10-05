@@ -706,7 +706,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 10
+  orthographic size: 15
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1304,7 +1304,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerSpawnTester
   _basicTower: {fileID: 11400000, guid: c63c52fefe850a14fa32b783d1537da5, type: 2}
   _rapidTower: {fileID: 11400000, guid: 2c5b8ac52fc1fe941a201b0eebb1da35, type: 2}
-  _razerTower: {fileID: 11400000, guid: 81d5d6289cfa60f4491dd20fe1a25381, type: 2}
+  _razerTower: {fileID: 11400000, guid: 5e6f83ac309a7714bb8a9482c6051e48, type: 2}
   _bombMissileTower: {fileID: 11400000, guid: e3ab288cedfb61e4286d719a01e1235f, type: 2}
   _areaTower: {fileID: 11400000, guid: a6b5fb62d9640b04b947f1985df2b0ee, type: 2}
 --- !u!1 &2072120485

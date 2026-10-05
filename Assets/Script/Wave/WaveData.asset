@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   _spawnEntries:
   - _enemyConfig: {fileID: 11400000, guid: 6aef041c0f36dfa4bb48942465de985a, type: 2}
-    _spawnCount: 50
-    _spawnInterval: 2
+    _spawnCount: 100
+    _spawnInterval: 1

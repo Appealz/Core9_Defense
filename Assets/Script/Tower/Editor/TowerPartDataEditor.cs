@@ -7,10 +7,32 @@ public class TowerPartDataEditor : Editor
 {
     private Type[] _attackDefinitionTypes;
     private string[] _attackDefinitionNames;
-    private int _selectedIndex;
+    private int _selectedAttackIndex;
 
-    // AttackDefinition 타입 목록과 Popup 이름 목록을 생성하고 현재 선택값을 동기화.
+    private Type[] _fireModeDefinitionTypes;
+    private string[] _fireModeDefinitionNames;
+    private int _selectedFireModeIndex;
+
     private void OnEnable()
+    {
+        InitializeAttackDefinitions();
+        InitializeFireModeDefinitions();
+
+        SyncSelectedAttackIndex();
+        SyncSelectedFireModeIndex();
+    }
+
+    public override void OnInspectorGUI()
+    {
+        serializedObject.Update();
+
+        DrawAttackDefinition();
+        DrawFireModeDefinition();
+
+        DrawDefaultInspector();
+    }
+
+    private void InitializeAttackDefinitions()
     {
         TypeCache.TypeCollection types = TypeCache.GetTypesDerivedFrom<TowerAttackDefinition>();
 
@@ -24,34 +46,45 @@ public class TowerPartDataEditor : Editor
             _attackDefinitionTypes[i] = types[i];
             _attackDefinitionNames[i + 1] = types[i].Name;
         }
-
-        SyncSelectedIndex();
     }
 
-    // TowerPartData의 Inspector UI 구성 및 입력 처리.
-    public override void OnInspectorGUI()
+    private void InitializeFireModeDefinitions()
     {
-        // Popup을 표시하고 현재 선택된 인덱스를 반환받음.
-        int newSelectedIndex = EditorGUILayout.Popup("Attack Definition", _selectedIndex, _attackDefinitionNames);
+        TypeCache.TypeCollection types = TypeCache.GetTypesDerivedFrom<FireModeDefinition>();
 
-        // 기존 인덱스와 선택된 인덱스가 다른경우(Popup의 선택값이 변경된 경우)
-        if (newSelectedIndex != _selectedIndex)
+        _fireModeDefinitionTypes = new Type[types.Count];
+        _fireModeDefinitionNames = new string[types.Count + 1];
+
+        _fireModeDefinitionNames[0] = "미설정";
+
+        for (int i = 0; i < types.Count; i++)
         {
-            _selectedIndex = newSelectedIndex;
+            _fireModeDefinitionTypes[i] = types[i];
+            _fireModeDefinitionNames[i + 1] = types[i].Name;
+        }
+    }
+
+    private void DrawAttackDefinition()
+    {
+        int newSelectedIndex = EditorGUILayout.Popup("Attack Definition", _selectedAttackIndex, _attackDefinitionNames);
+
+        if (newSelectedIndex != _selectedAttackIndex)
+        {
+            _selectedAttackIndex = newSelectedIndex;
 
             SerializedProperty attackDefinition = serializedObject.FindProperty("_attackDefinition");
 
-            if (_selectedIndex == 0)
+            if (_selectedAttackIndex == 0)
             {
                 attackDefinition.managedReferenceValue = null;
                 serializedObject.ApplyModifiedProperties();
             }
             else
             {
-                Type selectedType = _attackDefinitionTypes[_selectedIndex - 1];
+                Type selectedType = _attackDefinitionTypes[_selectedAttackIndex - 1];
                 SerializedProperty attackDefinitions = serializedObject.FindProperty("_attackDefinitions");
 
-                TowerAttackDefinition definition = FindDefinition(attackDefinitions, selectedType);
+                TowerAttackDefinition definition = FindAttackDefinition(attackDefinitions, selectedType);
 
                 if (definition == null)
                 {
@@ -69,15 +102,14 @@ public class TowerPartDataEditor : Editor
             }
         }
 
-        // 현재 공격 설정 초기화 버튼 클릭(현재 AttackDefinition을 새 객체로 교체하여 설정 초기화)
-        if (_selectedIndex != 0 && GUILayout.Button("현재 공격 설정 초기화"))
+        if (_selectedAttackIndex != 0 && GUILayout.Button("현재 공격 설정 초기화"))
         {
-            Type selectedType = _attackDefinitionTypes[_selectedIndex - 1];
+            Type selectedType = _attackDefinitionTypes[_selectedAttackIndex - 1];
 
             SerializedProperty attackDefinition = serializedObject.FindProperty("_attackDefinition");
             SerializedProperty attackDefinitions = serializedObject.FindProperty("_attackDefinitions");
 
-            int definitionIndex = FindDefinitionIndex(attackDefinitions, selectedType);
+            int definitionIndex = FindAttackDefinitionIndex(attackDefinitions, selectedType);
 
             if (definitionIndex >= 0)
             {
@@ -91,19 +123,77 @@ public class TowerPartDataEditor : Editor
                 serializedObject.ApplyModifiedProperties();
             }
         }
-
-        DrawDefaultInspector();
     }
 
-    // 현재 _attackDefinition의 실제 타입과 Popup 선택 인덱스를 동기화.
-    private void SyncSelectedIndex()
+    private void DrawFireModeDefinition()
+    {
+        int newSelectedIndex = EditorGUILayout.Popup("Fire Mode", _selectedFireModeIndex, _fireModeDefinitionNames);
+
+        if (newSelectedIndex != _selectedFireModeIndex)
+        {
+            _selectedFireModeIndex = newSelectedIndex;
+
+            SerializedProperty fireModeDefinition = serializedObject.FindProperty("_fireModeDefinition");
+
+            if (_selectedFireModeIndex == 0)
+            {
+                fireModeDefinition.managedReferenceValue = null;
+                serializedObject.ApplyModifiedProperties();
+            }
+            else
+            {
+                Type selectedType = _fireModeDefinitionTypes[_selectedFireModeIndex - 1];
+                SerializedProperty fireModeDefinitions = serializedObject.FindProperty("_fireModeDefinitions");
+
+                FireModeDefinition definition = FindFireModeDefinition(fireModeDefinitions, selectedType);
+
+                if (definition == null)
+                {
+                    definition = (FireModeDefinition)Activator.CreateInstance(selectedType);
+
+                    int newIndex = fireModeDefinitions.arraySize;
+                    fireModeDefinitions.arraySize++;
+
+                    SerializedProperty newElement = fireModeDefinitions.GetArrayElementAtIndex(newIndex);
+                    newElement.managedReferenceValue = definition;
+                }
+
+                fireModeDefinition.managedReferenceValue = definition;
+                serializedObject.ApplyModifiedProperties();
+            }
+        }
+
+        if (_selectedFireModeIndex != 0 && GUILayout.Button("현재 발사 방식 설정 초기화"))
+        {
+            Type selectedType = _fireModeDefinitionTypes[_selectedFireModeIndex - 1];
+
+            SerializedProperty fireModeDefinition = serializedObject.FindProperty("_fireModeDefinition");
+            SerializedProperty fireModeDefinitions = serializedObject.FindProperty("_fireModeDefinitions");
+
+            int definitionIndex = FindFireModeDefinitionIndex(fireModeDefinitions, selectedType);
+
+            if (definitionIndex >= 0)
+            {
+                FireModeDefinition newDefinition = (FireModeDefinition)Activator.CreateInstance(selectedType);
+
+                SerializedProperty element = fireModeDefinitions.GetArrayElementAtIndex(definitionIndex);
+                element.managedReferenceValue = newDefinition;
+
+                fireModeDefinition.managedReferenceValue = newDefinition;
+
+                serializedObject.ApplyModifiedProperties();
+            }
+        }
+    }
+
+    private void SyncSelectedAttackIndex()
     {
         serializedObject.Update();
 
         SerializedProperty attackDefinition = serializedObject.FindProperty("_attackDefinition");
         TowerAttackDefinition currentDefinition = (TowerAttackDefinition)attackDefinition.managedReferenceValue;
 
-        _selectedIndex = 0;
+        _selectedAttackIndex = 0;
 
         if (currentDefinition == null)
             return;
@@ -114,18 +204,41 @@ public class TowerPartDataEditor : Editor
         {
             if (_attackDefinitionTypes[i] == currentType)
             {
-                _selectedIndex = i + 1;
+                _selectedAttackIndex = i + 1;
                 return;
             }
         }
     }
 
-    // 보관된 Definition 중 selectedType과 같은 타입의 객체를 찾아 반환.
-    private TowerAttackDefinition FindDefinition(SerializedProperty attackDefinitions, Type selectedType)
+    private void SyncSelectedFireModeIndex()
     {
-        for (int i = 0; i < attackDefinitions.arraySize; i++)
+        serializedObject.Update();
+
+        SerializedProperty fireModeDefinition = serializedObject.FindProperty("_fireModeDefinition");
+        FireModeDefinition currentDefinition = (FireModeDefinition)fireModeDefinition.managedReferenceValue;
+
+        _selectedFireModeIndex = 0;
+
+        if (currentDefinition == null)
+            return;
+
+        Type currentType = currentDefinition.GetType();
+
+        for (int i = 0; i < _fireModeDefinitionTypes.Length; i++)
         {
-            SerializedProperty element = attackDefinitions.GetArrayElementAtIndex(i);
+            if (_fireModeDefinitionTypes[i] == currentType)
+            {
+                _selectedFireModeIndex = i + 1;
+                return;
+            }
+        }
+    }
+
+    private TowerAttackDefinition FindAttackDefinition(SerializedProperty definitions, Type selectedType)
+    {
+        for (int i = 0; i < definitions.arraySize; i++)
+        {
+            SerializedProperty element = definitions.GetArrayElementAtIndex(i);
             TowerAttackDefinition definition = (TowerAttackDefinition)element.managedReferenceValue;
 
             if (definition != null && definition.GetType() == selectedType)
@@ -135,13 +248,40 @@ public class TowerPartDataEditor : Editor
         return null;
     }
 
-    // 보관된 Definition 중 selectedType과 같은 타입의 객체 인덱스를 반환.
-    private int FindDefinitionIndex(SerializedProperty attackDefinitions, Type selectedType)
+    private int FindAttackDefinitionIndex(SerializedProperty definitions, Type selectedType)
     {
-        for (int i = 0; i < attackDefinitions.arraySize; i++)
+        for (int i = 0; i < definitions.arraySize; i++)
         {
-            SerializedProperty element = attackDefinitions.GetArrayElementAtIndex(i);
+            SerializedProperty element = definitions.GetArrayElementAtIndex(i);
             TowerAttackDefinition definition = (TowerAttackDefinition)element.managedReferenceValue;
+
+            if (definition != null && definition.GetType() == selectedType)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private FireModeDefinition FindFireModeDefinition(SerializedProperty definitions, Type selectedType)
+    {
+        for (int i = 0; i < definitions.arraySize; i++)
+        {
+            SerializedProperty element = definitions.GetArrayElementAtIndex(i);
+            FireModeDefinition definition = (FireModeDefinition)element.managedReferenceValue;
+
+            if (definition != null && definition.GetType() == selectedType)
+                return definition;
+        }
+
+        return null;
+    }
+
+    private int FindFireModeDefinitionIndex(SerializedProperty definitions, Type selectedType)
+    {
+        for (int i = 0; i < definitions.arraySize; i++)
+        {
+            SerializedProperty element = definitions.GetArrayElementAtIndex(i);
+            FireModeDefinition definition = (FireModeDefinition)element.managedReferenceValue;
 
             if (definition != null && definition.GetType() == selectedType)
                 return i;

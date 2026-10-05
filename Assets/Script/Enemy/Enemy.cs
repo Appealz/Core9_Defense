@@ -2,11 +2,14 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
-public class Enemy : MonoBehaviour
+public class Enemy : MonoBehaviour, IDamageable
 {
     public EnemyHealth Health { get; private set; }
     public EnemyStats Stats { get; private set; }
     public IEnemyAttack Attack { get; private set; }
+
+    public bool IsAlive => Health != null && Health.IsAlive;
+    public Vector3 Position => transform.position;
 
     public event Action<Enemy> Died;
 
@@ -46,6 +49,11 @@ public class Enemy : MonoBehaviour
         Attack.Attack(targetTower, Stats.AttackDamage);
 
         Health.TakeDamage(Health.CurrentHp);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        Health?.TakeDamage(damage);
     }
 
     private void Update()

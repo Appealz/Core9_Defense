@@ -10,10 +10,15 @@ public class TowerPartData : ScriptableObject
     [SerializeField] private float _attackRange;
     [SerializeField] private float _attackRate;
     [SerializeField] private Sprite _sprite;
+
     [SerializeReference] private TowerAttackDefinition _attackDefinition;
+    [SerializeReference] private FireModeDefinition _fireModeDefinition;
 
     [SerializeReference, HideInInspector]
     private List<TowerAttackDefinition> _attackDefinitions = new();
+
+    [SerializeReference, HideInInspector]
+    private List<FireModeDefinition> _fireModeDefinitions = new();
 
     public string TowerName => _towerName;
     public int MaxHp => _maxHp;
@@ -22,4 +27,5 @@ public class TowerPartData : ScriptableObject
     public float AttackRate => _attackRate;
     public Sprite Sprite => _sprite;
     public TowerAttackDefinition AttackDefinition => _attackDefinition;
+    public FireModeDefinition FireModeDefinition => _fireModeDefinition;
 }

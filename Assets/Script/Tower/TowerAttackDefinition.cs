@@ -4,5 +4,5 @@ using UnityEngine;
 [Serializable]
 public abstract class TowerAttackDefinition
 {
-    public abstract ITowerAttack CreateAttack();
+    public abstract ITowerAttack CreateAttack(ProjectileManager projectileManager);
 }

@@ -17,7 +17,7 @@ MonoBehaviour:
   _attackDamage: 0
   _attackRange: 0
   _attackRate: 0
-  _sprite: {fileID: 9098142356674041305, guid: 96430dabf8148694dbe5dd71acd649c5, type: 3}
+  _sprite: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
   _attackDefinition:
     rid: 1776078617994592331
   _attackDefinitions:

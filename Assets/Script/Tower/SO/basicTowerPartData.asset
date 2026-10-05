@@ -14,17 +14,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
   _towerName: basic
   _maxHp: 3
-  _attackDamage: 0
-  _attackRange: 0
-  _attackRate: 0
-  _sprite: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
+  _attackDamage: 2
+  _attackRange: 8
+  _attackRate: 1
+  _sprite: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
   _attackDefinition:
     rid: 8566528603791294539
+  _fireModeDefinition:
+    rid: 1776078645934161998
   _attackDefinitions:
   - rid: 8566528603791294539
+  _fireModeDefinitions:
+  - rid: 1776078645934161998
   references:
     version: 2
     RefIds:
+    - rid: 1776078645934161998
+      type: {class: SingleFireModeDefinition, ns: , asm: Assembly-CSharp}
+      data: 
     - rid: 8566528603791294539
       type: {class: SingleProjectileAttackDefinition, ns: , asm: Assembly-CSharp}
-      data: 
+      data:
+        _projectileSpeed: 10

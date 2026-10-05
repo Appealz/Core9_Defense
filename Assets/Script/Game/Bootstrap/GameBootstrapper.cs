@@ -10,12 +10,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
     protected override async UniTask ComposeAsync()
     {
-        var gameStateManager = new GameStateManager();
-
-        var coreBoard = new CoreBoard();
-        var coreManager = new CoreManager(coreBoard);
-
         CoreBoundary coreBoundary = _coreLayout.GetComponentInChildren<CoreBoundary>();
+        TowerSpawnTester towerSpawnTester = GetComponent<TowerSpawnTester>();
 
         if (coreBoundary == null)
         {
@@ -23,35 +19,9 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        coreBoundary.Initialize(coreManager);
-
-        var towerFactory = new TowerFactory();
-        var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
-
-        var addressableProvider = new AddressableProvider();
-        var objectPoolManager = new ObjectPoolManager(addressableProvider);
-
-        await objectPoolManager.InitializeAsync();
-
-        var enemyFactory = new EnemyFactory(objectPoolManager.GetPool<Enemy>());
-        var enemyManager = new EnemyManager(enemyFactory);
-
-        var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
-        var spawnPositionCalculator = new SpawnPositionCalculator();
-        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(_coreLayout, cameraBoundsProvider, spawnPositionCalculator, _enemySpawnMargin);
-
-        var spawnManager = new SpawnManager(enemyFactory, enemyManager, enemySpawnPositionProvider, _coreLayout.transform);
-        var waveManager = new WaveManager(spawnManager, enemyManager);
-
-        var gameManager = new GameManager(gameStateManager, waveManager, _gameStartData.WaveDataList);
-
-        towerManager.AllTowersDestroyed += gameManager.GameOver;
-
-        bool isPlaced = await towerManager.TryPlaceTowerAsync(_gameStartData.InitialTowerSlotNumber, _gameStartData.BasicTowerPartData);
-
-        if (!isPlaced)
+        if (towerSpawnTester == null)
         {
-            Debug.LogError("초기 타워 배치에 실패했습니다.", this);
+            Debug.LogError("TowerSpawnTester를 찾을 수 없습니다.", this);
             return;
         }
 
@@ -61,17 +31,55 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        TowerSpawnTester towerSpawnTester = GetComponent<TowerSpawnTester>();
+        var gameStateManager = new GameStateManager();
 
-        if (towerSpawnTester == null)
+        var coreBoard = new CoreBoard();
+        var coreManager = new CoreManager(coreBoard);
+        coreBoundary.Initialize(coreManager);
+
+        var addressableProvider = new AddressableProvider();
+        var objectPoolManager = new ObjectPoolManager(addressableProvider);
+
+        await objectPoolManager.InitializeAsync();
+
+        var projectileManager = new ProjectileManager(objectPoolManager.GetPool<Projectile>());
+
+        var enemyFactory = new EnemyFactory(objectPoolManager.GetPool<Enemy>());
+        var enemyManager = new EnemyManager(enemyFactory);
+
+        var towerTargetSelector = new TowerTargetSelector(enemyManager);
+        var towerFactory = new TowerFactory(towerTargetSelector, projectileManager);
+        var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
+
+        var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
+        var spawnPositionCalculator = new SpawnPositionCalculator();
+        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(
+            _coreLayout,
+            cameraBoundsProvider,
+            spawnPositionCalculator,
+            _enemySpawnMargin);
+
+        var spawnManager = new SpawnManager(enemyFactory, enemyManager, enemySpawnPositionProvider, _coreLayout.transform);
+        var waveManager = new WaveManager(spawnManager, enemyManager);
+
+        var gameManager = new GameManager(gameStateManager, waveManager, _gameStartData.WaveDataList);
+
+        towerManager.AllTowersDestroyed += gameManager.GameOver;
+        towerSpawnTester.Initialize(towerManager);
+
+        bool isPlaced = await towerManager.TryPlaceTowerAsync(
+            _gameStartData.InitialTowerSlotNumber,
+            _gameStartData.BasicTowerPartData);
+
+        if (!isPlaced)
         {
-            Debug.LogError("TowerSpawnTester를 찾을 수 없습니다.", this);
+            Debug.LogError("초기 타워 배치에 실패했습니다.", this);
             return;
         }
 
-        towerSpawnTester.Initialize(towerManager);
-
+        Register(projectileManager);
         Register(gameManager);
+
         gameManager.StartGame();
     }
 }

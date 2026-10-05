@@ -20,11 +20,18 @@ MonoBehaviour:
   _sprite: {fileID: 2901242061184369422, guid: 153c120c6536f4542b66cb7df4f1f1f9, type: 3}
   _attackDefinition:
     rid: 1776078617994592332
+  _fireModeDefinition:
+    rid: 1776078645934161999
   _attackDefinitions:
   - rid: 1776078617994592332
+  _fireModeDefinitions:
+  - rid: 1776078645934161999
   references:
     version: 2
     RefIds:
     - rid: 1776078617994592332
       type: {class: BombMissileAttackDefinition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 1776078645934161999
+      type: {class: SingleFireModeDefinition, ns: , asm: Assembly-CSharp}
       data: 
