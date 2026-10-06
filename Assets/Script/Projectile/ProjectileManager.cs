@@ -13,17 +13,17 @@ public class ProjectileManager : IUpdatable
         _projectilePool = projectilePool ?? throw new ArgumentNullException(nameof(projectilePool));
     }
 
-    public async UniTask FireAsync(Vector3 origin, IDamageable target, float damage, float speed)
+    public async UniTask FireAsync(Vector3 origin, IDamageable target, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
     {
         if (target == null || !target.IsAlive)
             return;
 
-        if (damage <= 0f || speed <= 0f)
+        if (damage <= 0f || speed <= 0f || impact == null)
             return;
 
         Projectile projectile = await _projectilePool.GetAsync();
 
-        projectile.Initialize(origin, target, damage, speed);
+        projectile.Initialize(origin, target, damage, speed, impact, sprite);
         projectile.gameObject.SetActive(true);
 
         _activeProjectiles.Add(projectile);

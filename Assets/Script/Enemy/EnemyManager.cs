@@ -6,7 +6,8 @@ public class EnemyManager
     private readonly HashSet<Enemy> _aliveEnemies = new();
 
     public int AliveCount => _aliveEnemies.Count;
-    public IReadOnlyCollection<Enemy> AliveEnemies => _aliveEnemies;
+
+    internal IReadOnlyCollection<Enemy> AliveEnemies => _aliveEnemies;
 
     public EnemyManager(EnemyFactory enemyFactory)
     {

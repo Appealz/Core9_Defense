@@ -3,41 +3,15 @@ using UnityEngine;
 
 public class TowerTargetSelector
 {
-    private readonly EnemyManager _enemyManager;
+    private readonly EnemyQuery _enemyQuery;
 
-    public TowerTargetSelector(EnemyManager enemyManager)
+    public TowerTargetSelector(EnemyQuery enemyQuery)
     {
-        _enemyManager = enemyManager ?? throw new ArgumentNullException(nameof(enemyManager));
+        _enemyQuery = enemyQuery ?? throw new ArgumentNullException(nameof(enemyQuery));
     }
 
     public bool TryFindNearestTarget(Vector3 origin, float range, out Enemy target)
     {
-        target = null;
-
-        if (range <= 0f)
-            return false;
-
-        float rangeSqr = range * range;
-        float nearestDistanceSqr = float.MaxValue;
-
-        foreach (Enemy enemy in _enemyManager.AliveEnemies)
-        {
-            if (enemy == null)
-                continue;
-
-            Vector3 enemyPosition = enemy.transform.position;
-
-            float deltaX = enemyPosition.x - origin.x;
-            float deltaY = enemyPosition.y - origin.y;
-            float distanceSqr = deltaX * deltaX + deltaY * deltaY;
-
-            if (distanceSqr > rangeSqr || distanceSqr >= nearestDistanceSqr)
-                continue;
-
-            nearestDistanceSqr = distanceSqr;
-            target = enemy;
-        }
-
-        return target != null;
+        return _enemyQuery.TryFindNearest(origin, range, out target);
     }
 }

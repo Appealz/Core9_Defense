@@ -46,8 +46,9 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         var enemyFactory = new EnemyFactory(objectPoolManager.GetPool<Enemy>());
         var enemyManager = new EnemyManager(enemyFactory);
+        var enemyQuery = new EnemyQuery(enemyManager);
 
-        var towerTargetSelector = new TowerTargetSelector(enemyManager);
+        var towerTargetSelector = new TowerTargetSelector(enemyQuery);
         var towerFactory = new TowerFactory(towerTargetSelector, projectileManager);
         var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
 
