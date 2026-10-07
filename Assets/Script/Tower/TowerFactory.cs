@@ -7,11 +7,13 @@ public class TowerFactory
 {
     private readonly TowerTargetSelector _targetSelector;
     private readonly ProjectileManager _projectileManager;
+    private readonly IImpactEffect _impactEffect;
 
-    public TowerFactory(TowerTargetSelector targetSelector, ProjectileManager projectileManager)
+    public TowerFactory(TowerTargetSelector targetSelector, ProjectileManager projectileManager, IImpactEffect impactEffect)
     {
         _targetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
         _projectileManager = projectileManager ?? throw new ArgumentNullException(nameof(projectileManager));
+        _impactEffect = impactEffect ?? throw new ArgumentNullException(nameof(impactEffect));
     }
 
     public async UniTask<Tower> CreateAsync(TowerPartData partData)
@@ -28,7 +30,7 @@ public class TowerFactory
         TowerHealth health = new TowerHealth(partData.MaxHp);
         TowerStats stats = new TowerStats(partData.AttackDamage, partData.AttackRate, partData.AttackRange);
 
-        ITowerAttack attack = partData.AttackDefinition.CreateAttack(_projectileManager);
+        ITowerAttack attack = CreateAttack(partData.AttackDefinition);
         IFireMode fireMode = partData.FireModeDefinition.CreateFireMode();
 
         TowerAttack towerAttack = new TowerAttack(stats, attack, fireMode, _targetSelector);
@@ -48,5 +50,13 @@ public class TowerFactory
             return;
 
         Addressables.ReleaseInstance(tower.gameObject);
+    }
+
+    private ITowerAttack CreateAttack(TowerAttackDefinition definition)
+    {
+        if (definition is IImpactEffectAttackDefinition effectAttackDefinition)
+            return effectAttackDefinition.CreateAttack(_projectileManager, _impactEffect);
+
+        return definition.CreateAttack(_projectileManager);
     }
 }

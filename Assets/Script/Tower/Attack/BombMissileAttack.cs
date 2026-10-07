@@ -8,13 +8,13 @@ public class BombMissileAttack : ITargetedTowerAttack
     private readonly float _projectileSpeed;
     private readonly Sprite _projectileSprite;
 
-    public BombMissileAttack(ProjectileManager projectileManager, float projectileSpeed, Sprite projectileSprite)
+    public BombMissileAttack(ProjectileManager projectileManager,IImpactEffect impactEffect, float projectileSpeed,Sprite projectileSprite, float explosionRadius)
     {
         _projectileManager = projectileManager;
         _projectileSpeed = projectileSpeed;
         _projectileSprite = projectileSprite;
 
-        _impact = new DirectHitImpact();
+        _impact = new ExplosionImpact(explosionRadius, impactEffect);
     }
 
     public void Attack(Vector3 origin, Enemy target, TowerStats stats)

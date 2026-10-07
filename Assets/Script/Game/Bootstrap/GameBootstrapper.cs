@@ -43,13 +43,14 @@ public sealed class GameBootstrapper : SceneBootstrapper
         await objectPoolManager.InitializeAsync();
 
         var projectileManager = new ProjectileManager(objectPoolManager.GetPool<Projectile>());
+        var explosionEffectManager = new ExplosionEffectManager(objectPoolManager.GetPool<ExplosionEffect>());
 
         var enemyFactory = new EnemyFactory(objectPoolManager.GetPool<Enemy>());
         var enemyManager = new EnemyManager(enemyFactory);
         var enemyQuery = new EnemyQuery(enemyManager);
 
         var towerTargetSelector = new TowerTargetSelector(enemyQuery);
-        var towerFactory = new TowerFactory(towerTargetSelector, projectileManager);
+        var towerFactory = new TowerFactory(towerTargetSelector, projectileManager, explosionEffectManager);
         var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
 
         var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
@@ -79,6 +80,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
         }
 
         Register(projectileManager);
+        Register(explosionEffectManager);
         Register(gameManager);
 
         gameManager.StartGame();

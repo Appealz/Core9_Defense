@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: GameStartData
   m_EditorClassIdentifier: Assembly-CSharp::GameStartData
   _initialTowerSlotNumber: 5
-  _basicTowerPartData: {fileID: 11400000, guid: 5e6f83ac309a7714bb8a9482c6051e48, type: 2}
+  _basicTowerPartData: {fileID: 11400000, guid: e3ab288cedfb61e4286d719a01e1235f, type: 2}
   _waveDataList:
   - {fileID: 11400000, guid: 2a149cba00aac084eab02a09a14c43fb, type: 2}

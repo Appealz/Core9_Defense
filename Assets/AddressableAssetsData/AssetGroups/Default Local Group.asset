@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: adeea3c54f65f5c45b6efd1c150af258
+    m_Address: ExplosionEffect
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e98491c4099e5d646bb48c08e9ffd14c
     m_Address: Tower
     m_ReadOnly: 0

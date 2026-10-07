@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
   _towerName: BombMissile
   _maxHp: 2
-  _attackDamage: 1
-  _attackRange: 15
-  _attackRate: 1
+  _attackDamage: 5
+  _attackRange: 20
+  _attackRate: 3
   _sprite: {fileID: 2901242061184369422, guid: 153c120c6536f4542b66cb7df4f1f1f9, type: 3}
   _attackDefinition:
     rid: 1776078617994592332
@@ -34,6 +34,7 @@ MonoBehaviour:
       data:
         _projectileSpeed: 7
         _projectileSprite: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
+        _explosionRadius: 6
     - rid: 1776078645934161999
       type: {class: SingleFireModeDefinition, ns: , asm: Assembly-CSharp}
       data: 
