@@ -6,8 +6,8 @@ public class SingleProjectileAttackDefinition : TowerAttackDefinition
 {
     [SerializeField] private float _projectileSpeed = 10f;
 
-    public override ITowerAttack CreateAttack(ProjectileManager projectileManager)
+    public override ITowerAttack CreateAttack(TowerAttackDependencies dependencies)
     {
-        return new SingleProjectileAttack(projectileManager, _projectileSpeed);
+        return new SingleProjectileAttack(dependencies.ProjectileManager, _projectileSpeed);
     }
 }

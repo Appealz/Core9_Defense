@@ -6,8 +6,9 @@ public class TowerSpawnTester : MonoBehaviour
 {
     [SerializeField] private TowerPartData _basicTower;
     [SerializeField] private TowerPartData _rapidTower;
-    [SerializeField] private TowerPartData _razerTower;
+    [SerializeField] private TowerPartData _burstTower;
     [SerializeField] private TowerPartData _bombMissileTower;
+    [SerializeField] private TowerPartData _laserTower;
     [SerializeField] private TowerPartData _areaTower;
 
     private TowerManager _towerManager;
@@ -33,10 +34,12 @@ public class TowerSpawnTester : MonoBehaviour
         else if (keyboard.wKey.wasPressedThisFrame)
             SpawnTowerAsync(_rapidTower).Forget();
         else if (keyboard.eKey.wasPressedThisFrame)
-            SpawnTowerAsync(_razerTower).Forget();
+            SpawnTowerAsync(_burstTower).Forget();
         else if (keyboard.rKey.wasPressedThisFrame)
             SpawnTowerAsync(_bombMissileTower).Forget();
         else if (keyboard.tKey.wasPressedThisFrame)
+            SpawnTowerAsync(_laserTower).Forget();
+        else if (keyboard.aKey.wasPressedThisFrame)
             SpawnTowerAsync(_areaTower).Forget();
     }
 

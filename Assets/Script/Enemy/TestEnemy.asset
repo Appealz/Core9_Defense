@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TestEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
   _maxHp: 5
-  _moveSpeed: 3
+  _moveSpeed: 5
   _attackDamage: 1
   _attackRange: 1
   _attackCooldown: 1

@@ -32,4 +32,5 @@ public static class AddressableKeys
     public const string TowerPrefab = "Tower";
     public const string ProjectilePrefab = "Projectile";
     public const string ExplosionEffectPrefab = "ExplosionEffect";
+    public const string LaserPrefab = "Laser";
 }

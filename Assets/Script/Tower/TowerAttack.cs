@@ -21,9 +21,18 @@ public class TowerAttack
 
     public void Update(Vector3 origin, float deltaTime)
     {
-        if (_attack is not ITargetedTowerAttack targetedAttack)
+        if (_attack is ITargetedTowerAttack targetedAttack)
+        {
+            UpdateTargeted(origin, deltaTime, targetedAttack);
             return;
+        }
 
+        if (_attack is INonTargetedTowerAttack nonTargetedAttack)
+            UpdateNonTargeted(origin, deltaTime, nonTargetedAttack);
+    }
+
+    private void UpdateTargeted(Vector3 origin, float deltaTime, ITargetedTowerAttack targetedAttack)
+    {
         if (_fireMode.IsFiring)
         {
             _fireMode.Update(deltaTime);
@@ -53,6 +62,31 @@ public class TowerAttack
             _attackTimer = _stats.AttackRate;
     }
 
+    private void UpdateNonTargeted(Vector3 origin, float deltaTime, INonTargetedTowerAttack nonTargetedAttack)
+    {
+        if (_fireMode.IsFiring)
+        {
+            _fireMode.Update(deltaTime);
+            FireReadyShots(origin, nonTargetedAttack);
+
+            if (!_fireMode.IsFiring)
+                _attackTimer = _stats.AttackRate;
+
+            return;
+        }
+
+        _attackTimer -= deltaTime;
+
+        if (_attackTimer > 0f)
+            return;
+
+        _fireMode.Start();
+        FireReadyShots(origin, nonTargetedAttack);
+
+        if (!_fireMode.IsFiring)
+            _attackTimer = _stats.AttackRate;
+    }
+
     private void FireReadyShots(Vector3 origin, ITargetedTowerAttack targetedAttack, Enemy firstTarget = null)
     {
         bool useFirstTarget = firstTarget != null && firstTarget.IsAlive;
@@ -73,5 +107,11 @@ public class TowerAttack
 
             targetedAttack.Attack(origin, target, _stats);
         }
+    }
+
+    private void FireReadyShots(Vector3 origin, INonTargetedTowerAttack nonTargetedAttack)
+    {
+        while (_fireMode.TryGetShot(out _))
+            nonTargetedAttack.Attack(origin, _stats);
     }
 }

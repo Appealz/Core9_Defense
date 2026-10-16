@@ -13,18 +13,27 @@ public class TowerPartDataEditor : Editor
     private string[] _fireModeDefinitionNames;
     private int _selectedFireModeIndex;
 
+    private bool _needsSync;
+
     private void OnEnable()
     {
         InitializeAttackDefinitions();
         InitializeFireModeDefinitions();
 
-        SyncSelectedAttackIndex();
-        SyncSelectedFireModeIndex();
+        _needsSync = true;
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
+
+        if (_needsSync)
+        {
+            SyncSelectedAttackIndex();
+            SyncSelectedFireModeIndex();
+
+            _needsSync = false;
+        }
 
         DrawAttackDefinition();
         DrawFireModeDefinition();
@@ -188,8 +197,6 @@ public class TowerPartDataEditor : Editor
 
     private void SyncSelectedAttackIndex()
     {
-        serializedObject.Update();
-
         SerializedProperty attackDefinition = serializedObject.FindProperty("_attackDefinition");
         TowerAttackDefinition currentDefinition = (TowerAttackDefinition)attackDefinition.managedReferenceValue;
 
@@ -212,8 +219,6 @@ public class TowerPartDataEditor : Editor
 
     private void SyncSelectedFireModeIndex()
     {
-        serializedObject.Update();
-
         SerializedProperty fireModeDefinition = serializedObject.FindProperty("_fireModeDefinition");
         FireModeDefinition currentDefinition = (FireModeDefinition)fireModeDefinition.managedReferenceValue;
 

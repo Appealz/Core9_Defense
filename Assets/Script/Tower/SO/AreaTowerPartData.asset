@@ -14,17 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
   _towerName: Area
   _maxHp: 3
-  _attackDamage: 0
-  _attackRange: 0
+  _attackDamage: 1
+  _attackRange: 5
   _attackRate: 0
-  _sprite: {fileID: 4765240581426776098, guid: 0a9ef40896273504fa9ceec7c2bedaff, type: 3}
+  _sprite: {fileID: 1803277974132308361, guid: 64f1a5f5354c37642b9b601ca7ce719c, type: 3}
   _attackDefinition:
     rid: 1776078617994592333
+  _fireModeDefinition:
+    rid: 1776078865019174987
   _attackDefinitions:
   - rid: 1776078617994592333
+  _fireModeDefinitions:
+  - rid: 1776078865019174987
   references:
     version: 2
     RefIds:
     - rid: 1776078617994592333
       type: {class: AreaAttackDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _effectSprite: {fileID: -2413806693520163455, guid: 0603d95ef655d2e4e8b88a5111856217, type: 3}
+        _effectAlpha: 0.2
+    - rid: 1776078865019174987
+      type: {class: SingleFireModeDefinition, ns: , asm: Assembly-CSharp}
       data: 
