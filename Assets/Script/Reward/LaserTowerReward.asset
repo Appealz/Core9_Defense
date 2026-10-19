@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bcde33cd237de243902bf6f92d3bf96, type: 3}
+  m_Name: LaserTowerReward
+  m_EditorClassIdentifier: Assembly-CSharp::RewardData
+  _rewardName: Laser Tower Reward
+  _description: "\uB808\uC774\uC800 \uD0C0\uC6CC \uD558\uB098\uB97C \uD68D\uB4DD\uD569\uB2C8\uB2E4."
+  _icon: {fileID: 4765240581426776098, guid: 0a9ef40896273504fa9ceec7c2bedaff, type: 3}
+  _rewardDefinition:
+    rid: 1776078908333490251
+  _rewardDefinitions:
+  - rid: 1776078908333490251
+  references:
+    version: 2
+    RefIds:
+    - rid: 1776078908333490251
+      type: {class: NewTowerRewardDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _towerPartData: {fileID: 11400000, guid: 81d5d6289cfa60f4491dd20fe1a25381, type: 2}

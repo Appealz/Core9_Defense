@@ -11,14 +11,14 @@ public class TowerPartData : ScriptableObject
     [SerializeField] private float _attackRate;
     [SerializeField] private Sprite _sprite;
 
-    [SerializeReference] private TowerAttackDefinition _attackDefinition;
-    [SerializeReference] private FireModeDefinition _fireModeDefinition;
+    [SerializeReference, SubclassSelector(nameof(_attackDefinitions))]
+    private TowerAttackDefinition _attackDefinition;
 
-    [SerializeReference, HideInInspector]
-    private List<TowerAttackDefinition> _attackDefinitions = new();
+    [SerializeReference, SubclassSelector(nameof(_fireModeDefinitions))]
+    private FireModeDefinition _fireModeDefinition;
 
-    [SerializeReference, HideInInspector]
-    private List<FireModeDefinition> _fireModeDefinitions = new();
+    [SerializeReference, HideInInspector] private List<TowerAttackDefinition> _attackDefinitions = new();
+    [SerializeReference, HideInInspector] private List<FireModeDefinition> _fireModeDefinitions = new();
 
     public string TowerName => _towerName;
     public int MaxHp => _maxHp;

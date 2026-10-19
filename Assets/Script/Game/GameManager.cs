@@ -6,16 +6,18 @@ public class GameManager : IUpdatable
 {
     private readonly GameStateManager _gameStateManager;
     private readonly WaveManager _waveManager;
+    private readonly RewardSelectionManager _rewardSelectionManager;
     private readonly IReadOnlyList<WaveData> _waveDataList;
 
     private int _currentWaveNumber = 1;
 
     public int CurrentWaveNumber => _currentWaveNumber;
 
-    public GameManager(GameStateManager gameStateManager, WaveManager waveManager, IReadOnlyList<WaveData> waveDataList)
+    public GameManager(GameStateManager gameStateManager, WaveManager waveManager, RewardSelectionManager rewardSelectionManager, IReadOnlyList<WaveData> waveDataList)
     {
         _gameStateManager = gameStateManager;
         _waveManager = waveManager;
+        _rewardSelectionManager = rewardSelectionManager;
         _waveDataList = waveDataList;
     }
 
@@ -72,5 +74,19 @@ public class GameManager : IUpdatable
 
         _gameStateManager.ChangeState(GameState.WaveClear);
         Debug.Log($"Wave {_currentWaveNumber} Clear");
+
+        _rewardSelectionManager.CreateChoices(3);
+        _gameStateManager.ChangeState(GameState.RewardSelection);
+
+        if (_rewardSelectionManager.CurrentChoices.Count == 0)
+        {
+            Debug.LogWarning("적용 가능한 보상이 없습니다.");
+            return;
+        }
+
+        RewardData rewardData = _rewardSelectionManager.CurrentChoices[0];
+        bool isApplied = await _rewardSelectionManager.ApplyAsync(rewardData);
+
+        Debug.Log($"Reward Applied: {rewardData.RewardName}, Result: {isApplied}");
     }
 }

@@ -32,6 +32,11 @@ public class TowerManager
         return true;
     }
 
+    public bool CanPlaceNextTower()
+    {
+        return _coreManager.TryFindPlacementSlotNumber(out _);
+    }
+
     public async UniTask<bool> TryPlaceNextTowerAsync(TowerPartData partData)
     {
         if (!_coreManager.TryFindPlacementSlotNumber(out int slotNumber))

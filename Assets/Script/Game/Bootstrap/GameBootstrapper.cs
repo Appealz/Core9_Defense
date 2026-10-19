@@ -51,34 +51,26 @@ public sealed class GameBootstrapper : SceneBootstrapper
         var enemyQuery = new EnemyQuery(enemyManager);
 
         var towerTargetSelector = new TowerTargetSelector(enemyQuery);
-
-        var attackDependencies = new TowerAttackDependencies(
-            projectileManager,
-            explosionEffectManager,
-            laserManager);
+        var attackDependencies = new TowerAttackDependencies(projectileManager, explosionEffectManager, laserManager);
 
         var towerFactory = new TowerFactory(towerTargetSelector, attackDependencies);
         var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
 
+        var rewardDependencies = new RewardDependencies(towerManager);
+        var rewardSelectionManager = new RewardSelectionManager(_gameStartData.RewardDataList, rewardDependencies);
+
         var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
         var spawnPositionCalculator = new SpawnPositionCalculator();
-        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(
-            _coreLayout,
-            cameraBoundsProvider,
-            spawnPositionCalculator,
-            _enemySpawnMargin);
+        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(_coreLayout, cameraBoundsProvider, spawnPositionCalculator, _enemySpawnMargin);
 
         var spawnManager = new SpawnManager(enemyFactory, enemyManager, enemySpawnPositionProvider, _coreLayout.transform);
         var waveManager = new WaveManager(spawnManager, enemyManager);
-
-        var gameManager = new GameManager(gameStateManager, waveManager, _gameStartData.WaveDataList);
+        var gameManager = new GameManager(gameStateManager, waveManager, rewardSelectionManager, _gameStartData.WaveDataList);
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
 
-        bool isPlaced = await towerManager.TryPlaceTowerAsync(
-            _gameStartData.InitialTowerSlotNumber,
-            _gameStartData.BasicTowerPartData);
+        bool isPlaced = await towerManager.TryPlaceTowerAsync(_gameStartData.InitialTowerSlotNumber, _gameStartData.BasicTowerPartData);
 
         if (!isPlaced)
         {

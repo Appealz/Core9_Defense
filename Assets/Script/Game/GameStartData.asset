@@ -16,3 +16,5 @@ MonoBehaviour:
   _basicTowerPartData: {fileID: 11400000, guid: a6b5fb62d9640b04b947f1985df2b0ee, type: 2}
   _waveDataList:
   - {fileID: 11400000, guid: 2a149cba00aac084eab02a09a14c43fb, type: 2}
+  _rewardDataList:
+  - {fileID: 11400000, guid: f61dcf26bbe30ae47b45ba8dc0bdec9d, type: 2}
