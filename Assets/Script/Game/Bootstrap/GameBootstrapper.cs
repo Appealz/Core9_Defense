@@ -1,3 +1,4 @@
+
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -6,22 +7,32 @@ public sealed class GameBootstrapper : SceneBootstrapper
     [SerializeField] private GameStartData _gameStartData;
     [SerializeField] private CoreLayout _coreLayout;
     [SerializeField] private Camera _mainCamera;
+    [SerializeField] private RewardSelectionView _rewardSelectionView;
     [SerializeField] private float _enemySpawnMargin = 1f;
+
+    private RewardSelectionPresenter _rewardSelectionPresenter;
 
     protected override async UniTask ComposeAsync()
     {
         CoreBoundary coreBoundary = _coreLayout.GetComponentInChildren<CoreBoundary>();
+        CoreVisual coreVisual = _coreLayout.GetComponentInChildren<CoreVisual>();
         TowerSpawnTester towerSpawnTester = GetComponent<TowerSpawnTester>();
 
-        if (coreBoundary == null)
+        if (coreBoundary == null || coreVisual == null)
         {
-            Debug.LogError("CoreBoundary를 찾을 수 없습니다.", this);
+            Debug.LogError("CoreBoundary 또는 CoreVisual을 찾을 수 없습니다.", this);
             return;
         }
 
         if (towerSpawnTester == null)
         {
             Debug.LogError("TowerSpawnTester를 찾을 수 없습니다.", this);
+            return;
+        }
+
+        if (_rewardSelectionView == null)
+        {
+            Debug.LogError("RewardSelectionView 참조가 설정되지 않았습니다.", this);
             return;
         }
 
@@ -35,7 +46,9 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         var coreBoard = new CoreBoard();
         var coreManager = new CoreManager(coreBoard);
+
         coreBoundary.Initialize(coreManager);
+        coreVisual.Initialize(coreManager);
 
         var addressableProvider = new AddressableProvider();
         var objectPoolManager = new ObjectPoolManager(addressableProvider);
@@ -77,6 +90,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
             Debug.LogError("초기 타워 배치에 실패했습니다.", this);
             return;
         }
+
+        _rewardSelectionPresenter = new RewardSelectionPresenter(_rewardSelectionView, gameStateManager, gameManager, rewardSelectionManager);
 
         Register(projectileManager);
         Register(explosionEffectManager);

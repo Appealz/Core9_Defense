@@ -1,3 +1,4 @@
+
 using System;
 using Cysharp.Threading.Tasks;
 
@@ -27,7 +28,7 @@ public class TowerManager
         }
 
         tower.transform.position = _coreLayout.GetSlotPosition(slotNumber);
-        tower.Health.Died += () => HandleTowerDied(slotNumber, tower);
+        tower.Health.Died += () => HandleTowerDied(tower);
 
         return true;
     }
@@ -45,12 +46,27 @@ public class TowerManager
         return await TryPlaceTowerAsync(slotNumber, partData);
     }
 
-    private void HandleTowerDied(int slotNumber, Tower tower)
+    public bool TryMoveOrSwapTower(int fromSlotNumber, int toSlotNumber)
     {
-        if (!_coreManager.TryRemoveTower(slotNumber, out Tower removedTower))
-            return;
+        if (!_coreManager.TryGetTower(fromSlotNumber, out Tower movingTower))
+            return false;
 
-        if (removedTower != tower)
+        _coreManager.TryGetTower(toSlotNumber, out Tower targetTower);
+
+        if (!_coreManager.TryMoveOrSwapTower(fromSlotNumber, toSlotNumber))
+            return false;
+
+        movingTower.transform.position = _coreLayout.GetSlotPosition(toSlotNumber);
+
+        if (targetTower != null)
+            targetTower.transform.position = _coreLayout.GetSlotPosition(fromSlotNumber);
+
+        return true;
+    }
+
+    private void HandleTowerDied(Tower tower)
+    {
+        if (!_coreManager.TryRemoveTower(tower))
             return;
 
         _towerFactory.Release(tower);

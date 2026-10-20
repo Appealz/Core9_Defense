@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -10,6 +11,7 @@ public class GameManager : IUpdatable
     private readonly IReadOnlyList<WaveData> _waveDataList;
 
     private int _currentWaveNumber = 1;
+    private bool _isRewardApplying;
 
     public int CurrentWaveNumber => _currentWaveNumber;
 
@@ -29,13 +31,33 @@ public class GameManager : IUpdatable
 
     public void StartNextWave()
     {
-        if (_gameStateManager.CurrentState == GameState.GameOver)
+        if (_gameStateManager.CurrentState != GameState.Rearrangement)
             return;
 
         _currentWaveNumber++;
 
         _gameStateManager.ChangeState(GameState.Playing);
         PlayCurrentWaveAsync().Forget();
+    }
+
+    public async UniTask SelectRewardAsync(RewardData rewardData)
+    {
+        if (_gameStateManager.CurrentState != GameState.RewardSelection || _isRewardApplying)
+            return;
+
+        _isRewardApplying = true;
+
+        try
+        {
+            await _rewardSelectionManager.ApplyAsync(rewardData);
+
+            if (_gameStateManager.CurrentState == GameState.RewardSelection)
+                _gameStateManager.ChangeState(GameState.Rearrangement);
+        }
+        finally
+        {
+            _isRewardApplying = false;
+        }
     }
 
     public void GameOver()
@@ -75,18 +97,12 @@ public class GameManager : IUpdatable
         _gameStateManager.ChangeState(GameState.WaveClear);
         Debug.Log($"Wave {_currentWaveNumber} Clear");
 
-        _rewardSelectionManager.CreateChoices(3);
-        _gameStateManager.ChangeState(GameState.RewardSelection);
-
-        if (_rewardSelectionManager.CurrentChoices.Count == 0)
+        if (_rewardSelectionManager.CreateChoices(3).Count == 0)
         {
-            Debug.LogWarning("적용 가능한 보상이 없습니다.");
+            Debug.LogError("선택 가능한 보상이 없습니다. 보상 데이터를 확인하세요.");
             return;
         }
 
-        RewardData rewardData = _rewardSelectionManager.CurrentChoices[0];
-        bool isApplied = await _rewardSelectionManager.ApplyAsync(rewardData);
-
-        Debug.Log($"Reward Applied: {rewardData.RewardName}, Result: {isApplied}");
+        _gameStateManager.ChangeState(GameState.RewardSelection);
     }
 }

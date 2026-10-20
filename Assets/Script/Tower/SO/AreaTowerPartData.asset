@@ -33,7 +33,7 @@ MonoBehaviour:
       type: {class: AreaAttackDefinition, ns: , asm: Assembly-CSharp}
       data:
         _effectSprite: {fileID: -2413806693520163455, guid: 0603d95ef655d2e4e8b88a5111856217, type: 3}
-        _effectAlpha: 0.2
+        _effectAlpha: 0.056
     - rid: 1776078865019174987
       type: {class: SingleFireModeDefinition, ns: , asm: Assembly-CSharp}
       data: 

@@ -1,4 +1,3 @@
-using UnityEngine;
 
 public class CoreBoard
 {
@@ -21,9 +20,7 @@ public class CoreBoard
         _slots = new CoreSlot[SlotCount];
 
         for (int i = 0; i < _slots.Length; i++)
-        {
             _slots[i] = new CoreSlot(i + 1);
-        }
     }
 
     public bool TryGetSlot(int slotNumber, out CoreSlot slot)
@@ -72,6 +69,31 @@ public class CoreBoard
 
         targetSlot = null;
         return false;
+    }
+
+    public bool TryMoveOrSwapTower(int fromSlotNumber, int toSlotNumber)
+    {
+        if (fromSlotNumber == toSlotNumber)
+            return false;
+
+        if (!TryGetSlot(fromSlotNumber, out CoreSlot fromSlot))
+            return false;
+
+        if (!TryGetSlot(toSlotNumber, out CoreSlot toSlot))
+            return false;
+
+        if (!fromSlot.IsOccupied)
+            return false;
+
+        Tower movingTower = fromSlot.RemoveTower();
+        Tower targetTower = toSlot.RemoveTower();
+
+        toSlot.TryPlaceTower(movingTower);
+
+        if (targetTower != null)
+            fromSlot.TryPlaceTower(targetTower);
+
+        return true;
     }
 
     public bool HasAnyTower()
