@@ -1,4 +1,3 @@
-
 using System;
 using UnityEngine;
 
@@ -39,6 +38,37 @@ public class CoreVisual : MonoBehaviour
 
         _coreManager.TryFindHitTargetSlotNumber(out int slotNumber);
         SetHitTargetSlot(slotNumber);
+    }
+
+    public bool TryGetSlotNumber(Vector2 worldPosition, out int slotNumber)
+    {
+        slotNumber = 0;
+
+        if (_slots == null)
+            return false;
+
+        float closestDistance = float.MaxValue;
+
+        for (int i = 1; i < _slots.Length; i++)
+        {
+            Bounds bounds = _slots[i].bounds;
+
+            if (worldPosition.x < bounds.min.x || worldPosition.x > bounds.max.x)
+                continue;
+
+            if (worldPosition.y < bounds.min.y || worldPosition.y > bounds.max.y)
+                continue;
+
+            float distance = ((Vector2)bounds.center - worldPosition).sqrMagnitude;
+
+            if (distance >= closestDistance)
+                continue;
+
+            closestDistance = distance;
+            slotNumber = i;
+        }
+
+        return slotNumber != 0;
     }
 
     private void CreateSlots()

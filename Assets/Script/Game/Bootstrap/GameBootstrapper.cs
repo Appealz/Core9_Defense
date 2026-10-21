@@ -74,7 +74,12 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
         var spawnPositionCalculator = new SpawnPositionCalculator();
-        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(_coreLayout, cameraBoundsProvider, spawnPositionCalculator, _enemySpawnMargin);
+        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(
+            _coreLayout,
+            cameraBoundsProvider,
+            spawnPositionCalculator,
+            _enemySpawnMargin
+        );
 
         var spawnManager = new SpawnManager(enemyFactory, enemyManager, enemySpawnPositionProvider, _coreLayout.transform);
         var waveManager = new WaveManager(spawnManager, enemyManager);
@@ -83,7 +88,10 @@ public sealed class GameBootstrapper : SceneBootstrapper
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
 
-        bool isPlaced = await towerManager.TryPlaceTowerAsync(_gameStartData.InitialTowerSlotNumber, _gameStartData.BasicTowerPartData);
+        bool isPlaced = await towerManager.TryPlaceTowerAsync(
+            _gameStartData.InitialTowerSlotNumber,
+            _gameStartData.BasicTowerPartData
+        );
 
         if (!isPlaced)
         {
@@ -91,7 +99,25 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        _rewardSelectionPresenter = new RewardSelectionPresenter(_rewardSelectionView, gameStateManager, gameManager, rewardSelectionManager);
+        _rewardSelectionPresenter = new RewardSelectionPresenter(
+            _rewardSelectionView,
+            gameStateManager,
+            gameManager,
+            rewardSelectionManager
+        );
+
+        CoreRearrangementInput rearrangementInput = GetComponent<CoreRearrangementInput>();
+
+        if (rearrangementInput == null)
+            rearrangementInput = gameObject.AddComponent<CoreRearrangementInput>();
+
+        rearrangementInput.Initialize(
+            gameStateManager,
+            coreManager,
+            towerManager,
+            coreVisual,
+            _mainCamera
+        );
 
         Register(projectileManager);
         Register(explosionEffectManager);
