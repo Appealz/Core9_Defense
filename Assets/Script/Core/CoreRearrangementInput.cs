@@ -6,6 +6,9 @@ using UnityEngine.InputSystem;
 
 public class CoreRearrangementInput : MonoBehaviour
 {
+    [SerializeField, Min(5f)]
+    private float _dragThreshold = 20f;
+
     private GameStateManager _gameStateManager;
     private CoreManager _coreManager;
     private TowerManager _towerManager;
@@ -16,8 +19,14 @@ public class CoreRearrangementInput : MonoBehaviour
     private InputAction _pressAction;
     private readonly List<RaycastResult> _uiResults = new();
 
-    private Pointer _dragPointer;
-    private int _fromSlotNumber;
+    private Pointer _activePointer;
+    private Vector2 _pressScreenPosition;
+
+    private int _selectedSlotNumber;
+    private int _pressSlotNumber;
+
+    private bool _startedSelectionThisPress;
+    private bool _isDragging;
 
     private void Awake()
     {
@@ -58,19 +67,32 @@ public class CoreRearrangementInput : MonoBehaviour
 
     private void Update()
     {
-        if (_dragPointer == null)
+        if (_selectedSlotNumber == 0)
             return;
 
         if (_gameStateManager.CurrentState != GameState.Rearrangement)
         {
-            ClearDrag();
+            ClearSelection();
             return;
         }
 
-        Vector2 screenPosition = _dragPointer.position.ReadValue();
-        Vector3 worldPosition = ScreenToWorld(screenPosition);
+        Pointer pointer = _activePointer ?? Pointer.current;
 
-        _rearrangementVisual.SetDragPosition(worldPosition);
+        if (pointer == null)
+            return;
+
+        Vector2 screenPosition = pointer.position.ReadValue();
+
+        if (_activePointer != null &&
+            _pressSlotNumber == _selectedSlotNumber &&
+            !_isDragging &&
+            HasMovedEnough(screenPosition))
+        {
+            _isDragging = true;
+            Debug.Log("재배치 드래그 시작");
+        }
+
+        _rearrangementVisual.SetDragPosition(ScreenToWorld(screenPosition));
     }
 
     private void HandlePress(InputAction.CallbackContext context)
@@ -81,7 +103,7 @@ public class CoreRearrangementInput : MonoBehaviour
         if (context.control.device is not Pointer pointer)
             return;
 
-        if (_dragPointer != null)
+        if (_activePointer != null)
             return;
 
         Vector2 screenPosition = pointer.position.ReadValue();
@@ -89,40 +111,90 @@ public class CoreRearrangementInput : MonoBehaviour
         if (IsPointerOverUI(screenPosition))
             return;
 
-        if (!TryGetSlotNumber(screenPosition, out int slotNumber))
-            return;
+        bool hasSlot = TryGetSlotNumber(screenPosition, out int slotNumber);
 
-        if (!_coreManager.TryGetTower(slotNumber, out Tower tower))
-            return;
+        _startedSelectionThisPress = false;
 
-        _dragPointer = pointer;
-        _fromSlotNumber = slotNumber;
+        if (_selectedSlotNumber == 0)
+        {
+            if (!hasSlot || !_coreManager.TryGetTower(slotNumber, out Tower tower))
+                return;
 
-        _rearrangementVisual.ShowSelection(tower);
-        _rearrangementVisual.SetDragPosition(ScreenToWorld(screenPosition));
+            _selectedSlotNumber = slotNumber;
+            _startedSelectionThisPress = true;
 
-        Debug.Log($"재배치 드래그 시작: {slotNumber}");
+            _rearrangementVisual.ShowSelection(tower);
+            _rearrangementVisual.SetDragPosition(ScreenToWorld(screenPosition));
+
+            Debug.Log($"재배치 타워 선택: {slotNumber}");
+        }
+
+        _activePointer = pointer;
+        _pressScreenPosition = screenPosition;
+        _pressSlotNumber = hasSlot ? slotNumber : 0;
+        _isDragging = false;
     }
 
     private void HandleRelease(InputAction.CallbackContext context)
     {
-        if (_dragPointer == null || context.control.device != _dragPointer)
+        if (_activePointer == null || context.control.device != _activePointer)
             return;
 
-        int fromSlotNumber = _fromSlotNumber;
-        Vector2 screenPosition = _dragPointer.position.ReadValue();
+        Vector2 screenPosition = _activePointer.position.ReadValue();
 
-        ClearDrag();
+        bool wasNewSelection = _startedSelectionThisPress;
+
+        bool releasedAfterDrag =
+            _pressSlotNumber == _selectedSlotNumber &&
+            (_isDragging || HasMovedEnough(screenPosition));
+
+        int pressedSlotNumber = _pressSlotNumber;
+        int selectedSlotNumber = _selectedSlotNumber;
+
+        ResetPress();
 
         if (_gameStateManager.CurrentState != GameState.Rearrangement)
+        {
+            ClearSelection();
             return;
+        }
+
+        if (releasedAfterDrag)
+        {
+            if (!IsPointerOverUI(screenPosition) &&
+                TryGetSlotNumber(screenPosition, out int targetSlotNumber))
+            {
+                TryMoveOrSwap(selectedSlotNumber, targetSlotNumber);
+            }
+
+            ClearSelection();
+            return;
+        }
+
+        if (wasNewSelection)
+            return;
+
+        if (pressedSlotNumber == 0 || pressedSlotNumber == selectedSlotNumber)
+        {
+            ClearSelection();
+            return;
+        }
 
         if (IsPointerOverUI(screenPosition))
             return;
 
-        if (!TryGetSlotNumber(screenPosition, out int toSlotNumber))
+        if (!TryGetSlotNumber(screenPosition, out int tappedSlotNumber))
             return;
 
+        if (tappedSlotNumber != pressedSlotNumber)
+            return;
+
+        TryMoveOrSwap(selectedSlotNumber, tappedSlotNumber);
+        ClearSelection();
+    }
+
+    private void TryMoveOrSwap(int fromSlotNumber, int toSlotNumber)
+    {
         if (fromSlotNumber == toSlotNumber)
             return;
 
@@ -130,10 +202,19 @@ public class CoreRearrangementInput : MonoBehaviour
             Debug.Log($"재배치 완료: {fromSlotNumber} → {toSlotNumber}");
     }
 
+    private bool HasMovedEnough(Vector2 screenPosition)
+    {
+        float threshold = _dragThreshold * _dragThreshold;
+
+        return (screenPosition - _pressScreenPosition).sqrMagnitude >= threshold;
+    }
+
     private bool TryGetSlotNumber(Vector2 screenPosition, out int slotNumber)
     {
-        Vector3 worldPosition = ScreenToWorld(screenPosition);
-        return _coreVisual.TryGetSlotNumber(worldPosition, out slotNumber);
+        return _coreVisual.TryGetSlotNumber(
+            ScreenToWorld(screenPosition),
+            out slotNumber
+        );
     }
 
     private Vector3 ScreenToWorld(Vector2 screenPosition)
@@ -154,7 +235,7 @@ public class CoreRearrangementInput : MonoBehaviour
 
     private void SetInputEnabled(bool enabled)
     {
-        ClearDrag();
+        ClearSelection();
 
         if (enabled && isActiveAndEnabled)
             _pressAction.Enable();
@@ -162,10 +243,18 @@ public class CoreRearrangementInput : MonoBehaviour
             _pressAction.Disable();
     }
 
-    private void ClearDrag()
+    private void ResetPress()
     {
-        _dragPointer = null;
-        _fromSlotNumber = 0;
+        _activePointer = null;
+        _pressSlotNumber = 0;
+        _startedSelectionThisPress = false;
+        _isDragging = false;
+    }
+
+    private void ClearSelection()
+    {
+        ResetPress();
+        _selectedSlotNumber = 0;
 
         if (_rearrangementVisual != null)
             _rearrangementVisual.HideSelection();
@@ -195,7 +284,7 @@ public class CoreRearrangementInput : MonoBehaviour
 
     private void OnDisable()
     {
-        ClearDrag();
+        ClearSelection();
         _pressAction?.Disable();
     }
 

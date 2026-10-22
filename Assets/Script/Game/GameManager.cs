@@ -1,21 +1,32 @@
 
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class GameManager : IUpdatable
 {
+    private const float RearrangementDuration = 30f;
+
     private readonly GameStateManager _gameStateManager;
     private readonly WaveManager _waveManager;
     private readonly RewardSelectionManager _rewardSelectionManager;
     private readonly IReadOnlyList<WaveData> _waveDataList;
 
     private int _currentWaveNumber = 1;
+    private float _rearrangementTimeRemaining;
     private bool _isRewardApplying;
 
-    public int CurrentWaveNumber => _currentWaveNumber;
+    public event Action<int> RearrangementTimeChanged;
 
-    public GameManager(GameStateManager gameStateManager, WaveManager waveManager, RewardSelectionManager rewardSelectionManager, IReadOnlyList<WaveData> waveDataList)
+    public int CurrentWaveNumber => _currentWaveNumber;
+    public int RearrangementRemainingSeconds => Mathf.CeilToInt(_rearrangementTimeRemaining);
+
+    public GameManager(
+        GameStateManager gameStateManager,
+        WaveManager waveManager,
+        RewardSelectionManager rewardSelectionManager,
+        IReadOnlyList<WaveData> waveDataList)
     {
         _gameStateManager = gameStateManager;
         _waveManager = waveManager;
@@ -34,6 +45,7 @@ public class GameManager : IUpdatable
         if (_gameStateManager.CurrentState != GameState.Rearrangement)
             return;
 
+        _rearrangementTimeRemaining = 0f;
         _currentWaveNumber++;
 
         _gameStateManager.ChangeState(GameState.Playing);
@@ -52,7 +64,10 @@ public class GameManager : IUpdatable
             await _rewardSelectionManager.ApplyAsync(rewardData);
 
             if (_gameStateManager.CurrentState == GameState.RewardSelection)
+            {
+                _rearrangementTimeRemaining = RearrangementDuration;
                 _gameStateManager.ChangeState(GameState.Rearrangement);
+            }
         }
         finally
         {
@@ -71,14 +86,38 @@ public class GameManager : IUpdatable
 
     public void Update(float deltaTime)
     {
-        if (_gameStateManager.CurrentState != GameState.Playing)
-            return;
+        switch (_gameStateManager.CurrentState)
+        {
+            case GameState.Playing:
+                UpdatePlaying(deltaTime);
+                break;
 
-        UpdatePlaying(deltaTime);
+            case GameState.Rearrangement:
+                UpdateRearrangement(deltaTime);
+                break;
+        }
     }
 
     private void UpdatePlaying(float deltaTime)
     {
+    }
+
+    private void UpdateRearrangement(float deltaTime)
+    {
+        int previousSeconds = RearrangementRemainingSeconds;
+
+        _rearrangementTimeRemaining = Mathf.Max(
+            0f,
+            _rearrangementTimeRemaining - deltaTime
+        );
+
+        int remainingSeconds = RearrangementRemainingSeconds;
+
+        if (previousSeconds != remainingSeconds)
+            RearrangementTimeChanged?.Invoke(remainingSeconds);
+
+        if (_rearrangementTimeRemaining <= 0f)
+            StartNextWave();
     }
 
     private async UniTask PlayCurrentWaveAsync()

@@ -8,9 +8,13 @@ public sealed class GameBootstrapper : SceneBootstrapper
     [SerializeField] private CoreLayout _coreLayout;
     [SerializeField] private Camera _mainCamera;
     [SerializeField] private RewardSelectionView _rewardSelectionView;
+    [SerializeField] private CoreRearrangementView _rearrangementView;
+    [SerializeField] private WaveHUDView _waveHUDView;
     [SerializeField] private float _enemySpawnMargin = 1f;
 
     private RewardSelectionPresenter _rewardSelectionPresenter;
+    private CoreRearrangementPresenter _rearrangementPresenter;
+    private WaveHUDPresenter _waveHUDPresenter;
 
     protected override async UniTask ComposeAsync()
     {
@@ -30,9 +34,9 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        if (_rewardSelectionView == null)
+        if (_rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null)
         {
-            Debug.LogError("RewardSelectionView 참조가 설정되지 않았습니다.", this);
+            Debug.LogError("게임 UI 참조가 설정되지 않았습니다.", this);
             return;
         }
 
@@ -81,9 +85,21 @@ public sealed class GameBootstrapper : SceneBootstrapper
             _enemySpawnMargin
         );
 
-        var spawnManager = new SpawnManager(enemyFactory, enemyManager, enemySpawnPositionProvider, _coreLayout.transform);
+        var spawnManager = new SpawnManager(
+            enemyFactory,
+            enemyManager,
+            enemySpawnPositionProvider,
+            _coreLayout.transform
+        );
+
         var waveManager = new WaveManager(spawnManager, enemyManager);
-        var gameManager = new GameManager(gameStateManager, waveManager, rewardSelectionManager, _gameStartData.WaveDataList);
+
+        var gameManager = new GameManager(
+            gameStateManager,
+            waveManager,
+            rewardSelectionManager,
+            _gameStartData.WaveDataList
+        );
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
@@ -104,6 +120,19 @@ public sealed class GameBootstrapper : SceneBootstrapper
             gameStateManager,
             gameManager,
             rewardSelectionManager
+        );
+
+        _rearrangementPresenter = new CoreRearrangementPresenter(
+            _rearrangementView,
+            gameStateManager,
+            gameManager
+        );
+
+        _waveHUDPresenter = new WaveHUDPresenter(
+            _waveHUDView,
+            waveManager,
+            gameManager,
+            gameStateManager
         );
 
         CoreRearrangementInput rearrangementInput = GetComponent<CoreRearrangementInput>();

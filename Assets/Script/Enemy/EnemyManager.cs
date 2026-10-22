@@ -1,7 +1,11 @@
+
+using System;
 using System.Collections.Generic;
 
 public class EnemyManager
 {
+    public event Action EnemyRemoved;
+
     private readonly EnemyFactory _enemyFactory;
     private readonly HashSet<Enemy> _aliveEnemies = new();
 
@@ -31,6 +35,9 @@ public class EnemyManager
             return;
 
         enemy.Died -= OnEnemyDied;
+
         _enemyFactory.Release(enemy);
+
+        EnemyRemoved?.Invoke();
     }
 }
