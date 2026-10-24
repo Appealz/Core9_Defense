@@ -1,3 +1,4 @@
+
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -5,10 +6,14 @@ using UnityEngine;
 public class EnemyFactory
 {
     private readonly ObjectPool<Enemy> _enemyPool;
+    private readonly ProjectileManager _projectileManager;
+    private readonly CoreBoundary _coreBoundary;
 
-    public EnemyFactory(ObjectPool<Enemy> enemyPool)
+    public EnemyFactory(ObjectPool<Enemy> enemyPool, ProjectileManager projectileManager, CoreBoundary coreBoundary)
     {
         _enemyPool = enemyPool ?? throw new ArgumentNullException(nameof(enemyPool));
+        _projectileManager = projectileManager ?? throw new ArgumentNullException(nameof(projectileManager));
+        _coreBoundary = coreBoundary != null ? coreBoundary : throw new ArgumentNullException(nameof(coreBoundary));
     }
 
     public async UniTask<Enemy> CreateAsync(EnemyConfig config, Transform moveTarget)
@@ -31,11 +36,11 @@ public class EnemyFactory
         EnemyStats stats = new EnemyStats(config.MoveSpeed, config.AttackDamage, config.AttackRange, config.AttackCooldown);
 
         IEnemyMovement movement = config.MovementDefinition.CreateMovement();
-        IEnemyAttack attack = config.AttackDefinition.CreateAttack();
+        IEnemyAttack attack = config.AttackDefinition.CreateAttack(enemy.transform, _projectileManager, _coreBoundary);
 
-        EnemyController controller = new EnemyController(stats, movement);
+        EnemyController controller = new EnemyController(stats, movement, attack, _coreBoundary);
 
-        enemy.Initialize(health, stats, controller, attack, moveTarget, config.Sprite);
+        enemy.Initialize(health, stats, controller, attack, moveTarget, config);
 
         return enemy;
     }

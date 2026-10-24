@@ -1,17 +1,20 @@
+using System;
 using UnityEngine;
 
 public class MeleeAttack : IEnemyAttack
 {
-    public void Attack(Tower target, float damage)
+    private readonly CoreBoundary _coreBoundary;
+
+    public bool IsRanged => false;
+
+    public MeleeAttack(CoreBoundary coreBoundary)
     {
-        if (target == null || target.Health == null)
-            return;
+        _coreBoundary = coreBoundary != null ? coreBoundary : throw new ArgumentNullException(nameof(coreBoundary));
+    }
 
-        float beforeHp = target.Health.CurrentHp;
-
-        target.Health.TakeDamage(damage);
-
-        Debug.Log(
-            $"[Tower Hit] {target.name} / Damage: {damage} / HP: {beforeHp} ¡æ {target.Health.CurrentHp}");
+    public void Attack(float damage)
+    {
+        if (_coreBoundary.TryTakeDamage(damage))
+            Debug.Log($"[Core Hit] Damage: {damage}");
     }
 }

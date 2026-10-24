@@ -29,6 +29,19 @@ public class ProjectileManager : IUpdatable
         _activeProjectiles.Add(projectile);
     }
 
+    public async UniTask FireFixedAsync(Vector3 origin, Vector3 targetPosition, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
+    {
+        if (damage <= 0f || speed <= 0f || impact == null)
+            return;
+
+        Projectile projectile = await _projectilePool.GetAsync();
+
+        projectile.InitializeFixed(origin, targetPosition, damage, speed, impact, sprite);
+        projectile.gameObject.SetActive(true);
+
+        _activeProjectiles.Add(projectile);
+    }
+
     public void Update(float deltaTime)
     {
         for (int i = _activeProjectiles.Count - 1; i >= 0; i--)

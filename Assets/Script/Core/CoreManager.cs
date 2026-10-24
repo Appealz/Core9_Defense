@@ -75,6 +75,18 @@ public class CoreManager
         return true;
     }
 
+    public bool TryApplyDamage(float damage)
+    {
+        if (damage <= 0f)
+            return false;
+
+        if (!TryFindHitTargetTower(out Tower targetTower) || !targetTower.IsAlive)
+            return false;
+
+        targetTower.TakeDamage(damage);
+        return true;
+    }
+
     public bool TryRemoveTower(int slotNumber, out Tower removedTower)
     {
         removedTower = null;

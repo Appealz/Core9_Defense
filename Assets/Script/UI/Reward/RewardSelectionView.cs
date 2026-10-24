@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,11 +10,6 @@ public class RewardSelectionView : MonoBehaviour
     public event Action<RewardData> RewardSelected;
 
     private readonly List<RewardCardView> _cards = new();
-
-    private void Awake()
-    {
-        gameObject.SetActive(false);
-    }
 
     public void Show(IReadOnlyList<RewardData> rewards)
     {

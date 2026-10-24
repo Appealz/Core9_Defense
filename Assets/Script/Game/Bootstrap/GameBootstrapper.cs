@@ -10,11 +10,17 @@ public sealed class GameBootstrapper : SceneBootstrapper
     [SerializeField] private RewardSelectionView _rewardSelectionView;
     [SerializeField] private CoreRearrangementView _rearrangementView;
     [SerializeField] private WaveHUDView _waveHUDView;
+    [SerializeField] private GoldHUDView _goldHUDView;
     [SerializeField] private float _enemySpawnMargin = 1f;
 
     private RewardSelectionPresenter _rewardSelectionPresenter;
     private CoreRearrangementPresenter _rearrangementPresenter;
     private WaveHUDPresenter _waveHUDPresenter;
+    private GoldHUDPresenter _goldHUDPresenter;
+
+    private GoldManager _goldManager;
+    private EnemyGoldRewardService _enemyGoldRewardService;
+    private EnemyDeathBehaviorService _deathBehaviorService;
 
     protected override async UniTask ComposeAsync()
     {
@@ -34,7 +40,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        if (_rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null)
+        if (_rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null || _goldHUDView == null)
         {
             Debug.LogError("게임 UI 참조가 설정되지 않았습니다.", this);
             return;
@@ -63,9 +69,12 @@ public sealed class GameBootstrapper : SceneBootstrapper
         var explosionEffectManager = new ExplosionEffectManager(objectPoolManager.GetPool<ExplosionEffect>());
         var laserManager = new LaserManager(objectPoolManager.GetPool<Laser>());
 
-        var enemyFactory = new EnemyFactory(objectPoolManager.GetPool<Enemy>());
+        var enemyFactory = new EnemyFactory(objectPoolManager.GetPool<Enemy>(), projectileManager, coreBoundary);
         var enemyManager = new EnemyManager(enemyFactory);
         var enemyQuery = new EnemyQuery(enemyManager);
+
+        _goldManager = new GoldManager();
+        _enemyGoldRewardService = new EnemyGoldRewardService(enemyManager, _goldManager);
 
         var towerTargetSelector = new TowerTargetSelector(enemyQuery);
         var attackDependencies = new TowerAttackDependencies(projectileManager, explosionEffectManager, laserManager);
@@ -78,36 +87,19 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
         var spawnPositionCalculator = new SpawnPositionCalculator();
-        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(
-            _coreLayout,
-            cameraBoundsProvider,
-            spawnPositionCalculator,
-            _enemySpawnMargin
-        );
+        var enemySpawnPositionProvider = new EnemySpawnPositionProvider(_coreLayout, cameraBoundsProvider, spawnPositionCalculator, _enemySpawnMargin);
 
-        var spawnManager = new SpawnManager(
-            enemyFactory,
-            enemyManager,
-            enemySpawnPositionProvider,
-            _coreLayout.transform
-        );
+        var spawnManager = new SpawnManager(enemyFactory, enemyManager, enemySpawnPositionProvider, _coreLayout.transform);
+
+        _deathBehaviorService = new EnemyDeathBehaviorService(enemyManager, spawnManager);
 
         var waveManager = new WaveManager(spawnManager, enemyManager);
-
-        var gameManager = new GameManager(
-            gameStateManager,
-            waveManager,
-            rewardSelectionManager,
-            _gameStartData.WaveDataList
-        );
+        var gameManager = new GameManager(gameStateManager, waveManager, rewardSelectionManager, _gameStartData.WaveDataList);
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
 
-        bool isPlaced = await towerManager.TryPlaceTowerAsync(
-            _gameStartData.InitialTowerSlotNumber,
-            _gameStartData.BasicTowerPartData
-        );
+        bool isPlaced = await towerManager.TryPlaceTowerAsync(_gameStartData.InitialTowerSlotNumber, _gameStartData.BasicTowerPartData);
 
         if (!isPlaced)
         {
@@ -115,38 +107,17 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        _rewardSelectionPresenter = new RewardSelectionPresenter(
-            _rewardSelectionView,
-            gameStateManager,
-            gameManager,
-            rewardSelectionManager
-        );
-
-        _rearrangementPresenter = new CoreRearrangementPresenter(
-            _rearrangementView,
-            gameStateManager,
-            gameManager
-        );
-
-        _waveHUDPresenter = new WaveHUDPresenter(
-            _waveHUDView,
-            waveManager,
-            gameManager,
-            gameStateManager
-        );
+        _rewardSelectionPresenter = new RewardSelectionPresenter(_rewardSelectionView, gameStateManager, gameManager, rewardSelectionManager);
+        _rearrangementPresenter = new CoreRearrangementPresenter(_rearrangementView, gameStateManager, gameManager);
+        _waveHUDPresenter = new WaveHUDPresenter(_waveHUDView, waveManager, gameManager, gameStateManager);
+        _goldHUDPresenter = new GoldHUDPresenter(_goldHUDView, _goldManager);
 
         CoreRearrangementInput rearrangementInput = GetComponent<CoreRearrangementInput>();
 
         if (rearrangementInput == null)
             rearrangementInput = gameObject.AddComponent<CoreRearrangementInput>();
 
-        rearrangementInput.Initialize(
-            gameStateManager,
-            coreManager,
-            towerManager,
-            coreVisual,
-            _mainCamera
-        );
+        rearrangementInput.Initialize(gameStateManager, coreManager, towerManager, coreVisual, _mainCamera);
 
         Register(projectileManager);
         Register(explosionEffectManager);
@@ -154,5 +125,18 @@ public sealed class GameBootstrapper : SceneBootstrapper
         Register(gameManager);
 
         gameManager.StartGame();
+    }
+
+    protected override void OnDestroy()
+    {
+        _goldHUDPresenter?.Dispose();
+        _waveHUDPresenter?.Dispose();
+        _rearrangementPresenter?.Dispose();
+        _rewardSelectionPresenter?.Dispose();
+
+        _deathBehaviorService?.Dispose();
+        _enemyGoldRewardService?.Dispose();
+
+        base.OnDestroy();
     }
 }

@@ -12,6 +12,7 @@ public class Projectile : MonoBehaviour
 
     private float _damage;
     private float _speed;
+    private bool _isHoming;
 
     private void Awake()
     {
@@ -21,21 +22,37 @@ public class Projectile : MonoBehaviour
 
     public void Initialize(Vector3 origin, IDamageable target, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
     {
-        transform.position = origin;
+        InitializeCommon(origin, damage, speed, impact, sprite);
 
         _target = target;
-        _impact = impact;
         _lastTargetPosition = target.Position;
+        _isHoming = true;
+    }
+
+    public void InitializeFixed(Vector3 origin, Vector3 targetPosition, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
+    {
+        InitializeCommon(origin, damage, speed, impact, sprite);
+
+        _target = null;
+        _lastTargetPosition = targetPosition;
+        _isHoming = false;
+    }
+
+    private void InitializeCommon(Vector3 origin, float damage, float speed, IProjectileImpact impact, Sprite sprite)
+    {
+        transform.position = origin;
 
         _damage = damage;
         _speed = speed;
+        _impact = impact;
 
         _spriteRenderer.sprite = sprite != null ? sprite : _defaultSprite;
     }
 
     public bool ProjectileUpdate(float deltaTime)
     {
-        UpdateTargetState();
+        if (_isHoming)
+            UpdateTargetState();
 
         Vector3 direction = _lastTargetPosition - transform.position;
 
@@ -45,14 +62,11 @@ public class Projectile : MonoBehaviour
         if (distance <= moveDistance)
         {
             transform.position = _lastTargetPosition;
-
             _impact.Impact(_lastTargetPosition, _target, _damage);
-
             return false;
         }
 
         transform.position += direction / distance * moveDistance;
-
         return true;
     }
 
@@ -64,6 +78,7 @@ public class Projectile : MonoBehaviour
 
         _damage = 0f;
         _speed = 0f;
+        _isHoming = false;
 
         _spriteRenderer.sprite = _defaultSprite;
     }

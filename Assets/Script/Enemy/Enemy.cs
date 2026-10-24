@@ -1,28 +1,35 @@
+
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(EnemyVisual))]
 public class Enemy : MonoBehaviour, IDamageable
 {
     public EnemyHealth Health { get; private set; }
     public EnemyStats Stats { get; private set; }
     public IEnemyAttack Attack { get; private set; }
+    public EnemyConfig Config { get; private set; }
+    public EnemyVisual Visual { get; private set; }
 
-    public bool IsAlive => Health != null && Health.IsAlive;
+    public bool IsAlive => Health != null && Health.IsAlive && !_isRemoved;
     public Vector3 Position => transform.position;
+    public int GoldReward { get; private set; }
 
     public event Action<Enemy> Died;
+    public event Action<Enemy> CoreReached;
 
     private EnemyController _controller;
     private Transform _moveTarget;
-    private SpriteRenderer _spriteRenderer;
+    private CoreBoundary _coreBoundary;
+
+    private bool _isRemoved;
 
     private void Awake()
     {
-        _spriteRenderer = GetComponent<SpriteRenderer>();
+        Visual = GetComponent<EnemyVisual>();
     }
 
-    public void Initialize(EnemyHealth health, EnemyStats stats, EnemyController controller, IEnemyAttack attack, Transform moveTarget, Sprite sprite)
+    public void Initialize(EnemyHealth health, EnemyStats stats, EnemyController controller, IEnemyAttack attack, Transform moveTarget, EnemyConfig config)
     {
         if (Health != null)
             Health.Died -= OnDied;
@@ -30,42 +37,66 @@ public class Enemy : MonoBehaviour, IDamageable
         Health = health;
         Stats = stats;
         Attack = attack;
+        Config = config;
         _controller = controller;
-        _moveTarget = moveTarget;
 
-        _spriteRenderer.sprite = sprite;
+        if (_moveTarget != moveTarget || _coreBoundary == null)
+        {
+            _moveTarget = moveTarget;
+            _coreBoundary = moveTarget.GetComponentInChildren<CoreBoundary>();
+        }
+
+        if (_coreBoundary == null)
+            throw new InvalidOperationException("CoreBoundary를 찾을 수 없습니다.");
+
+        _isRemoved = false;
+        GoldReward = config.GoldReward;
+
+        Visual.Initialize(config.Sprite);
 
         Health.Died += OnDied;
     }
 
-    public void ReachCore(CoreManager coreManager)
+    public void ReachCore()
     {
-        if (Health == null || !Health.IsAlive || Stats == null || Attack == null)
+        if (!IsAlive || Attack == null || Stats == null)
             return;
 
-        if (!coreManager.TryFindHitTargetTower(out Tower targetTower))
+        if (_coreBoundary == null || !_coreBoundary.CanReceiveDamage)
             return;
 
-        Attack.Attack(targetTower, Stats.AttackDamage);
+        _isRemoved = true;
+        Visual.StopSpawnSpread();
 
-        Health.TakeDamage(Health.CurrentHp);
+        Attack.Attack(Stats.AttackDamage);
+        CoreReached?.Invoke(this);
     }
 
     public void TakeDamage(float damage)
     {
-        Health?.TakeDamage(damage);
+        if (!IsAlive)
+            return;
+
+        Health.TakeDamage(damage);
     }
 
     private void Update()
     {
-        if (_controller == null || _moveTarget == null)
+        if (_controller == null || _coreBoundary == null || !IsAlive || Visual.IsSpawnSpreading)
             return;
 
-        _controller.EnemyUpdate(transform, _moveTarget.position, Time.deltaTime);
+        Vector3 targetPosition = _coreBoundary.GetClosestPoint(transform.position);
+        _controller.EnemyUpdate(transform, targetPosition, Time.deltaTime);
     }
 
     private void OnDied()
     {
+        if (_isRemoved)
+            return;
+
+        _isRemoved = true;
+        Visual.StopSpawnSpread();
+
         Died?.Invoke(this);
     }
 

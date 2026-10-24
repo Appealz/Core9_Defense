@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce9c90edd99d407488fa18271cc59465, type: 3}
+  m_Name: SplitEnemy
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
+  _maxHp: 2
+  _moveSpeed: 2
+  _attackDamage: 1
+  _attackRange: 1
+  _attackCooldown: 0
+  _goldReward: 0
+  _sprite: {fileID: 8289069705900547627, guid: dbc8eccc190fdb541840d5a73ba6eaa6, type: 3}
+  _movementDefinition:
+    rid: 1776079061674623051
+  _attackDefinition:
+    rid: 1776079061674623052
+  _deathBehaviorDefinition:
+    rid: 1776079061674623053
+  references:
+    version: 2
+    RefIds:
+    - rid: 1776079061674623051
+      type: {class: ChaseMovementDefinition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 1776079061674623052
+      type: {class: MeleeAttackDefinition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 1776079061674623053
+      type: {class: SplitOnDeathDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _childConfig: {fileID: 11400000, guid: 6aef041c0f36dfa4bb48942465de985a, type: 2}
+        _childCount: 2
+        _splitRadius: 0.75
+        _splitDuration: 0.3

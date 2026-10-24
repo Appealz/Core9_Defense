@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -47,7 +48,7 @@ public abstract class SceneBootstrapper : MonoBehaviour
         _registeredUpdatables.Add(updatable);
     }
 
-    private void OnDestroy()
+    protected virtual void OnDestroy()
     {
         if (!_isReady)
             return;

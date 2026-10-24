@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -27,22 +28,26 @@ public class WaveManager
         ProgressChanged?.Invoke(_processedEnemyCount, _totalEnemyCount);
 
         _enemyManager.EnemyRemoved += HandleEnemyRemoved;
+        _enemyManager.SpawnCountAdjusted += HandleSpawnCountAdjusted;
 
         try
         {
+            List<UniTask> spawnTasks = new();
+
             foreach (WaveSpawnEntry entry in waveData.SpawnEntries)
-            {
-                await SpawnEntryAsync(entry, cancellationToken);
-            }
+                spawnTasks.Add(SpawnEntryAsync(entry, cancellationToken));
+
+            await UniTask.WhenAll(spawnTasks);
 
             await UniTask.WaitUntil(
-                () => _enemyManager.AliveCount == 0,
+                () => _enemyManager.AliveCount == 0 && _enemyManager.PendingSpawnCount == 0,
                 cancellationToken: cancellationToken
             );
         }
         finally
         {
             _enemyManager.EnemyRemoved -= HandleEnemyRemoved;
+            _enemyManager.SpawnCountAdjusted -= HandleSpawnCountAdjusted;
         }
     }
 
@@ -58,33 +63,32 @@ public class WaveManager
 
     private void HandleEnemyRemoved()
     {
-        _processedEnemyCount = Math.Min(
-            _processedEnemyCount + 1,
-            _totalEnemyCount
-        );
-
+        _processedEnemyCount = Math.Min(_processedEnemyCount + 1, _totalEnemyCount);
         ProgressChanged?.Invoke(_processedEnemyCount, _totalEnemyCount);
     }
 
-    private async UniTask SpawnEntryAsync(
-        WaveSpawnEntry entry,
-        CancellationToken cancellationToken)
+    private void HandleSpawnCountAdjusted(int count)
     {
+        _totalEnemyCount = Math.Max(_processedEnemyCount, _totalEnemyCount + count);
+        ProgressChanged?.Invoke(_processedEnemyCount, _totalEnemyCount);
+    }
+
+    private async UniTask SpawnEntryAsync(WaveSpawnEntry entry, CancellationToken cancellationToken)
+    {
+        if (entry.SpawnCount <= 0)
+            return;
+
+        if (entry.StartDelay > 0f)
+            await UniTask.Delay(TimeSpan.FromSeconds(entry.StartDelay), cancellationToken: cancellationToken);
+
         for (int i = 0; i < entry.SpawnCount; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             await _spawnManager.SpawnEnemyAsync(entry.EnemyConfig);
 
-            bool isLastSpawn = i == entry.SpawnCount - 1;
-
-            if (isLastSpawn)
-                continue;
-
-            await UniTask.Delay(
-                TimeSpan.FromSeconds(entry.SpawnInterval),
-                cancellationToken: cancellationToken
-            );
+            if (i < entry.SpawnCount - 1)
+                await UniTask.Delay(TimeSpan.FromSeconds(Math.Max(0f, entry.SpawnInterval)), cancellationToken: cancellationToken);
         }
     }
 }

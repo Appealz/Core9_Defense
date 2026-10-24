@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -14,23 +15,30 @@ public class EnemyConfigEditor : Editor
     private string[] _attackDefinitionNames;
     private int _attackSelectedIndex;
 
+    private Type[] _deathDefinitionTypes;
+    private string[] _deathDefinitionNames;
+    private int _deathSelectedIndex;
+
     private void OnEnable()
     {
         CreateTypeList<EnemyMovementDefinition>(out _movementDefinitionTypes, out _movementDefinitionNames);
         CreateTypeList<EnemyAttackDefinition>(out _attackDefinitionTypes, out _attackDefinitionNames);
+        CreateTypeList<EnemyDeathBehaviorDefinition>(out _deathDefinitionTypes, out _deathDefinitionNames);
 
         _movementSelectedIndex = FindSelectedIndex("_movementDefinition", _movementDefinitionTypes);
         _attackSelectedIndex = FindSelectedIndex("_attackDefinition", _attackDefinitionTypes);
+        _deathSelectedIndex = FindSelectedIndex("_deathBehaviorDefinition", _deathDefinitionTypes);
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", "_movementDefinition", "_attackDefinition");
+        DrawPropertiesExcluding(serializedObject, "m_Script", "_movementDefinition", "_attackDefinition", "_deathBehaviorDefinition");
 
         SerializedProperty movementDefinition = serializedObject.FindProperty("_movementDefinition");
         SerializedProperty attackDefinition = serializedObject.FindProperty("_attackDefinition");
+        SerializedProperty deathDefinition = serializedObject.FindProperty("_deathBehaviorDefinition");
 
         int newMovementIndex = EditorGUILayout.Popup("Movement Definition", _movementSelectedIndex, _movementDefinitionNames);
 
@@ -56,6 +64,18 @@ public class EnemyConfigEditor : Editor
 
         DrawDefinitionFields(attackDefinition);
 
+        int newDeathIndex = EditorGUILayout.Popup("Death Behavior", _deathSelectedIndex, _deathDefinitionNames);
+
+        if (newDeathIndex != _deathSelectedIndex)
+        {
+            _deathSelectedIndex = newDeathIndex;
+            deathDefinition.managedReferenceValue = _deathSelectedIndex == 0
+                ? null
+                : Activator.CreateInstance(_deathDefinitionTypes[_deathSelectedIndex - 1]);
+        }
+
+        DrawDefinitionFields(deathDefinition);
+
         serializedObject.ApplyModifiedProperties();
     }
 
@@ -72,7 +92,7 @@ public class EnemyConfigEditor : Editor
 
         definitionTypes = validTypes.ToArray();
         definitionNames = new string[definitionTypes.Length + 1];
-        definitionNames[0] = "¹Ì¼³Á¤";
+        definitionNames[0] = "None";
 
         for (int i = 0; i < definitionTypes.Length; i++)
         {
