@@ -31,4 +31,13 @@ public class EnemyHealth
         CurrentHp = 0f;
         Died?.Invoke();
     }
+
+    public bool TryHeal(float amount)
+    {
+        if (!IsAlive || amount <= 0f || CurrentHp >= MaxHp)
+            return false;
+
+        CurrentHp = Mathf.Min(MaxHp, CurrentHp + amount);
+        return true;
+    }
 }

@@ -15,6 +15,10 @@ public class EnemyConfigEditor : Editor
     private string[] _attackDefinitionNames;
     private int _attackSelectedIndex;
 
+    private Type[] _abilityDefinitionTypes;
+    private string[] _abilityDefinitionNames;
+    private int _abilitySelectedIndex;
+
     private Type[] _deathDefinitionTypes;
     private string[] _deathDefinitionNames;
     private int _deathSelectedIndex;
@@ -23,10 +27,12 @@ public class EnemyConfigEditor : Editor
     {
         CreateTypeList<EnemyMovementDefinition>(out _movementDefinitionTypes, out _movementDefinitionNames);
         CreateTypeList<EnemyAttackDefinition>(out _attackDefinitionTypes, out _attackDefinitionNames);
+        CreateTypeList<EnemyAbilityDefinition>(out _abilityDefinitionTypes, out _abilityDefinitionNames);
         CreateTypeList<EnemyDeathBehaviorDefinition>(out _deathDefinitionTypes, out _deathDefinitionNames);
 
         _movementSelectedIndex = FindSelectedIndex("_movementDefinition", _movementDefinitionTypes);
         _attackSelectedIndex = FindSelectedIndex("_attackDefinition", _attackDefinitionTypes);
+        _abilitySelectedIndex = FindSelectedIndex("_abilityDefinition", _abilityDefinitionTypes);
         _deathSelectedIndex = FindSelectedIndex("_deathBehaviorDefinition", _deathDefinitionTypes);
     }
 
@@ -34,10 +40,11 @@ public class EnemyConfigEditor : Editor
     {
         serializedObject.Update();
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", "_movementDefinition", "_attackDefinition", "_deathBehaviorDefinition");
+        DrawPropertiesExcluding(serializedObject, "m_Script", "_movementDefinition", "_attackDefinition", "_abilityDefinition", "_deathBehaviorDefinition");
 
         SerializedProperty movementDefinition = serializedObject.FindProperty("_movementDefinition");
         SerializedProperty attackDefinition = serializedObject.FindProperty("_attackDefinition");
+        SerializedProperty abilityDefinition = serializedObject.FindProperty("_abilityDefinition");
         SerializedProperty deathDefinition = serializedObject.FindProperty("_deathBehaviorDefinition");
 
         int newMovementIndex = EditorGUILayout.Popup("Movement Definition", _movementSelectedIndex, _movementDefinitionNames);
@@ -63,6 +70,18 @@ public class EnemyConfigEditor : Editor
         }
 
         DrawDefinitionFields(attackDefinition);
+
+        int newAbilityIndex = EditorGUILayout.Popup("Ability Definition", _abilitySelectedIndex, _abilityDefinitionNames);
+
+        if (newAbilityIndex != _abilitySelectedIndex)
+        {
+            _abilitySelectedIndex = newAbilityIndex;
+            abilityDefinition.managedReferenceValue = _abilitySelectedIndex == 0
+                ? null
+                : Activator.CreateInstance(_abilityDefinitionTypes[_abilitySelectedIndex - 1]);
+        }
+
+        DrawDefinitionFields(abilityDefinition);
 
         int newDeathIndex = EditorGUILayout.Popup("Death Behavior", _deathSelectedIndex, _deathDefinitionNames);
 

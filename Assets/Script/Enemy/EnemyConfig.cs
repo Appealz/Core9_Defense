@@ -14,6 +14,7 @@ public class EnemyConfig : ScriptableObject
 
     [SerializeReference] private EnemyMovementDefinition _movementDefinition;
     [SerializeReference] private EnemyAttackDefinition _attackDefinition;
+    [SerializeReference] private EnemyAbilityDefinition _abilityDefinition;
     [SerializeReference] private EnemyDeathBehaviorDefinition _deathBehaviorDefinition;
 
     public float MaxHp => _maxHp;
@@ -26,5 +27,7 @@ public class EnemyConfig : ScriptableObject
 
     public EnemyMovementDefinition MovementDefinition => _movementDefinition;
     public EnemyAttackDefinition AttackDefinition => _attackDefinition;
+    public EnemyAbilityDefinition AbilityDefinition => _abilityDefinition;
     public EnemyDeathBehaviorDefinition DeathBehaviorDefinition => _deathBehaviorDefinition;
+    public bool CanReceiveHealing => _abilityDefinition == null || _abilityDefinition.CanReceiveHealing;
 }

@@ -21,3 +21,7 @@ MonoBehaviour:
     _spawnCount: 5
     _spawnInterval: 1
     _startDelay: 4
+  - _enemyConfig: {fileID: 11400000, guid: 4956e80d6a562ef4fb28b23a88d504aa, type: 2}
+    _spawnCount: 3
+    _spawnInterval: 4
+    _startDelay: 4

@@ -12,6 +12,7 @@ public class Enemy : MonoBehaviour, IDamageable
     public EnemyVisual Visual { get; private set; }
 
     public bool IsAlive => Health != null && Health.IsAlive && !_isRemoved;
+    public bool CanReceiveHealing => IsAlive && Config != null && Config.CanReceiveHealing;
     public Vector3 Position => transform.position;
     public int GoldReward { get; private set; }
 
@@ -21,6 +22,7 @@ public class Enemy : MonoBehaviour, IDamageable
     private EnemyController _controller;
     private Transform _moveTarget;
     private CoreBoundary _coreBoundary;
+    private IEnemyAbility _ability;
 
     private bool _isRemoved;
 
@@ -40,6 +42,9 @@ public class Enemy : MonoBehaviour, IDamageable
         Config = config;
         _controller = controller;
 
+        _ability?.Stop();
+        _ability = config.AbilityDefinition?.CreateAbility(this);
+
         if (_moveTarget != moveTarget || _coreBoundary == null)
         {
             _moveTarget = moveTarget;
@@ -47,7 +52,7 @@ public class Enemy : MonoBehaviour, IDamageable
         }
 
         if (_coreBoundary == null)
-            throw new InvalidOperationException("CoreBoundary∏¶ √£¿ª ºˆ æ¯Ω¿¥œ¥Ÿ.");
+            throw new InvalidOperationException("CoreBoundaryÎ•º Ï∞æÏùÑ Ïàò ÏóÜÏäµÎãàÎã§.");
 
         _isRemoved = false;
         GoldReward = config.GoldReward;
@@ -86,7 +91,8 @@ public class Enemy : MonoBehaviour, IDamageable
             return;
 
         Vector3 targetPosition = _coreBoundary.GetClosestPoint(transform.position);
-        _controller.EnemyUpdate(transform, targetPosition, Time.deltaTime);
+        bool isMovementStopped = _controller.EnemyUpdate(transform, targetPosition, Time.deltaTime);
+        _ability?.AbilityUpdate(Time.deltaTime, isMovementStopped);
     }
 
     private void OnDied()
@@ -96,13 +102,21 @@ public class Enemy : MonoBehaviour, IDamageable
 
         _isRemoved = true;
         Visual.StopSpawnSpread();
+        _ability?.Stop();
 
         Died?.Invoke(this);
+    }
+
+    private void OnDisable()
+    {
+        _ability?.Stop();
     }
 
     private void OnDestroy()
     {
         if (Health != null)
             Health.Died -= OnDied;
+
+        _ability?.Stop();
     }
 }

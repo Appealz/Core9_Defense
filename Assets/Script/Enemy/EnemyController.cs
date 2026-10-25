@@ -15,32 +15,33 @@ public class EnemyController
     {
         _stats = stats ?? throw new ArgumentNullException(nameof(stats));
         _movement = movement ?? throw new ArgumentNullException(nameof(movement));
-        _attack = attack ?? throw new ArgumentNullException(nameof(attack));
+        _attack = attack;
         _coreBoundary = coreBoundary != null ? coreBoundary : throw new ArgumentNullException(nameof(coreBoundary));
     }
 
-    public void EnemyUpdate(Transform transform, Vector3 targetPosition, float deltaTime)
+    public bool EnemyUpdate(Transform transform, Vector3 targetPosition, float deltaTime)
     {
         if (_isCoreContact)
-            return;
+            return true;
 
-        _movement.Move(transform, targetPosition, deltaTime, _stats);
+        bool isMovementStopped = _movement.Move(transform, targetPosition, deltaTime, _stats);
 
-        if (!_attack.IsRanged)
-            return;
+        if (_attack == null || !_attack.IsRanged)
+            return isMovementStopped;
 
         float attackRange = Mathf.Max(0f, _stats.AttackRange);
 
         if ((transform.position - targetPosition).sqrMagnitude > attackRange * attackRange)
-            return;
+            return isMovementStopped;
 
         _attackCooldownRemaining -= deltaTime;
 
         if (_attackCooldownRemaining > 0f || !_coreBoundary.CanReceiveDamage)
-            return;
+            return isMovementStopped;
 
         _attack.Attack(_stats.AttackDamage);
         _attackCooldownRemaining = Mathf.Max(0.01f, _stats.AttackCooldown);
+        return isMovementStopped;
     }
 
     public void SetCoreContact(bool isContact)

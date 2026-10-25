@@ -25,10 +25,7 @@ public class EnemyFactory
             throw new ArgumentNullException(nameof(moveTarget));
 
         if (config.MovementDefinition == null)
-            throw new InvalidOperationException("MovementDefinitionÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
-
-        if (config.AttackDefinition == null)
-            throw new InvalidOperationException("AttackDefinitionÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            throw new InvalidOperationException("MovementDefinitionì´ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
 
         Enemy enemy = await _enemyPool.GetAsync();
 
@@ -36,7 +33,7 @@ public class EnemyFactory
         EnemyStats stats = new EnemyStats(config.MoveSpeed, config.AttackDamage, config.AttackRange, config.AttackCooldown);
 
         IEnemyMovement movement = config.MovementDefinition.CreateMovement();
-        IEnemyAttack attack = config.AttackDefinition.CreateAttack(enemy.transform, _projectileManager, _coreBoundary);
+        IEnemyAttack attack = config.AttackDefinition?.CreateAttack(enemy.transform, _projectileManager, _coreBoundary);
 
         EnemyController controller = new EnemyController(stats, movement, attack, _coreBoundary);
 

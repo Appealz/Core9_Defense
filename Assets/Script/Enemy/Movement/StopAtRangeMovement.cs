@@ -3,19 +3,32 @@ using UnityEngine;
 
 public class StopAtRangeMovement : IEnemyMovement
 {
-    public void Move(Transform transform, Vector3 targetPosition, float deltaTime, EnemyStats stats)
+    private readonly float? _stopDistance;
+
+    public StopAtRangeMovement()
+    {
+    }
+
+    public StopAtRangeMovement(float stopDistance)
+    {
+        _stopDistance = Mathf.Max(0f, stopDistance);
+    }
+
+    public bool Move(Transform transform, Vector3 targetPosition, float deltaTime, EnemyStats stats)
     {
         Vector3 direction = targetPosition - transform.position;
         direction.z = 0f;
 
         float distance = direction.magnitude;
-        float attackRange = Mathf.Max(0f, stats.AttackRange);
+        float stopDistance = _stopDistance ?? Mathf.Max(0f, stats.AttackRange);
 
-        if (distance <= attackRange)
-            return;
+        if (distance <= stopDistance)
+            return true;
 
-        float moveDistance = Mathf.Min(Mathf.Max(0f, stats.MoveSpeed) * deltaTime, distance - attackRange);
+        float remainingDistance = distance - stopDistance;
+        float moveDistance = Mathf.Min(Mathf.Max(0f, stats.MoveSpeed) * deltaTime, remainingDistance);
 
         transform.position += direction.normalized * moveDistance;
+        return moveDistance >= remainingDistance;
     }
 }

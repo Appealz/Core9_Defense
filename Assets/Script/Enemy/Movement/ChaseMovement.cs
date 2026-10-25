@@ -3,16 +3,10 @@ using UnityEngine;
 
 public class ChaseMovement : IEnemyMovement
 {
-    public void Move(
-        Transform transform,
-        Vector3 targetPosition,
-        float deltaTime,
-        EnemyStats stats)
+    public bool Move(Transform transform, Vector3 targetPosition, float deltaTime, EnemyStats stats)
     {
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            targetPosition,
-            stats.MoveSpeed * deltaTime
-        );
+        transform.position = Vector3.MoveTowards(transform.position, targetPosition, stats.MoveSpeed * deltaTime);
+
+        return transform.position == targetPosition;
     }
 }
