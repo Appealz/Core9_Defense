@@ -15,6 +15,9 @@ MonoBehaviour:
   _rewardName: Bomb Tower Reward
   _description: Add "One" Bomb Tower
   _icon: {fileID: 2901242061184369422, guid: 153c120c6536f4542b66cb7df4f1f1f9, type: 3}
+  _rarity: 2
+  _category: 1
+  _selectionWeight: 1
   _rewardDefinition:
     rid: 1776078908333490251
   _rewardDefinitions:

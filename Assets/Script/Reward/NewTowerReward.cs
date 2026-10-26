@@ -14,7 +14,7 @@ public class NewTowerReward : IReward
 
     public bool CanApply()
     {
-        return _towerManager.CanPlaceNextTower();
+        return _towerPartData != null && _towerManager.CanPlaceNextTower();
     }
 
     public UniTask<bool> ApplyAsync()

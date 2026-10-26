@@ -20,3 +20,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f61dcf26bbe30ae47b45ba8dc0bdec9d, type: 2}
   - {fileID: 11400000, guid: 330409ca7b6acd64d9494ac1d9b6dc36, type: 2}
   - {fileID: 11400000, guid: 403ec20b75e4c0c41830517386660f70, type: 2}
+  - {fileID: 11400000, guid: 14c24de5e9a7e3444a77065aa4cd2eff, type: 2}
+  - {fileID: 11400000, guid: 02db305e0e9693e45b68f0b193700db5, type: 2}
+  _rewardSelectionSettings:
+    _cardCount: 3
+    _minimumNewTowerCards: 1
+    _bronzeWeight: 1
+    _silverWeight: 0.65
+    _goldWeight: 0.35
+    _platinumWeight: 0.1

@@ -136,12 +136,19 @@ public class GameManager : IUpdatable
         _gameStateManager.ChangeState(GameState.WaveClear);
         Debug.Log($"Wave {_currentWaveNumber} Clear");
 
-        if (_rewardSelectionManager.CreateChoices(3).Count == 0)
+        if (_rewardSelectionManager.CreateChoices().Count == 0)
         {
-            Debug.LogError("선택 가능한 보상이 없습니다. 보상 데이터를 확인하세요.");
+            Debug.LogWarning("선택 가능한 보상이 없어 보상 선택 단계를 건너뜁니다. 보상 데이터를 확인하세요.");
+            BeginRearrangement();
             return;
         }
 
         _gameStateManager.ChangeState(GameState.RewardSelection);
+    }
+
+    private void BeginRearrangement()
+    {
+        _rearrangementTimeRemaining = RearrangementDuration;
+        _gameStateManager.ChangeState(GameState.Rearrangement);
     }
 }

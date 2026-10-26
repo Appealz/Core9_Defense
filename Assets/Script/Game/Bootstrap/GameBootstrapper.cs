@@ -83,7 +83,11 @@ public sealed class GameBootstrapper : SceneBootstrapper
         var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
 
         var rewardDependencies = new RewardDependencies(towerManager);
-        var rewardSelectionManager = new RewardSelectionManager(_gameStartData.RewardDataList, rewardDependencies);
+        var rewardSelectionManager = new RewardSelectionManager(
+            _gameStartData.RewardDataList,
+            rewardDependencies,
+            _gameStartData.RewardSelectionSettings
+        );
 
         var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
         var spawnPositionCalculator = new SpawnPositionCalculator();

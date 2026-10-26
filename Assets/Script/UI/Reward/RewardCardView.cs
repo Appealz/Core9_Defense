@@ -10,6 +10,9 @@ public class RewardCardView : MonoBehaviour
     [SerializeField] private Image _icon;
     [SerializeField] private TMP_Text _rewardName;
     [SerializeField] private TMP_Text _description;
+    [SerializeField] private TMP_Text _rarity;
+    [SerializeField] private Image _rarityBackground;
+    [SerializeField] private RewardRarityColorPalette _rarityColors = new();
 
     public event Action<RewardData> Selected;
 
@@ -29,6 +32,12 @@ public class RewardCardView : MonoBehaviour
         _icon.sprite = rewardData.Icon;
         _rewardName.text = rewardData.RewardName;
         _description.text = rewardData.Description;
+
+        if (_rarity != null)
+            _rarity.text = rewardData.Rarity.ToString();
+
+        if (_rarityBackground != null && _rarityColors != null)
+            _rarityBackground.color = _rarityColors.GetColor(rewardData.Rarity);
 
         SetInteractable(true);
     }
