@@ -16,9 +16,13 @@ public class CoreLayout : MonoBehaviour
             throw new ArgumentOutOfRangeException(nameof(slotNumber));
 
         int index = slotNumber - 1;
+        return GetGridPosition(new Vector2Int(index % _gridSize, index / _gridSize));
+    }
 
-        int column = index % _gridSize;
-        int row = index / _gridSize;
+    public Vector3 GetGridPosition(Vector2Int gridPosition)
+    {
+        int column = gridPosition.x;
+        int row = gridPosition.y;
 
         float centerOffset = (_gridSize - 1) * 0.5f;
 

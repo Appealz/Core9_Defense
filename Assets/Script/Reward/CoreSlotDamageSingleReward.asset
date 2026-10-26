@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bcde33cd237de243902bf6f92d3bf96, type: 3}
+  m_Name: CoreSlotDamageSingleReward
+  m_EditorClassIdentifier: Assembly-CSharp::RewardData
+  _rewardName: Reinforced Core
+  _description: 
+  _icon: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
+  _rarity: 0
+  _category: 3
+  _selectionWeight: 1
+  _rewardDefinition:
+    rid: 830001
+  _rewardDefinitions:
+  - rid: 830001
+  references:
+    version: 2
+    RefIds:
+    - rid: 830001
+      type: {class: CoreSlotEnhancementRewardDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _pattern: {fileID: 11400000, guid: 0b172eea402d4ed989cc77895034e379, type: 2}
+        _effects:
+        - {fileID: 11400000, guid: e884a5bcefa04452b06ad1dc2bbcd240, type: 2}

@@ -6,6 +6,7 @@ public enum GameState
     Playing,
     WaveClear,
     RewardSelection,
+    CoreSlotSelection,
     Rearrangement,
     Paused,
     GameOver

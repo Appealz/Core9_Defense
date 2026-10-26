@@ -7,11 +7,13 @@ public class TowerFactory
 {
     private readonly TowerTargetSelector _targetSelector;
     private readonly TowerAttackDependencies _attackDependencies;
+    private readonly TowerStatModifiers _globalStatModifiers;
 
-    public TowerFactory(TowerTargetSelector targetSelector, TowerAttackDependencies attackDependencies)
+    public TowerFactory(TowerTargetSelector targetSelector, TowerAttackDependencies attackDependencies, TowerStatModifiers globalStatModifiers)
     {
         _targetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
         _attackDependencies = attackDependencies ?? throw new ArgumentNullException(nameof(attackDependencies));
+        _globalStatModifiers = globalStatModifiers ?? throw new ArgumentNullException(nameof(globalStatModifiers));
     }
 
     public async UniTask<Tower> CreateAsync(TowerPartData partData)
@@ -25,8 +27,8 @@ public class TowerFactory
         if (partData.FireModeDefinition == null)
             throw new InvalidOperationException("FireModeDefinition이 설정되지 않았습니다.");
 
-        TowerHealth health = new TowerHealth(partData.MaxHp);
-        TowerStats stats = new TowerStats(partData.AttackDamage, partData.AttackRate, partData.AttackRange);
+        TowerStats stats = new TowerStats(partData, _globalStatModifiers);
+        TowerHealth health = new TowerHealth(stats.MaxHp);
 
         ITowerAttack attack = partData.AttackDefinition.CreateAttack(_attackDependencies);
         IFireMode fireMode = partData.FireModeDefinition.CreateFireMode();

@@ -2,5 +2,5 @@ using UnityEngine;
 
 public interface ITargetedTowerAttack : ITowerAttack
 {
-    void Attack(Vector3 origin, Enemy target, TowerStats stats);
+    void Attack(Vector3 origin, Enemy target, TowerStats stats, float damage);
 }

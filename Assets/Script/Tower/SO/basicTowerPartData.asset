@@ -17,6 +17,10 @@ MonoBehaviour:
   _attackDamage: 2
   _attackRange: 8
   _attackRate: 1
+  _criticalChance: 0
+  _criticalDamageMultiplier: 2
+  _criticalChanceCap: 1
+  _minimumAttackInterval: 0.05
   _sprite: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
   _attackDefinition:
     rid: 8566528603791294539

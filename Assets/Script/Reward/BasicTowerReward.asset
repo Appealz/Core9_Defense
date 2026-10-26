@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BasicTowerReward
   m_EditorClassIdentifier: Assembly-CSharp::RewardData
   _rewardName: Basic Tower Reward
-  _description: Add "One" Laser Tower
+  _description: Add "One" Basic Tower
   _icon: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
   _rarity: 0
   _category: 1

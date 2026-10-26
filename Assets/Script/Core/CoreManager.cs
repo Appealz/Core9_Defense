@@ -1,9 +1,11 @@
 
 using System;
+using System.Collections.Generic;
 
 public class CoreManager
 {
     public event Action<int> HitTargetSlotChanged;
+    public event Action<int> SlotEffectsChanged;
 
     private readonly CoreBoard _coreBoard;
     private int _currentHitTargetSlotNumber;
@@ -37,6 +39,60 @@ public class CoreManager
 
         tower = slot.CurrentTower;
         return tower != null;
+    }
+
+    public bool TryGetSlotEffects(int slotNumber, out IReadOnlyList<CoreSlotEffect> effects)
+    {
+        if (!_coreBoard.TryGetSlot(slotNumber, out CoreSlot slot))
+        {
+            effects = null;
+            return false;
+        }
+
+        effects = slot.Effects;
+        return true;
+    }
+
+    public bool CanAddSlotEffects(
+        IReadOnlyList<int> slotNumbers,
+        IReadOnlyList<CoreSlotEffect> effects)
+    {
+        if (slotNumbers == null || slotNumbers.Count == 0 || effects == null || effects.Count == 0)
+            return false;
+
+        HashSet<int> uniqueSlots = new HashSet<int>();
+
+        for (int i = 0; i < slotNumbers.Count; i++)
+        {
+            int slotNumber = slotNumbers[i];
+
+            if (!uniqueSlots.Add(slotNumber) ||
+                !_coreBoard.TryGetSlot(slotNumber, out CoreSlot slot) ||
+                !slot.CanAddEffects(effects))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public bool TryAddSlotEffects(
+        IReadOnlyList<int> slotNumbers,
+        IReadOnlyList<CoreSlotEffect> effects)
+    {
+        if (!CanAddSlotEffects(slotNumbers, effects))
+            return false;
+
+        for (int i = 0; i < slotNumbers.Count; i++)
+        {
+            int slotNumber = slotNumbers[i];
+            _coreBoard.TryGetSlot(slotNumber, out CoreSlot slot);
+            slot.TryAddEffects(effects);
+            SlotEffectsChanged?.Invoke(slotNumber);
+        }
+
+        return true;
     }
 
     public bool TryFindPlacementSlotNumber(out int slotNumber)

@@ -32,6 +32,7 @@ public class RewardSelectionPresenter : IDisposable
 
     private void OnRewardSelected(RewardData rewardData)
     {
+        _view.Hide();
         _gameManager.SelectRewardAsync(rewardData).Forget();
     }
 

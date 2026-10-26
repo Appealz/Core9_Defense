@@ -157,6 +157,34 @@ public class RewardSelectionManager
         return true;
     }
 
+#if UNITY_EDITOR
+    public async UniTask<bool> ApplyForDebugAsync(RewardData rewardData)
+    {
+        if (rewardData == null || rewardData.RewardDefinition == null)
+        {
+            Debug.LogWarning("[Combat Debug] RewardData or RewardDefinition is missing.");
+            return false;
+        }
+
+        IReward reward = rewardData.RewardDefinition.CreateReward(_dependencies);
+
+        if (reward == null || !reward.CanApply())
+        {
+            Debug.LogWarning($"[Combat Debug] Reward cannot be applied: {rewardData.RewardName}");
+            return false;
+        }
+
+        bool isApplied = await reward.ApplyAsync();
+
+        if (isApplied)
+            Debug.Log($"[Combat Debug] Applied reward through the real reward path: {rewardData.RewardName}");
+        else
+            Debug.LogWarning($"[Combat Debug] Reward application failed: {rewardData.RewardName}");
+
+        return isApplied;
+    }
+#endif
+
     private void Shuffle(List<RewardData> rewards)
     {
         for (int i = rewards.Count - 1; i > 0; i--)

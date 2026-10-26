@@ -15,11 +15,11 @@ public class SingleProjectileAttack : ITargetedTowerAttack
         _impact = new DirectHitImpact();
     }
 
-    public void Attack(Vector3 origin, Enemy target, TowerStats stats)
+    public void Attack(Vector3 origin, Enemy target, TowerStats stats, float damage)
     {
         if (target == null || !target.IsAlive)
             return;
 
-        _projectileManager.FireAsync(origin, target, stats.AttackDamage, _projectileSpeed, _impact).Forget();
+        _projectileManager.FireAsync(origin, target, damage, _projectileSpeed, _impact).Forget();
     }
 }

@@ -17,7 +17,7 @@ public class LaserAttack : ITargetedTowerAttack
         _damageInterval = damageInterval;
     }
 
-    public void Attack(Vector3 origin, Enemy target, TowerStats stats)
+    public void Attack(Vector3 origin, Enemy target, TowerStats stats, float damage)
     {
         if (target == null || !target.IsAlive)
             return;
@@ -27,7 +27,7 @@ public class LaserAttack : ITargetedTowerAttack
         _laserManager.FireAsync(
             origin,
             direction,
-            stats.AttackDamage,
+            damage,
             stats.AttackRange,
             _width,
             _duration,

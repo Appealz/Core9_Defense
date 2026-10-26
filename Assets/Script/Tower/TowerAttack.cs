@@ -10,6 +10,7 @@ public class TowerAttack
     private readonly TowerTargetSelector _targetSelector;
 
     private float _attackTimer;
+    private float _lastAttackInterval;
 
     public TowerAttack(TowerStats stats, ITowerAttack attack, IFireMode fireMode, TowerTargetSelector targetSelector)
     {
@@ -17,10 +18,13 @@ public class TowerAttack
         _attack = attack;
         _fireMode = fireMode;
         _targetSelector = targetSelector;
+        _lastAttackInterval = stats.AttackInterval;
     }
 
     public void Update(Vector3 origin, float deltaTime)
     {
+        SynchronizeAttackInterval();
+
         if (_attack is ITargetedTowerAttack targetedAttack)
         {
             UpdateTargeted(origin, deltaTime, targetedAttack);
@@ -39,7 +43,7 @@ public class TowerAttack
             FireReadyShots(origin, targetedAttack);
 
             if (!_fireMode.IsFiring)
-                _attackTimer = _stats.AttackRate;
+                _attackTimer = _stats.AttackInterval;
 
             return;
         }
@@ -59,7 +63,7 @@ public class TowerAttack
         FireReadyShots(origin, targetedAttack, target);
 
         if (!_fireMode.IsFiring)
-            _attackTimer = _stats.AttackRate;
+            _attackTimer = _stats.AttackInterval;
     }
 
     private void UpdateNonTargeted(Vector3 origin, float deltaTime, INonTargetedTowerAttack nonTargetedAttack)
@@ -70,7 +74,7 @@ public class TowerAttack
             FireReadyShots(origin, nonTargetedAttack);
 
             if (!_fireMode.IsFiring)
-                _attackTimer = _stats.AttackRate;
+                _attackTimer = _stats.AttackInterval;
 
             return;
         }
@@ -84,7 +88,7 @@ public class TowerAttack
         FireReadyShots(origin, nonTargetedAttack);
 
         if (!_fireMode.IsFiring)
-            _attackTimer = _stats.AttackRate;
+            _attackTimer = _stats.AttackInterval;
     }
 
     private void FireReadyShots(Vector3 origin, ITargetedTowerAttack targetedAttack, Enemy firstTarget = null)
@@ -105,13 +109,40 @@ public class TowerAttack
                 continue;
             }
 
-            targetedAttack.Attack(origin, target, _stats);
+            float damage = _stats.CalculateAttackDamage(Random.value, out bool isCritical);
+
+#if UNITY_EDITOR
+            TowerCombatDebugTrace.LogAttack(_attack.GetType().Name, damage, isCritical);
+#endif
+
+            targetedAttack.Attack(origin, target, _stats, damage);
         }
     }
 
     private void FireReadyShots(Vector3 origin, INonTargetedTowerAttack nonTargetedAttack)
     {
         while (_fireMode.TryGetShot(out _))
-            nonTargetedAttack.Attack(origin, _stats);
+        {
+            float damage = _stats.CalculateAttackDamage(Random.value, out bool isCritical);
+
+#if UNITY_EDITOR
+            TowerCombatDebugTrace.LogAttack(_attack.GetType().Name, damage, isCritical);
+#endif
+
+            nonTargetedAttack.Attack(origin, _stats, damage);
+        }
+    }
+
+    private void SynchronizeAttackInterval()
+    {
+        float currentInterval = _stats.AttackInterval;
+
+        if (Mathf.Approximately(currentInterval, _lastAttackInterval))
+            return;
+
+        if (_attackTimer > 0f && _lastAttackInterval > 0f)
+            _attackTimer *= currentInterval / _lastAttackInterval;
+
+        _lastAttackInterval = currentInterval;
     }
 }

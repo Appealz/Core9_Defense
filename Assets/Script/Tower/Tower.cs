@@ -6,6 +6,7 @@ public class Tower : MonoBehaviour, IDamageable
 {
     private SpriteRenderer _spriteRenderer;
     private TowerHitFlash _hitFlash;
+    private readonly TowerSlotEffectRuntime _slotEffectRuntime = new();
 
     public TowerHealth Health { get; private set; }
     public TowerStats Stats { get; private set; }
@@ -23,6 +24,7 @@ public class Tower : MonoBehaviour, IDamageable
     private void Update()
     {
         Attack?.Update(transform.position, Time.deltaTime);
+        _slotEffectRuntime.Update(Time.deltaTime);
     }
 
     public void Initialize(TowerHealth health, TowerStats stats, TowerAttack attack, Sprite sprite)
@@ -35,7 +37,7 @@ public class Tower : MonoBehaviour, IDamageable
             _spriteRenderer.sprite = sprite;
 
         if (_hitFlash == null)
-            throw new MissingComponentException("TowerHitFlash ƒƒ∆˜≥Õ∆Æ∞° æ¯Ω¿¥œ¥Ÿ.");
+            throw new MissingComponentException("TowerHitFlash Ïª¥Ìè¨ÎÑåÌä∏Í∞Ä ÏóÜÏäµÎãàÎã§.");
 
         _hitFlash.Initialize(health);
     }
@@ -43,5 +45,15 @@ public class Tower : MonoBehaviour, IDamageable
     public void TakeDamage(float damage)
     {
         Health?.TakeDamage(damage);
+    }
+
+    public void BindSlotEffects(System.Collections.Generic.IReadOnlyList<CoreSlotEffect> effects)
+    {
+        _slotEffectRuntime.Bind(this, effects);
+    }
+
+    private void OnDisable()
+    {
+        _slotEffectRuntime.Clear();
     }
 }

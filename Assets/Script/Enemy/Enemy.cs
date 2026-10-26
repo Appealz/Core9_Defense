@@ -82,7 +82,15 @@ public class Enemy : MonoBehaviour, IDamageable
         if (!IsAlive)
             return;
 
+#if UNITY_EDITOR
+        float hpBefore = Health.CurrentHp;
+#endif
+
         Health.TakeDamage(damage);
+
+#if UNITY_EDITOR
+        TowerCombatDebugTrace.LogEnemyDamage(name, damage, hpBefore, Health.CurrentHp);
+#endif
     }
 
     private void Update()

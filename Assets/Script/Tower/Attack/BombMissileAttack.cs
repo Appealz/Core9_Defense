@@ -17,11 +17,11 @@ public class BombMissileAttack : ITargetedTowerAttack
         _impact = new ExplosionImpact(explosionRadius, impactEffect);
     }
 
-    public void Attack(Vector3 origin, Enemy target, TowerStats stats)
+    public void Attack(Vector3 origin, Enemy target, TowerStats stats, float damage)
     {
         if (target == null || !target.IsAlive)
             return;
 
-        _projectileManager.FireAsync(origin, target, stats.AttackDamage, _projectileSpeed, _impact, _projectileSprite).Forget();
+        _projectileManager.FireAsync(origin, target, damage, _projectileSpeed, _impact, _projectileSprite).Forget();
     }
 }

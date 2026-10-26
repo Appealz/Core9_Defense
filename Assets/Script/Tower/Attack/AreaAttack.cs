@@ -14,7 +14,7 @@ public sealed class AreaAttack : INonTargetedTowerAttack
         _contactFilter = contactFilter;
     }
 
-    public void Attack(Vector3 origin, TowerStats stats)
+    public void Attack(Vector3 origin, TowerStats stats, float damage)
     {
         _results.Clear();
 
@@ -27,7 +27,7 @@ public sealed class AreaAttack : INonTargetedTowerAttack
             if (hit == null || !hit.TryGetComponent(out Enemy enemy) || !enemy.IsAlive)
                 continue;
 
-            enemy.TakeDamage(stats.AttackDamage);
+            enemy.TakeDamage(damage);
         }
     }
 }

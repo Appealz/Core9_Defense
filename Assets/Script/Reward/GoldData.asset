@@ -19,15 +19,13 @@ MonoBehaviour:
   _category: 5
   _selectionWeight: 1
   _rewardDefinition:
-    rid: -2
+    rid: 810001
   _rewardDefinitions:
-  - rid: 1776079109174853708
+  - rid: 810001
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
-    - rid: 1776079109174853708
-      type: {class: NewTowerRewardDefinition, ns: , asm: Assembly-CSharp}
+    - rid: 810001
+      type: {class: GoldRewardDefinition, ns: , asm: Assembly-CSharp}
       data:
-        _towerPartData: {fileID: 0}
+        _amount: 100

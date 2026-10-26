@@ -30,25 +30,25 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         if (coreBoundary == null || coreVisual == null)
         {
-            Debug.LogError("CoreBoundary ¶Ç´Â CoreVisualÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.", this);
+            Debug.LogError("CoreBoundary ë˜ëŠ” CoreVisualì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.", this);
             return;
         }
 
         if (towerSpawnTester == null)
         {
-            Debug.LogError("TowerSpawnTester¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.", this);
+            Debug.LogError("TowerSpawnTesterë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.", this);
             return;
         }
 
         if (_rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null || _goldHUDView == null)
         {
-            Debug.LogError("°ÔÀÓ UI ÂüÁ¶°¡ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+            Debug.LogError("ê²Œì„ UI ì°¸ì¡°ê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
             return;
         }
 
         if (_gameStartData.WaveDataList.Count == 0)
         {
-            Debug.LogError("WaveDataList°¡ ºñ¾î ÀÖ½À´Ï´Ù.", this);
+            Debug.LogError("WaveDataListê°€ ë¹„ì–´ ìˆìŠµë‹ˆë‹¤.", this);
             return;
         }
 
@@ -78,11 +78,24 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         var towerTargetSelector = new TowerTargetSelector(enemyQuery);
         var attackDependencies = new TowerAttackDependencies(projectileManager, explosionEffectManager, laserManager);
+        var globalStatModifiers = new TowerStatModifiers();
 
-        var towerFactory = new TowerFactory(towerTargetSelector, attackDependencies);
-        var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout);
+        var towerFactory = new TowerFactory(towerTargetSelector, attackDependencies, globalStatModifiers);
+        var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout, globalStatModifiers);
 
-        var rewardDependencies = new RewardDependencies(towerManager);
+        CoreSlotEnhancementSelectionController slotEnhancementSelection =
+            GetComponent<CoreSlotEnhancementSelectionController>();
+
+        if (slotEnhancementSelection == null)
+            slotEnhancementSelection = gameObject.AddComponent<CoreSlotEnhancementSelectionController>();
+
+        slotEnhancementSelection.Initialize(gameStateManager, coreManager, coreVisual, _mainCamera);
+
+        var rewardDependencies = new RewardDependencies(
+            towerManager,
+            _goldManager,
+            slotEnhancementSelection
+        );
         var rewardSelectionManager = new RewardSelectionManager(
             _gameStartData.RewardDataList,
             rewardDependencies,
@@ -107,7 +120,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         if (!isPlaced)
         {
-            Debug.LogError("ÃÊ±â Å¸¿ö ¹èÄ¡¿¡ ½ÇÆĞÇß½À´Ï´Ù.", this);
+            Debug.LogError("ì´ˆê¸° íƒ€ì›Œ ë°°ì¹˜ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.", this);
             return;
         }
 
@@ -122,6 +135,20 @@ public sealed class GameBootstrapper : SceneBootstrapper
             rearrangementInput = gameObject.AddComponent<CoreRearrangementInput>();
 
         rearrangementInput.Initialize(gameStateManager, coreManager, towerManager, coreVisual, _mainCamera);
+
+#if UNITY_EDITOR
+        TowerCombatDebugPanel combatDebugPanel = GetComponent<TowerCombatDebugPanel>();
+
+        if (combatDebugPanel == null)
+            combatDebugPanel = gameObject.AddComponent<TowerCombatDebugPanel>();
+
+        combatDebugPanel.Initialize(
+            coreManager,
+            globalStatModifiers,
+            rewardSelectionManager,
+            _gameStartData.RewardDataList
+        );
+#endif
 
         Register(projectileManager);
         Register(explosionEffectManager);

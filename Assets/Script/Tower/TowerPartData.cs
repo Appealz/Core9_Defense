@@ -8,7 +8,17 @@ public class TowerPartData : ScriptableObject
     [SerializeField] private int _maxHp;
     [SerializeField] private float _attackDamage;
     [SerializeField] private float _attackRange;
-    [SerializeField] private float _attackRate;
+    [Tooltip("Seconds between attack sequences before attack-speed modifiers.")]
+    [SerializeField, Min(0f)] private float _attackRate;
+    [Header("Combat Limits")]
+    [Tooltip("Base critical chance in 0-1 format.")]
+    [SerializeField, Range(0f, 1f)] private float _criticalChance;
+    [Tooltip("Damage multiplier applied when one attack roll is critical.")]
+    [SerializeField, Min(1f)] private float _criticalDamageMultiplier = 2f;
+    [Tooltip("Maximum final critical chance after all modifiers.")]
+    [SerializeField, Range(0f, 1f)] private float _criticalChanceCap = 1f;
+    [Tooltip("Smallest allowed interval between attack sequences in seconds.")]
+    [SerializeField, Min(0.01f)] private float _minimumAttackInterval = 0.05f;
     [SerializeField] private Sprite _sprite;
 
     [SerializeReference, SubclassSelector(nameof(_attackDefinitions))]
@@ -25,6 +35,10 @@ public class TowerPartData : ScriptableObject
     public float AttackDamage => _attackDamage;
     public float AttackRange => _attackRange;
     public float AttackRate => _attackRate;
+    public float CriticalChance => _criticalChance;
+    public float CriticalDamageMultiplier => _criticalDamageMultiplier;
+    public float CriticalChanceCap => _criticalChanceCap;
+    public float MinimumAttackInterval => _minimumAttackInterval;
     public Sprite Sprite => _sprite;
     public TowerAttackDefinition AttackDefinition => _attackDefinition;
     public FireModeDefinition FireModeDefinition => _fireModeDefinition;

@@ -1,7 +1,8 @@
 
 public class CoreBoard
 {
-    private const int SlotCount = 9;
+    public const int GridSize = 3;
+    public const int SlotCount = GridSize * GridSize;
 
     private readonly int[] _placementPriority =
     {

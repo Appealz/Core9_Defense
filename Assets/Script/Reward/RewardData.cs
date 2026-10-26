@@ -24,7 +24,7 @@ public class RewardData : ScriptableObject
     [SerializeReference, HideInInspector] private List<RewardDefinition> _rewardDefinitions = new();
 
     public string RewardName => _rewardName;
-    public string Description => _description;
+    public string Description => _rewardDefinition?.GetDescription(_description) ?? _description;
     public Sprite Icon => _icon;
     public RewardRarity Rarity => _rarity;
     public RewardCategory Category => _category;

@@ -63,7 +63,8 @@ public class GameManager : IUpdatable
         {
             await _rewardSelectionManager.ApplyAsync(rewardData);
 
-            if (_gameStateManager.CurrentState == GameState.RewardSelection)
+            if (_gameStateManager.CurrentState == GameState.RewardSelection ||
+                _gameStateManager.CurrentState == GameState.CoreSlotSelection)
             {
                 _rearrangementTimeRemaining = RearrangementDuration;
                 _gameStateManager.ChangeState(GameState.Rearrangement);
@@ -138,7 +139,7 @@ public class GameManager : IUpdatable
 
         if (_rewardSelectionManager.CreateChoices().Count == 0)
         {
-            Debug.LogWarning("¼±ÅÃ °¡´ÉÇÑ º¸»óÀÌ ¾ø¾î º¸»ó ¼±ÅÃ ´Ü°è¸¦ °Ç³Ê¶İ´Ï´Ù. º¸»ó µ¥ÀÌÅÍ¸¦ È®ÀÎÇÏ¼¼¿ä.");
+            Debug.LogWarning("ì„ íƒ ê°€ëŠ¥í•œ ë³´ìƒì´ ì—†ì–´ ë³´ìƒ ì„ íƒ ë‹¨ê³„ë¥¼ ê±´ë„ˆëœë‹ˆë‹¤. ë³´ìƒ ë°ì´í„°ë¥¼ í™•ì¸í•˜ì„¸ìš”.");
             BeginRearrangement();
             return;
         }

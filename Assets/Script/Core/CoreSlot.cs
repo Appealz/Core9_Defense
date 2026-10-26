@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 public sealed class CoreSlot
 {
+    private readonly List<CoreSlotEffect> _effects = new();
+
     public int SlotNumber { get; }
 
     public Tower CurrentTower { get; private set; }
 
     public bool IsOccupied => CurrentTower != null;
+    public IReadOnlyList<CoreSlotEffect> Effects => _effects;
 
     public CoreSlot(int slotNumber)
     {
@@ -15,7 +19,7 @@ public sealed class CoreSlot
 
     public bool TryPlaceTower(Tower tower)
     {
-        Debug.Log($"TryPlaceTower È£Ãâ - ½½·Ô: {SlotNumber}, Tower null: {tower == null}, Á¡À¯ »óÅÂ: {IsOccupied}");
+        Debug.Log($"TryPlaceTower í˜¸ì¶œ - ìŠ¬ë¡¯: {SlotNumber}, Tower null: {tower == null}, ì ìœ  ìƒíƒœ: {IsOccupied}");
         if (tower == null)
             return false;
 
@@ -24,7 +28,7 @@ public sealed class CoreSlot
 
         CurrentTower = tower;
 
-        Debug.Log($"Å¸¿ö ¹èÄ¡ ¿Ï·á - ½½·Ô: {SlotNumber}, CurrentTower null: {CurrentTower == null}, Á¡À¯ »óÅÂ: {IsOccupied}");
+        Debug.Log($"íƒ€ì›Œ ë°°ì¹˜ ì™„ë£Œ - ìŠ¬ë¡¯: {SlotNumber}, CurrentTower null: {CurrentTower == null}, ì ìœ  ìƒíƒœ: {IsOccupied}");
 
         return true;
     }
@@ -35,5 +39,36 @@ public sealed class CoreSlot
         CurrentTower = null;
 
         return removedTower;
+    }
+
+    public bool CanAddEffects(IReadOnlyList<CoreSlotEffect> effects)
+    {
+        if (effects == null || effects.Count == 0)
+            return false;
+
+        List<CoreSlotEffect> combinedEffects = new List<CoreSlotEffect>(_effects);
+
+        for (int i = 0; i < effects.Count; i++)
+        {
+            CoreSlotEffect effect = effects[i];
+
+            if (effect == null || !effect.CanAddTo(combinedEffects))
+                return false;
+
+            combinedEffects.Add(effect);
+        }
+
+        return true;
+    }
+
+    public bool TryAddEffects(IReadOnlyList<CoreSlotEffect> effects)
+    {
+        if (!CanAddEffects(effects))
+            return false;
+
+        for (int i = 0; i < effects.Count; i++)
+            _effects.Add(effects[i]);
+
+        return true;
     }
 }

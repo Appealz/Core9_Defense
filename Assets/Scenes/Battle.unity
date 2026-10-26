@@ -2140,7 +2140,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoreVisual
   _slotPrefab: {fileID: 6544226257979037134, guid: 3ab6240385971a9498cdb2c5e2ce28e8, type: 3}
-  _hitTargetColor: {r: 1, g: 0.2, b: 0.2, a: 0.23529412}
+  _hitTargetColor: {r: 1, g: 0.2, b: 0.2, a: 0.6392157}
+  _hitTargetThickness: 0.1
+  _validPreviewColor: {r: 0.2, g: 1, b: 0.25, a: 0.65}
+  _invalidPreviewColor: {r: 1, g: 0.15, b: 0.15, a: 0.65}
+  _previewScale: 0.9
+  _effectCountColor: {r: 1, g: 1, b: 1, a: 1}
+  _effectCountFontSize: 2
 --- !u!1 &1811950887
 GameObject:
   m_ObjectHideFlags: 0
