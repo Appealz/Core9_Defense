@@ -7,17 +7,20 @@ public class SingleProjectileAttack : ITargetedTowerAttack
     private readonly IProjectileImpact _impact;
     private readonly float _projectileSpeed;
     private readonly float _straightProjectileLifetime;
+    private readonly float _projectileCollisionRadius;
     private readonly TowerUniqueModifiers _uniqueModifiers;
 
     public SingleProjectileAttack(
         ProjectileManager projectileManager,
         float projectileSpeed,
         float straightProjectileLifetime,
+        float projectileCollisionRadius,
         TowerUniqueModifiers uniqueModifiers)
     {
         _projectileManager = projectileManager;
         _projectileSpeed = projectileSpeed;
         _straightProjectileLifetime = Mathf.Max(0.01f, straightProjectileLifetime);
+        _projectileCollisionRadius = Mathf.Max(0f, projectileCollisionRadius);
         _uniqueModifiers = uniqueModifiers;
 
         _impact = new DirectHitImpact();
@@ -39,19 +42,6 @@ public class SingleProjectileAttack : ITargetedTowerAttack
             float centeredIndex = i - (projectileCount - 1) * 0.5f;
             Vector3 shotOrigin = origin + perpendicular * (centeredIndex * spacing);
 
-            bool useStraightProjectile = projectileCount > 1 || spreadAngle > 0f || spacing > 0f;
-
-            if (!useStraightProjectile)
-            {
-                _projectileManager.FireAsync(
-                    shotOrigin,
-                    target,
-                    damage,
-                    _projectileSpeed,
-                    _impact).Forget();
-                continue;
-            }
-
             float angle = GetSpreadAngle(i, spreadAngle);
             Vector3 shotDirection = Quaternion.Euler(0f, 0f, angle) * direction;
             _projectileManager.FireFixedAsync(
@@ -62,7 +52,8 @@ public class SingleProjectileAttack : ITargetedTowerAttack
                 damage,
                 _projectileSpeed,
                 _impact,
-                ProjectileCollisionTarget.Enemy).Forget();
+                ProjectileCollisionTarget.Enemy,
+                collisionRadius: _projectileCollisionRadius).Forget();
         }
     }
 

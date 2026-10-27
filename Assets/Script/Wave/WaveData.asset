@@ -13,15 +13,19 @@ MonoBehaviour:
   m_Name: WaveData
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   _spawnEntries:
-  - _enemyConfig: {fileID: 11400000, guid: 38cef139b79891749966ebc18352f280, type: 2}
+  - _enemyConfig: {fileID: 11400000, guid: 304d2c5e662d53148b56170fb4542ec7, type: 2}
     _spawnCount: 20
     _spawnInterval: 0.5
     _startDelay: 0
   - _enemyConfig: {fileID: 11400000, guid: d41a2ac805a8b9e45bee243e4d09e51d, type: 2}
-    _spawnCount: 5
-    _spawnInterval: 1
-    _startDelay: 4
+    _spawnCount: 3
+    _spawnInterval: 4
+    _startDelay: 6
   - _enemyConfig: {fileID: 11400000, guid: 4956e80d6a562ef4fb28b23a88d504aa, type: 2}
     _spawnCount: 3
     _spawnInterval: 4
-    _startDelay: 4
+    _startDelay: 6
+  - _enemyConfig: {fileID: 11400000, guid: 38cef139b79891749966ebc18352f280, type: 2}
+    _spawnCount: 2
+    _spawnInterval: 5
+    _startDelay: 8

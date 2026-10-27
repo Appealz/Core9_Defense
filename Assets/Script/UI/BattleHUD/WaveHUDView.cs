@@ -7,23 +7,22 @@ public class WaveHUDView : MonoBehaviour
 {
     [SerializeField] private Image _progressFill;
     [SerializeField] private TMP_Text _waveNumberText;
+    [SerializeField] private TMP_Text _levelNumberText;    
 
     public void SetWaveNumber(int waveNumber)
     {
-        _waveNumberText.text = waveNumber.ToString();
+        _waveNumberText.text = $"WAVE {waveNumber}";
     }
 
-    public void SetProgress(float progress)
+    public void SetLevel(int level)
     {
-        _progressFill.fillAmount = Mathf.Clamp01(progress);
+        _levelNumberText.text = $"{level}";
     }
 
-    public void SetProgress(int processedCount, int totalCount)
+    public void SetExperience(int currentExperience, int requiredExperience)
     {
-        float progress = totalCount > 0
-            ? (float)processedCount / totalCount
+        _progressFill.fillAmount = requiredExperience > 0
+            ? Mathf.Clamp01((float)currentExperience / requiredExperience)
             : 0f;
-
-        SetProgress(progress);
     }
 }

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce9c90edd99d407488fa18271cc59465, type: 3}
+  m_Name: SplitMiniEnemy
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
+  _role: 0
+  _retreatDelay: 5
+  _retreatMoveSpeed: 8
+  _retreatExitMargin: 1
+  _maxHp: 3
+  _moveSpeed: 5
+  _attackDamage: 1
+  _attackRange: 1
+  _attackCooldown: 1
+  _goldReward: 10
+  _experienceReward: 0
+  _sprite: {fileID: -2369867600477939372, guid: 7d18bb937043c4f41b9932d2252ad6f8, type: 3}
+  _movementDefinition:
+    rid: 1776078544303292491
+  _attackDefinition:
+    rid: 1776078544303292492
+  _abilityDefinition:
+    rid: -2
+  _deathBehaviorDefinition:
+    rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1776078544303292491
+      type: {class: ChaseMovementDefinition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 1776078544303292492
+      type: {class: MeleeAttackDefinition, ns: , asm: Assembly-CSharp}
+      data: 

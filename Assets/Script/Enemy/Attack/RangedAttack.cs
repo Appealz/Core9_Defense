@@ -10,6 +10,7 @@ public class RangedAttack : IEnemyAttack
     private readonly IProjectileImpact _impact;
     private readonly float _projectileSpeed;
     private readonly float _projectileLifetime;
+    private readonly float _projectileCollisionRadius;
     private readonly Sprite _projectileSprite;
 
     public bool IsRanged => true;
@@ -20,6 +21,7 @@ public class RangedAttack : IEnemyAttack
         CoreBoundary coreBoundary,
         float projectileSpeed,
         float projectileLifetime,
+        float projectileCollisionRadius,
         Sprite projectileSprite)
     {
         _origin = origin != null ? origin : throw new ArgumentNullException(nameof(origin));
@@ -28,6 +30,7 @@ public class RangedAttack : IEnemyAttack
 
         _projectileSpeed = Mathf.Max(0.01f, projectileSpeed);
         _projectileLifetime = Mathf.Max(0.01f, projectileLifetime);
+        _projectileCollisionRadius = Mathf.Max(0f, projectileCollisionRadius);
         _projectileSprite = projectileSprite;
         _impact = new CoreHitImpact(coreBoundary);
     }
@@ -50,6 +53,7 @@ public class RangedAttack : IEnemyAttack
             _impact,
             ProjectileCollisionTarget.CoreBoundary,
             _coreBoundary,
+            _projectileCollisionRadius,
             _projectileSprite).Forget();
     }
 }

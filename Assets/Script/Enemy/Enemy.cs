@@ -15,6 +15,8 @@ public class Enemy : MonoBehaviour, IDamageable
     public bool CanReceiveHealing => IsAlive && Config != null && Config.CanReceiveHealing;
     public Vector3 Position => transform.position;
     public int GoldReward { get; private set; }
+    public int SpawnVersion { get; private set; }
+    public bool IsRetreating => _isRetreating;
 
     public event Action<Enemy> Died;
     public event Action<Enemy> CoreReached;
@@ -24,15 +26,27 @@ public class Enemy : MonoBehaviour, IDamageable
     private Transform _moveTarget;
     private CoreBoundary _coreBoundary;
     private IEnemyAbility _ability;
+    private CameraBoundsProvider _cameraBoundsProvider;
 
     private bool _isRemoved;
+    private bool _isRetreatWaiting;
+    private bool _isRetreating;
+    private float _retreatWaitElapsed;
+    private Vector3 _retreatDirection;
 
     private void Awake()
     {
         Visual = GetComponent<EnemyVisual>();
     }
 
-    public void Initialize(EnemyHealth health, EnemyStats stats, EnemyController controller, IEnemyAttack attack, Transform moveTarget, EnemyConfig config)
+    public void Initialize(
+        EnemyHealth health,
+        EnemyStats stats,
+        EnemyController controller,
+        IEnemyAttack attack,
+        Transform moveTarget,
+        EnemyConfig config,
+        CameraBoundsProvider cameraBoundsProvider)
     {
         if (Health != null)
             Health.Died -= OnDied;
@@ -41,6 +55,7 @@ public class Enemy : MonoBehaviour, IDamageable
         Stats = stats;
         Attack = attack;
         Config = config;
+        _cameraBoundsProvider = cameraBoundsProvider ?? throw new ArgumentNullException(nameof(cameraBoundsProvider));
         _controller = controller;
 
         _ability?.Stop();
@@ -56,6 +71,11 @@ public class Enemy : MonoBehaviour, IDamageable
             throw new InvalidOperationException("CoreBoundary를 찾을 수 없습니다.");
 
         _isRemoved = false;
+        _isRetreatWaiting = false;
+        _isRetreating = false;
+        _retreatWaitElapsed = 0f;
+        _retreatDirection = Vector3.zero;
+        SpawnVersion = unchecked(SpawnVersion + 1);
         GoldReward = config.GoldReward;
 
         Visual.Initialize(config.Sprite);
@@ -83,11 +103,12 @@ public class Enemy : MonoBehaviour, IDamageable
         if (!IsAlive)
             return;
 
-#if UNITY_EDITOR
         float hpBefore = Health.CurrentHp;
-#endif
 
         Health.TakeDamage(damage);
+
+        if (Health.CurrentHp < hpBefore && _isRetreatWaiting && !_isRetreating)
+            _retreatWaitElapsed = 0f;
 
 #if UNITY_EDITOR
         TowerCombatDebugTrace.LogEnemyDamage(name, damage, hpBefore, Health.CurrentHp);
@@ -99,16 +120,58 @@ public class Enemy : MonoBehaviour, IDamageable
         if (!IsAlive || Config == null || Config.Role != EnemyRole.Support)
             return false;
 
-        _isRemoved = true;
         Visual.StopSpawnSpread();
         _ability?.Stop();
-        Visual.PlayRetreat(Config.RetreatDuration, CompleteRetreat);
+        _isRetreatWaiting = false;
+        _isRetreating = true;
+        _retreatWaitElapsed = 0f;
+
+        Vector3 coreToEnemy = transform.position - _moveTarget.position;
+        coreToEnemy.z = 0f;
+        _retreatDirection = coreToEnemy.sqrMagnitude > 0.0001f
+            ? coreToEnemy.normalized
+            : Vector3.up;
         return true;
+    }
+
+    public void SetRetreatWaiting(bool shouldWait)
+    {
+        if (_isRetreating || Config == null || Config.Role != EnemyRole.Support || !IsAlive)
+            return;
+
+        if (!shouldWait)
+        {
+            _isRetreatWaiting = false;
+            _retreatWaitElapsed = 0f;
+            return;
+        }
+
+        _isRetreatWaiting = true;
     }
 
     private void Update()
     {
-        if (_controller == null || _coreBoundary == null || !IsAlive || Visual.IsSpawnSpreading)
+        if (!IsAlive)
+            return;
+
+        if (_isRetreating)
+        {
+            UpdateRetreat(Time.deltaTime);
+            return;
+        }
+
+        if (_isRetreatWaiting)
+        {
+            _retreatWaitElapsed += Time.deltaTime;
+
+            if (_retreatWaitElapsed >= Config.RetreatDelay)
+            {
+                TryBeginRetreat();
+                return;
+            }
+        }
+
+        if (_controller == null || _coreBoundary == null || Visual.IsSpawnSpreading)
             return;
 
         Vector3 targetPosition = _coreBoundary.GetClosestPoint(transform.position);
@@ -122,20 +185,41 @@ public class Enemy : MonoBehaviour, IDamageable
             return;
 
         _isRemoved = true;
+        _isRetreatWaiting = false;
+        _isRetreating = false;
         Visual.StopSpawnSpread();
         _ability?.Stop();
 
         Died?.Invoke(this);
     }
 
-    private void CompleteRetreat()
+    private void UpdateRetreat(float deltaTime)
     {
+        transform.position += _retreatDirection * (Config.RetreatMoveSpeed * deltaTime);
+
+        CameraBounds bounds = _cameraBoundsProvider.GetBounds();
+        float margin = Config.RetreatExitMargin;
+        Vector3 position = transform.position;
+
+        if (position.x >= bounds.Left - margin &&
+            position.x <= bounds.Right + margin &&
+            position.y >= bounds.Bottom - margin &&
+            position.y <= bounds.Top + margin)
+        {
+            return;
+        }
+
+        _isRetreating = false;
+        _isRemoved = true;
         Retreated?.Invoke(this);
     }
 
     private void OnDisable()
     {
         _ability?.Stop();
+        _isRetreatWaiting = false;
+        _isRetreating = false;
+        _retreatWaitElapsed = 0f;
     }
 
     private void OnDestroy()

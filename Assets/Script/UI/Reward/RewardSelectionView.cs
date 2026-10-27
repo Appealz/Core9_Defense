@@ -1,20 +1,25 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class RewardSelectionView : MonoBehaviour
 {
     [SerializeField] private RewardCardView _cardPrefab;
     [SerializeField] private Transform _cardContainer;
+    [SerializeField] private TMP_Text _selectionProgressText;
 
     public event Action<RewardData> RewardSelected;
 
     private readonly List<RewardCardView> _cards = new();
 
-    public void Show(IReadOnlyList<RewardData> rewards)
+    public void Show(IReadOnlyList<RewardData> rewards, int currentSelection, int totalSelections)
     {
         gameObject.SetActive(true);
         EnsureCardCount(rewards.Count);
+
+        if (_selectionProgressText != null)
+            _selectionProgressText.text = $"Reward Selection {currentSelection} / {totalSelections}";
 
         for (int i = 0; i < _cards.Count; i++)
         {

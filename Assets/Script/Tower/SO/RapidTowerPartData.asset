@@ -39,6 +39,7 @@ MonoBehaviour:
       data:
         _projectileSpeed: 10
         _straightProjectileLifetime: 3
+        _projectileCollisionRadius: 0.05
     - rid: 1776078645934161997
       type: {class: SingleFireModeDefinition, ns: , asm: Assembly-CSharp}
       data: 

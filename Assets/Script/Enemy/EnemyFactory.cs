@@ -8,12 +8,18 @@ public class EnemyFactory
     private readonly ObjectPool<Enemy> _enemyPool;
     private readonly ProjectileManager _projectileManager;
     private readonly CoreBoundary _coreBoundary;
+    private readonly CameraBoundsProvider _cameraBoundsProvider;
 
-    public EnemyFactory(ObjectPool<Enemy> enemyPool, ProjectileManager projectileManager, CoreBoundary coreBoundary)
+    public EnemyFactory(
+        ObjectPool<Enemy> enemyPool,
+        ProjectileManager projectileManager,
+        CoreBoundary coreBoundary,
+        CameraBoundsProvider cameraBoundsProvider)
     {
         _enemyPool = enemyPool ?? throw new ArgumentNullException(nameof(enemyPool));
         _projectileManager = projectileManager ?? throw new ArgumentNullException(nameof(projectileManager));
         _coreBoundary = coreBoundary != null ? coreBoundary : throw new ArgumentNullException(nameof(coreBoundary));
+        _cameraBoundsProvider = cameraBoundsProvider ?? throw new ArgumentNullException(nameof(cameraBoundsProvider));
     }
 
     public async UniTask<Enemy> CreateAsync(EnemyConfig config, Transform moveTarget)
@@ -37,7 +43,7 @@ public class EnemyFactory
 
         EnemyController controller = new EnemyController(stats, movement, attack, _coreBoundary);
 
-        enemy.Initialize(health, stats, controller, attack, moveTarget, config);
+        enemy.Initialize(health, stats, controller, attack, moveTarget, config, _cameraBoundsProvider);
 
         return enemy;
     }

@@ -10,6 +10,7 @@ public class GameStartData : ScriptableObject
     [SerializeField] private List<RewardData> _rewardDataList = new();
     [SerializeField] private List<TowerTypeUpgradeData> _towerTypeUpgradeDataList = new();
     [SerializeField] private RewardSelectionSettings _rewardSelectionSettings = new();
+    [SerializeField] private PlayerLevelData _playerLevelData;
 
     public int InitialTowerSlotNumber => _initialTowerSlotNumber;
     public TowerPartData BasicTowerPartData => _basicTowerPartData;
@@ -17,4 +18,5 @@ public class GameStartData : ScriptableObject
     public IReadOnlyList<RewardData> RewardDataList => _rewardDataList;
     public IReadOnlyList<TowerTypeUpgradeData> TowerTypeUpgradeDataList => _towerTypeUpgradeDataList;
     public RewardSelectionSettings RewardSelectionSettings => _rewardSelectionSettings;
+    public PlayerLevelData PlayerLevelData => _playerLevelData;
 }

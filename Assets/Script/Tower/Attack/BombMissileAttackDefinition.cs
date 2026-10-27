@@ -5,6 +5,8 @@ using UnityEngine;
 public class BombMissileAttackDefinition : TowerAttackDefinition
 {
     [SerializeField] private float _projectileSpeed = 7f;
+    [SerializeField, Min(0.01f)] private float _projectileLifetime = 8f;
+    [SerializeField, Min(0f)] private float _projectileCollisionRadius = 0.08f;
     [SerializeField] private Sprite _projectileSprite;
     [SerializeField] private float _explosionRadius = 2f;
 
@@ -12,6 +14,13 @@ public class BombMissileAttackDefinition : TowerAttackDefinition
         TowerAttackDependencies dependencies,
         TowerUniqueModifiers uniqueModifiers)
     {
-        return new BombMissileAttack(dependencies.ProjectileManager, dependencies.ImpactEffect, _projectileSpeed, _projectileSprite, _explosionRadius);
+        return new BombMissileAttack(
+            dependencies.ProjectileManager,
+            dependencies.ImpactEffect,
+            _projectileSpeed,
+            _projectileLifetime,
+            _projectileCollisionRadius,
+            _projectileSprite,
+            _explosionRadius);
     }
 }

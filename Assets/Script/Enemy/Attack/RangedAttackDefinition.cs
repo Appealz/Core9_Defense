@@ -6,6 +6,7 @@ public class RangedAttackDefinition : EnemyAttackDefinition
 {
     [SerializeField, Min(0.01f)] private float _projectileSpeed = 5f;
     [SerializeField, Min(0.01f)] private float _projectileLifetime = 5f;
+    [SerializeField, Min(0f)] private float _projectileCollisionRadius = 0.05f;
     [SerializeField] private Sprite _projectileSprite;
 
     public override IEnemyAttack CreateAttack(Transform origin, ProjectileManager projectileManager, CoreBoundary coreBoundary)
@@ -16,6 +17,7 @@ public class RangedAttackDefinition : EnemyAttackDefinition
             coreBoundary,
             _projectileSpeed,
             _projectileLifetime,
+            _projectileCollisionRadius,
             _projectileSprite);
     }
 }

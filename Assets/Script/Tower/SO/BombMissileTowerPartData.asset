@@ -38,6 +38,8 @@ MonoBehaviour:
       type: {class: BombMissileAttackDefinition, ns: , asm: Assembly-CSharp}
       data:
         _projectileSpeed: 7
+        _projectileLifetime: 8
+        _projectileCollisionRadius: 0.08
         _projectileSprite: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
         _explosionRadius: 6
     - rid: 1776078645934161999

@@ -42,3 +42,4 @@ MonoBehaviour:
       data:
         _projectileSpeed: 10
         _straightProjectileLifetime: 3
+        _projectileCollisionRadius: 0.05

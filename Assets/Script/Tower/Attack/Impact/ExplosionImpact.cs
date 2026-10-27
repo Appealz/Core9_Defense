@@ -8,6 +8,7 @@ public sealed class ExplosionImpact : IProjectileImpact
     private readonly IImpactEffect _effect;
     private readonly ContactFilter2D _contactFilter;
     private readonly List<Collider2D> _results = new(32);
+    private readonly HashSet<Enemy> _damagedEnemies = new();
 
     public ExplosionImpact(float radius, IImpactEffect effect)
     {
@@ -28,14 +29,16 @@ public sealed class ExplosionImpact : IProjectileImpact
         _effect.Play(position, _radius);
 
         _results.Clear();
+        _damagedEnemies.Clear();
 
         Physics2D.OverlapCircle(position, _radius, _contactFilter, _results);
 
         for (int i = 0; i < _results.Count; i++)
         {
             Collider2D hit = _results[i];
+            Enemy enemy = hit != null ? hit.GetComponentInParent<Enemy>() : null;
 
-            if (hit == null || !hit.TryGetComponent(out Enemy enemy) || !enemy.IsAlive)
+            if (enemy == null || !enemy.IsAlive || !_damagedEnemies.Add(enemy))
                 continue;
 
             enemy.TakeDamage(damage);

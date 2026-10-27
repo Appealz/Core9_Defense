@@ -11,15 +11,18 @@ public sealed class GameBootstrapper : SceneBootstrapper
     [SerializeField] private CoreRearrangementView _rearrangementView;
     [SerializeField] private WaveHUDView _waveHUDView;
     [SerializeField] private GoldHUDView _goldHUDView;
+    [SerializeField] private RewardHUDView _rewardHUDView;
     [SerializeField] private float _enemySpawnMargin = 1f;
 
     private RewardSelectionPresenter _rewardSelectionPresenter;
     private CoreRearrangementPresenter _rearrangementPresenter;
     private WaveHUDPresenter _waveHUDPresenter;
     private GoldHUDPresenter _goldHUDPresenter;
+    private RewardHUDPresenter _rewardHUDPresenter;
 
     private GoldManager _goldManager;
     private EnemyGoldRewardService _enemyGoldRewardService;
+    private EnemyExperienceRewardService _enemyExperienceRewardService;
     private EnemyDeathBehaviorService _deathBehaviorService;
 
     protected override async UniTask ComposeAsync()
@@ -40,7 +43,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        if (_rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null || _goldHUDView == null)
+        if (_rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null ||
+            _goldHUDView == null || _rewardHUDView == null || _gameStartData.PlayerLevelData == null)
         {
             Debug.LogError("게임 UI 참조가 설정되지 않았습니다.", this);
             return;
@@ -69,12 +73,19 @@ public sealed class GameBootstrapper : SceneBootstrapper
         var explosionEffectManager = new ExplosionEffectManager(objectPoolManager.GetPool<ExplosionEffect>());
         var laserManager = new LaserManager(objectPoolManager.GetPool<Laser>());
 
-        var enemyFactory = new EnemyFactory(objectPoolManager.GetPool<Enemy>(), projectileManager, coreBoundary);
+        var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
+        var enemyFactory = new EnemyFactory(
+            objectPoolManager.GetPool<Enemy>(),
+            projectileManager,
+            coreBoundary,
+            cameraBoundsProvider);
         var enemyManager = new EnemyManager(enemyFactory);
         var enemyQuery = new EnemyQuery(enemyManager);
 
         _goldManager = new GoldManager();
         _enemyGoldRewardService = new EnemyGoldRewardService(enemyManager, _goldManager);
+        var playerProgression = new PlayerProgression(_gameStartData.PlayerLevelData);
+        _enemyExperienceRewardService = new EnemyExperienceRewardService(enemyManager, playerProgression);
 
         var towerTargetSelector = new TowerTargetSelector(enemyQuery);
         var attackDependencies = new TowerAttackDependencies(projectileManager, explosionEffectManager, laserManager);
@@ -112,7 +123,6 @@ public sealed class GameBootstrapper : SceneBootstrapper
             _gameStartData.RewardSelectionSettings
         );
 
-        var cameraBoundsProvider = new CameraBoundsProvider(_mainCamera);
         var spawnPositionCalculator = new SpawnPositionCalculator();
         var enemySpawnPositionProvider = new EnemySpawnPositionProvider(_coreLayout, cameraBoundsProvider, spawnPositionCalculator, _enemySpawnMargin);
 
@@ -121,7 +131,12 @@ public sealed class GameBootstrapper : SceneBootstrapper
         _deathBehaviorService = new EnemyDeathBehaviorService(enemyManager, spawnManager);
 
         var waveManager = new WaveManager(spawnManager, enemyManager);
-        var gameManager = new GameManager(gameStateManager, waveManager, rewardSelectionManager, _gameStartData.WaveDataList);
+        var gameManager = new GameManager(
+            gameStateManager,
+            waveManager,
+            rewardSelectionManager,
+            _gameStartData.WaveDataList,
+            playerProgression);
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
@@ -136,8 +151,9 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         _rewardSelectionPresenter = new RewardSelectionPresenter(_rewardSelectionView, gameStateManager, gameManager, rewardSelectionManager);
         _rearrangementPresenter = new CoreRearrangementPresenter(_rearrangementView, gameStateManager, gameManager);
-        _waveHUDPresenter = new WaveHUDPresenter(_waveHUDView, waveManager, gameManager, gameStateManager);
+        _waveHUDPresenter = new WaveHUDPresenter(_waveHUDView, gameManager, gameStateManager, playerProgression);
         _goldHUDPresenter = new GoldHUDPresenter(_goldHUDView, _goldManager);
+        _rewardHUDPresenter = new RewardHUDPresenter(_rewardHUDView, playerProgression);
 
         CoreRearrangementInput rearrangementInput = GetComponent<CoreRearrangementInput>();
 
@@ -170,6 +186,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
     protected override void OnDestroy()
     {
+        _rewardHUDPresenter?.Dispose();
         _goldHUDPresenter?.Dispose();
         _waveHUDPresenter?.Dispose();
         _rearrangementPresenter?.Dispose();
@@ -177,6 +194,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         _deathBehaviorService?.Dispose();
         _enemyGoldRewardService?.Dispose();
+        _enemyExperienceRewardService?.Dispose();
 
         base.OnDestroy();
     }

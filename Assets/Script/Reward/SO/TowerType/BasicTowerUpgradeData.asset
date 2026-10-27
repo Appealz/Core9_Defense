@@ -29,7 +29,7 @@ MonoBehaviour:
       _value: 1
     - _statType: 1
       _modifierType: 0
-      _value: 12
+      _value: 6
   - _level: 3
     _statUpgrades:
     - _statType: 2

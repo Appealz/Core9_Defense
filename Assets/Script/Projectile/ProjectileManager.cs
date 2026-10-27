@@ -13,17 +13,25 @@ public class ProjectileManager : IUpdatable
         _projectilePool = projectilePool ?? throw new ArgumentNullException(nameof(projectilePool));
     }
 
-    public async UniTask FireAsync(Vector3 origin, IDamageable target, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
+    public async UniTask FireAsync(
+        Vector3 origin,
+        IDamageable target,
+        float lifetime,
+        float collisionRadius,
+        float damage,
+        float speed,
+        IProjectileImpact impact,
+        Sprite sprite = null)
     {
         if (target == null || !target.IsAlive)
             return;
 
-        if (damage <= 0f || speed <= 0f || impact == null)
+        if (lifetime <= 0f || collisionRadius < 0f || damage <= 0f || speed <= 0f || impact == null)
             return;
 
         Projectile projectile = await _projectilePool.GetAsync();
 
-        projectile.Initialize(origin, target, damage, speed, impact, sprite);
+        projectile.Initialize(origin, target, lifetime, collisionRadius, damage, speed, impact, sprite);
         projectile.gameObject.SetActive(true);
 
         _activeProjectiles.Add(projectile);
@@ -39,10 +47,11 @@ public class ProjectileManager : IUpdatable
         IProjectileImpact impact,
         ProjectileCollisionTarget collisionTarget,
         CoreBoundary collisionBoundary = null,
+        float collisionRadius = 0f,
         Sprite sprite = null)
     {
         if (direction.sqrMagnitude <= 0f || maxDistance <= 0f || lifetime <= 0f ||
-            damage <= 0f || speed <= 0f || impact == null ||
+            collisionRadius < 0f || damage <= 0f || speed <= 0f || impact == null ||
             collisionTarget == ProjectileCollisionTarget.None ||
             (collisionTarget == ProjectileCollisionTarget.CoreBoundary && collisionBoundary == null))
         {
@@ -61,6 +70,7 @@ public class ProjectileManager : IUpdatable
             impact,
             collisionTarget,
             collisionBoundary,
+            collisionRadius,
             sprite);
         projectile.gameObject.SetActive(true);
 

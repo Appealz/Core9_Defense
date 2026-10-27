@@ -71,7 +71,7 @@ public class EnemyManager
         RemoveEnemy(enemy, false);
     }
 
-    public int TryRetreatSupportEnemies()
+    public void SetSupportRetreatWaiting(bool shouldWait)
     {
         List<Enemy> supportEnemies = new();
 
@@ -81,15 +81,8 @@ public class EnemyManager
                 supportEnemies.Add(enemy);
         }
 
-        int startedCount = 0;
-
         for (int i = 0; i < supportEnemies.Count; i++)
-        {
-            if (supportEnemies[i].TryBeginRetreat())
-                startedCount++;
-        }
-
-        return startedCount;
+            supportEnemies[i].SetRetreatWaiting(shouldWait);
     }
 
     private void RemoveEnemy(Enemy enemy, bool wasKilled)

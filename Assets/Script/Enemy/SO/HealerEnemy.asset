@@ -13,13 +13,16 @@ MonoBehaviour:
   m_Name: HealerEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
   _role: 1
-  _retreatDuration: 0.35
+  _retreatDelay: 5
+  _retreatMoveSpeed: 8
+  _retreatExitMargin: 1
   _maxHp: 5
   _moveSpeed: 2
   _attackDamage: 0
   _attackRange: 0
   _attackCooldown: 0
   _goldReward: 0
+  _experienceReward: 3
   _sprite: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
   _movementDefinition:
     rid: 1776079096826822656
@@ -37,7 +40,7 @@ MonoBehaviour:
     - rid: 1776079096826822656
       type: {class: HealerMovementDefinition, ns: , asm: Assembly-CSharp}
       data:
-        _stopDistance: 5
+        _stopDistance: 7
     - rid: 1776079096826822657
       type: {class: HealerAbilityDefinition, ns: , asm: Assembly-CSharp}
       data:

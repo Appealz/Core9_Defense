@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -12,12 +11,16 @@ public class GameManager : IUpdatable
     private readonly WaveManager _waveManager;
     private readonly RewardSelectionManager _rewardSelectionManager;
     private readonly IReadOnlyList<WaveData> _waveDataList;
+    private readonly PlayerProgression _playerProgression;
 
     private int _currentWaveNumber = 1;
     private float _rearrangementTimeRemaining;
     private bool _isRewardApplying;
+    private int _rewardBatchTotal;
+    private int _rewardBatchProcessed;
 
     public event Action<int> RearrangementTimeChanged;
+    public event Action<IReadOnlyList<RewardData>, int, int> RewardChoicesChanged;
 
     public int CurrentWaveNumber => _currentWaveNumber;
     public int RearrangementRemainingSeconds => Mathf.CeilToInt(_rearrangementTimeRemaining);
@@ -26,16 +29,19 @@ public class GameManager : IUpdatable
         GameStateManager gameStateManager,
         WaveManager waveManager,
         RewardSelectionManager rewardSelectionManager,
-        IReadOnlyList<WaveData> waveDataList)
+        IReadOnlyList<WaveData> waveDataList,
+        PlayerProgression playerProgression)
     {
         _gameStateManager = gameStateManager;
         _waveManager = waveManager;
         _rewardSelectionManager = rewardSelectionManager;
         _waveDataList = waveDataList;
+        _playerProgression = playerProgression ?? throw new ArgumentNullException(nameof(playerProgression));
     }
 
     public void StartGame()
     {
+        _playerProgression.Reset();
         _gameStateManager.ChangeState(GameState.Playing);
         PlayCurrentWaveAsync().Forget();
     }
@@ -47,7 +53,6 @@ public class GameManager : IUpdatable
 
         _rearrangementTimeRemaining = 0f;
         _currentWaveNumber++;
-
         _gameStateManager.ChangeState(GameState.Playing);
         PlayCurrentWaveAsync().Forget();
     }
@@ -61,14 +66,31 @@ public class GameManager : IUpdatable
 
         try
         {
-            await _rewardSelectionManager.ApplyAsync(rewardData);
+            bool isApplied = await _rewardSelectionManager.ApplyAsync(rewardData);
 
-            if (_gameStateManager.CurrentState == GameState.RewardSelection ||
-                _gameStateManager.CurrentState == GameState.CoreSlotSelection)
+            if (!isApplied)
             {
-                _rearrangementTimeRemaining = RearrangementDuration;
-                _gameStateManager.ChangeState(GameState.Rearrangement);
+                PublishCurrentChoices();
+                return;
             }
+
+            _playerProgression.TryConsumeReward();
+            _rewardBatchProcessed++;
+
+            if (_gameStateManager.CurrentState == GameState.GameOver)
+                return;
+
+            if (_playerProgression.PendingRewardCount > 0)
+                ShowNextRewardSelection();
+            else
+                BeginRearrangement();
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception);
+
+            if (_gameStateManager.CurrentState != GameState.GameOver)
+                PublishCurrentChoices();
         }
         finally
         {
@@ -87,31 +109,14 @@ public class GameManager : IUpdatable
 
     public void Update(float deltaTime)
     {
-        switch (_gameStateManager.CurrentState)
-        {
-            case GameState.Playing:
-                UpdatePlaying(deltaTime);
-                break;
-
-            case GameState.Rearrangement:
-                UpdateRearrangement(deltaTime);
-                break;
-        }
-    }
-
-    private void UpdatePlaying(float deltaTime)
-    {
+        if (_gameStateManager.CurrentState == GameState.Rearrangement)
+            UpdateRearrangement(deltaTime);
     }
 
     private void UpdateRearrangement(float deltaTime)
     {
         int previousSeconds = RearrangementRemainingSeconds;
-
-        _rearrangementTimeRemaining = Mathf.Max(
-            0f,
-            _rearrangementTimeRemaining - deltaTime
-        );
-
+        _rearrangementTimeRemaining = Mathf.Max(0f, _rearrangementTimeRemaining - deltaTime);
         int remainingSeconds = RearrangementRemainingSeconds;
 
         if (previousSeconds != remainingSeconds)
@@ -127,9 +132,7 @@ public class GameManager : IUpdatable
             return;
 
         int waveDataIndex = (_currentWaveNumber - 1) % _waveDataList.Count;
-        WaveData waveData = _waveDataList[waveDataIndex];
-
-        await _waveManager.PlayWaveAsync(waveData);
+        await _waveManager.PlayWaveAsync(_waveDataList[waveDataIndex]);
 
         if (_gameStateManager.CurrentState == GameState.GameOver)
             return;
@@ -137,14 +140,43 @@ public class GameManager : IUpdatable
         _gameStateManager.ChangeState(GameState.WaveClear);
         Debug.Log($"Wave {_currentWaveNumber} Clear");
 
-        if (_rewardSelectionManager.CreateChoices().Count == 0)
+        if (_playerProgression.PendingRewardCount <= 0)
         {
-            Debug.LogWarning("선택 가능한 보상이 없어 보상 선택 단계를 건너뜁니다. 보상 데이터를 확인하세요.");
             BeginRearrangement();
             return;
         }
 
-        _gameStateManager.ChangeState(GameState.RewardSelection);
+        _rewardBatchTotal = _playerProgression.PendingRewardCount;
+        _rewardBatchProcessed = 0;
+        ShowNextRewardSelection();
+    }
+
+    private void ShowNextRewardSelection()
+    {
+        IReadOnlyList<RewardData> choices = _rewardSelectionManager.CreateChoices();
+
+        if (choices.Count == 0)
+        {
+            Debug.LogWarning("선택 가능한 보상이 없어 선택권을 보존하고 재배치 단계로 진행합니다.");
+            BeginRearrangement();
+            return;
+        }
+
+        if (_gameStateManager.CurrentState != GameState.RewardSelection)
+            _gameStateManager.ChangeState(GameState.RewardSelection);
+
+        RewardChoicesChanged?.Invoke(choices, _rewardBatchProcessed + 1, _rewardBatchTotal);
+    }
+
+    private void PublishCurrentChoices()
+    {
+        if (_gameStateManager.CurrentState != GameState.RewardSelection)
+            _gameStateManager.ChangeState(GameState.RewardSelection);
+
+        RewardChoicesChanged?.Invoke(
+            _rewardSelectionManager.CurrentChoices,
+            _rewardBatchProcessed + 1,
+            _rewardBatchTotal);
     }
 
     private void BeginRearrangement()

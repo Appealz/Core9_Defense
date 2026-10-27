@@ -18,6 +18,7 @@ MonoBehaviour:
   _attackRange: 5
   _attackCooldown: 1
   _goldReward: 10
+  _experienceReward: 2
   _sprite: {fileID: -6685421513473703928, guid: 7cebcc6e84ff07d4faf42f0340f35616, type: 3}
   _movementDefinition:
     rid: 1776079044188569676
@@ -34,4 +35,5 @@ MonoBehaviour:
       data:
         _projectileSpeed: 5
         _projectileLifetime: 5
+        _projectileCollisionRadius: 0.05
         _projectileSprite: {fileID: -2413806693520163455, guid: 38d339ba03ffe9145811230948fd538a, type: 3}

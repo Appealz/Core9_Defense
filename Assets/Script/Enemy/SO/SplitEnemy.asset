@@ -12,22 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce9c90edd99d407488fa18271cc59465, type: 3}
   m_Name: SplitEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
+  _role: 0
+  _retreatDelay: 5
+  _retreatMoveSpeed: 8
+  _retreatExitMargin: 1
   _maxHp: 2
   _moveSpeed: 2
   _attackDamage: 1
   _attackRange: 1
   _attackCooldown: 0
   _goldReward: 0
+  _experienceReward: 2
   _sprite: {fileID: 8289069705900547627, guid: dbc8eccc190fdb541840d5a73ba6eaa6, type: 3}
   _movementDefinition:
     rid: 1776079061674623051
   _attackDefinition:
     rid: 1776079061674623052
+  _abilityDefinition:
+    rid: -2
   _deathBehaviorDefinition:
     rid: 1776079061674623053
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 1776079061674623051
       type: {class: ChaseMovementDefinition, ns: , asm: Assembly-CSharp}
       data: 
@@ -37,7 +46,7 @@ MonoBehaviour:
     - rid: 1776079061674623053
       type: {class: SplitOnDeathDefinition, ns: , asm: Assembly-CSharp}
       data:
-        _childConfig: {fileID: 11400000, guid: 6aef041c0f36dfa4bb48942465de985a, type: 2}
+        _childConfig: {fileID: 11400000, guid: 827810e86144c284790fdec358bf007d, type: 2}
         _childCount: 2
         _splitRadius: 0.75
         _splitDuration: 0.3

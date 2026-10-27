@@ -24,6 +24,7 @@ public class WaveManager
     {
         _totalEnemyCount = CalculateTotalEnemyCount(waveData);
         _processedEnemyCount = 0;
+        _enemyManager.SetSupportRetreatWaiting(false);
 
         ProgressChanged?.Invoke(_processedEnemyCount, _totalEnemyCount);
 
@@ -46,6 +47,7 @@ public class WaveManager
         }
         finally
         {
+            _enemyManager.SetSupportRetreatWaiting(false);
             _enemyManager.EnemyRemoved -= HandleEnemyRemoved;
             _enemyManager.SpawnCountAdjusted -= HandleSpawnCountAdjusted;
         }
@@ -53,6 +55,12 @@ public class WaveManager
 
     private bool TryCompleteWaveOrBeginSupportRetreat()
     {
+        bool canWaitForRetreat = _enemyManager.PendingSpawnCount == 0 &&
+            _enemyManager.CombatAliveCount == 0 &&
+            _enemyManager.SupportAliveCount > 0;
+
+        _enemyManager.SetSupportRetreatWaiting(canWaitForRetreat);
+
         if (_enemyManager.PendingSpawnCount > 0)
             return false;
 
@@ -61,9 +69,6 @@ public class WaveManager
 
         if (_enemyManager.CombatAliveCount > 0)
             return false;
-
-        if (_enemyManager.SupportAliveCount > 0)
-            _enemyManager.TryRetreatSupportEnemies();
 
         return false;
     }

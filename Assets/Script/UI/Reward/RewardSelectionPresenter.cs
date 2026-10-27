@@ -17,6 +17,7 @@ public class RewardSelectionPresenter : IDisposable
         _rewardSelectionManager = rewardSelectionManager;
 
         _gameStateManager.StateChanged += OnStateChanged;
+        _gameManager.RewardChoicesChanged += OnRewardChoicesChanged;
         _view.RewardSelected += OnRewardSelected;
 
         _view.Hide();
@@ -24,10 +25,16 @@ public class RewardSelectionPresenter : IDisposable
 
     private void OnStateChanged(GameState previousState, GameState nextState)
     {
-        if (nextState == GameState.RewardSelection)
-            _view.Show(_rewardSelectionManager.CurrentChoices);
-        else
+        if (nextState != GameState.RewardSelection)
             _view.Hide();
+    }
+
+    private void OnRewardChoicesChanged(
+        System.Collections.Generic.IReadOnlyList<RewardData> rewards,
+        int currentSelection,
+        int totalSelections)
+    {
+        _view.Show(rewards, currentSelection, totalSelections);
     }
 
     private void OnRewardSelected(RewardData rewardData)
@@ -39,6 +46,7 @@ public class RewardSelectionPresenter : IDisposable
     public void Dispose()
     {
         _gameStateManager.StateChanged -= OnStateChanged;
+        _gameManager.RewardChoicesChanged -= OnRewardChoicesChanged;
         _view.RewardSelected -= OnRewardSelected;
     }
 }

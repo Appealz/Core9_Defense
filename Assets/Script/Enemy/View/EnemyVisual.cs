@@ -1,5 +1,4 @@
 
-using System;
 using DG.Tweening;
 using UnityEngine;
 
@@ -8,7 +7,6 @@ public class EnemyVisual : MonoBehaviour
 {
     private SpriteRenderer _spriteRenderer;
     private Tween _spawnTween;
-    private Tween _retreatTween;
     private Vector3 _defaultScale;
     private Color _defaultColor;
 
@@ -24,7 +22,6 @@ public class EnemyVisual : MonoBehaviour
     public void Initialize(Sprite sprite)
     {
         StopSpawnSpread();
-        StopRetreat();
 
         _spriteRenderer.sprite = sprite;
         _spriteRenderer.color = _defaultColor;
@@ -59,39 +56,13 @@ public class EnemyVisual : MonoBehaviour
         IsSpawnSpreading = false;
     }
 
-    public void PlayRetreat(float duration, Action completed)
-    {
-        StopSpawnSpread();
-        StopRetreat();
-
-        float safeDuration = Mathf.Max(0.01f, duration);
-        Sequence sequence = DOTween.Sequence();
-        sequence.Join(_spriteRenderer.DOFade(0f, safeDuration));
-        sequence.Join(transform.DOScale(_defaultScale * 0.75f, safeDuration));
-        sequence.SetEase(Ease.InCubic);
-        sequence.OnComplete(() =>
-        {
-            _retreatTween = null;
-            completed?.Invoke();
-        });
-        _retreatTween = sequence;
-    }
-
-    private void StopRetreat()
-    {
-        _retreatTween?.Kill();
-        _retreatTween = null;
-    }
-
     private void OnDisable()
     {
         StopSpawnSpread();
-        StopRetreat();
     }
 
     private void OnDestroy()
     {
         StopSpawnSpread();
-        StopRetreat();
     }
 }

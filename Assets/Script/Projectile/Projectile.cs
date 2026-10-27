@@ -17,24 +17,40 @@ public class Projectile : MonoBehaviour
     private float _speed;
     private float _remainingDistance;
     private float _remainingLifetime;
+    private float _collisionRadius;
     private bool _isHoming;
     private bool _hasImpacted;
     private ProjectileCollisionTarget _collisionTarget;
     private CoreBoundary _collisionBoundary;
+    private Enemy _trackedEnemy;
+    private int _trackedEnemySpawnVersion;
 
     private void Awake()
     {
         EnsureRenderer();
     }
 
-    public void Initialize(Vector3 origin, IDamageable target, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
+    public void Initialize(
+        Vector3 origin,
+        IDamageable target,
+        float lifetime,
+        float collisionRadius,
+        float damage,
+        float speed,
+        IProjectileImpact impact,
+        Sprite sprite = null)
     {
         InitializeCommon(origin, damage, speed, impact, sprite);
 
         _target = target;
         _lastTargetPosition = target.Position;
+        _remainingLifetime = Mathf.Max(0.01f, lifetime);
+        _collisionRadius = Mathf.Max(0f, collisionRadius);
         _isHoming = true;
-        _collisionTarget = ProjectileCollisionTarget.None;
+        _collisionTarget = ProjectileCollisionTarget.Enemy;
+
+        _trackedEnemy = target as Enemy;
+        _trackedEnemySpawnVersion = _trackedEnemy != null ? _trackedEnemy.SpawnVersion : 0;
     }
 
     public void InitializeFixed(
@@ -47,6 +63,7 @@ public class Projectile : MonoBehaviour
         IProjectileImpact impact,
         ProjectileCollisionTarget collisionTarget,
         CoreBoundary collisionBoundary,
+        float collisionRadius,
         Sprite sprite = null)
     {
         InitializeCommon(origin, damage, speed, impact, sprite);
@@ -55,6 +72,7 @@ public class Projectile : MonoBehaviour
         _fixedDirection = direction.normalized;
         _remainingDistance = Mathf.Max(0f, maxDistance);
         _remainingLifetime = Mathf.Max(0.01f, lifetime);
+        _collisionRadius = Mathf.Max(0f, collisionRadius);
         _isHoming = false;
         _collisionTarget = collisionTarget;
         _collisionBoundary = collisionBoundary;
@@ -83,12 +101,30 @@ public class Projectile : MonoBehaviour
 
     private bool UpdateHoming(float deltaTime)
     {
+        _remainingLifetime -= deltaTime;
+
+        if (_remainingLifetime <= 0f)
+            return false;
+
         UpdateTargetState();
 
         Vector3 direction = _lastTargetPosition - transform.position;
 
         float distance = direction.magnitude;
         float moveDistance = _speed * deltaTime;
+
+        float actualMoveDistance = Mathf.Min(moveDistance, distance);
+        Vector3 end = distance > 0f
+            ? transform.position + direction / distance * actualMoveDistance
+            : transform.position;
+
+        if (TryFindCollision(transform.position, end, out RaycastHit2D hit, out IDamageable hitTarget))
+        {
+            Vector3 impactPosition = GetImpactPosition(hit, end);
+            transform.position = impactPosition;
+            ApplyImpact(impactPosition, hitTarget);
+            return false;
+        }
 
         if (distance <= moveDistance)
         {
@@ -97,7 +133,7 @@ public class Projectile : MonoBehaviour
             return false;
         }
 
-        transform.position += direction / distance * moveDistance;
+        transform.position = end;
         return true;
     }
 
@@ -114,8 +150,9 @@ public class Projectile : MonoBehaviour
 
         if (TryFindCollision(start, end, out RaycastHit2D hit, out IDamageable target))
         {
-            transform.position = hit.point;
-            ApplyImpact(hit.point, target);
+            Vector3 impactPosition = GetImpactPosition(hit, end);
+            transform.position = impactPosition;
+            ApplyImpact(impactPosition, target);
             return false;
         }
 
@@ -153,7 +190,26 @@ public class Projectile : MonoBehaviour
             : Physics2D.AllLayers);
 
         _collisionResults.Clear();
-        Physics2D.Linecast(start, end, filter, _collisionResults);
+        Vector2 displacement = end - start;
+        float distance = displacement.magnitude;
+
+        if (distance <= 0f)
+            return false;
+
+        if (_collisionRadius > 0f)
+        {
+            Physics2D.CircleCast(
+                start,
+                _collisionRadius,
+                displacement / distance,
+                filter,
+                _collisionResults,
+                distance);
+        }
+        else
+        {
+            Physics2D.Linecast(start, end, filter, _collisionResults);
+        }
 
         float nearestFraction = float.MaxValue;
 
@@ -173,6 +229,15 @@ public class Projectile : MonoBehaviour
         }
 
         return nearestFraction < float.MaxValue;
+    }
+
+    private static Vector3 GetImpactPosition(RaycastHit2D hit, Vector3 fallback)
+    {
+        if (hit.collider == null)
+            return fallback;
+
+        Vector2 position = hit.centroid != Vector2.zero ? hit.centroid : hit.point;
+        return new Vector3(position.x, position.y, fallback.z);
     }
 
     private bool TryResolveCollision(Collider2D collider, out IDamageable target)
@@ -222,6 +287,9 @@ public class Projectile : MonoBehaviour
         _hasImpacted = false;
         _collisionTarget = ProjectileCollisionTarget.None;
         _collisionBoundary = null;
+        _collisionRadius = 0f;
+        _trackedEnemy = null;
+        _trackedEnemySpawnVersion = 0;
         _collisionResults.Clear();
 
         if (_spriteRenderer != null)
@@ -263,6 +331,9 @@ public class Projectile : MonoBehaviour
             return false;
 
         if (_target is Object unityObject && unityObject == null)
+            return false;
+
+        if (_trackedEnemy != null && _trackedEnemy.SpawnVersion != _trackedEnemySpawnVersion)
             return false;
 
         return true;
