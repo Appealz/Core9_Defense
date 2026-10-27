@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bcde33cd237de243902bf6f92d3bf96, type: 3}
+  m_Name: AreaTowerReward
+  m_EditorClassIdentifier: Assembly-CSharp::RewardData
+  _rewardName: Area Tower
+  _description: Place a new Area Tower.
+  _icon: {fileID: 1803277974132308361, guid: 64f1a5f5354c37642b9b601ca7ce719c, type: 3}
+  _rarity: 0
+  _category: 1
+  _selectionWeight: 1
+  _rewardDefinition:
+    rid: 1776079130660175874
+  _rewardDefinitions:
+  - rid: 1776079130660175874
+  references:
+    version: 2
+    RefIds:
+    - rid: 1776079130660175874
+      type: {class: NewTowerRewardDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _towerPartData: {fileID: 11400000, guid: a6b5fb62d9640b04b947f1985df2b0ee, type: 2}

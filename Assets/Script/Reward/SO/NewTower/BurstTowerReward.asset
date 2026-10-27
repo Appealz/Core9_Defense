@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bcde33cd237de243902bf6f92d3bf96, type: 3}
+  m_Name: BurstTowerReward
+  m_EditorClassIdentifier: Assembly-CSharp::RewardData
+  _rewardName: Burst Tower
+  _description: Place a new Burst Tower.
+  _icon: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
+  _rarity: 0
+  _category: 1
+  _selectionWeight: 1
+  _rewardDefinition:
+    rid: 1776079130660175873
+  _rewardDefinitions:
+  - rid: 1776079130660175873
+  references:
+    version: 2
+    RefIds:
+    - rid: 1776079130660175873
+      type: {class: NewTowerRewardDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _towerPartData: {fileID: 11400000, guid: 5e6f83ac309a7714bb8a9482c6051e48, type: 2}

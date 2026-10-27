@@ -7,7 +7,9 @@ public class AreaAttackDefinition : TowerAttackDefinition
     [SerializeField] private Sprite _effectSprite;
     [SerializeField, Range(0f, 1f)] private float _effectAlpha = 0.2f;
 
-    public override ITowerAttack CreateAttack(TowerAttackDependencies dependencies)
+    public override ITowerAttack CreateAttack(
+        TowerAttackDependencies dependencies,
+        TowerUniqueModifiers uniqueModifiers)
     {
         return new AreaAttack();
     }

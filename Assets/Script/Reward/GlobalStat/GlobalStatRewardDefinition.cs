@@ -40,6 +40,7 @@ public sealed class GlobalStatRewardDefinition : RewardDefinition
             TowerStatType.MaxHp => "Max HP",
             TowerStatType.AttackSpeed => "Attack Speed",
             TowerStatType.CriticalChance => "Critical Chance",
+            TowerStatType.AttackRange => "Attack Range",
             _ => "Stat"
         };
     }

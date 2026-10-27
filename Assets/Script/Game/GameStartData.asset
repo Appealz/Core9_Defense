@@ -33,6 +33,34 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a0e3cf5032034b2791755fa02885309b, type: 2}
   - {fileID: 11400000, guid: b824a9f9984e4855829001cc035fa46c, type: 2}
   - {fileID: 11400000, guid: 2e10b7f7bcac45d3bb7fef95dbd4a2f1, type: 2}
+  - {fileID: 11400000, guid: 70083d1f00fad564e9acdfacc3ea5cd0, type: 2}
+  - {fileID: 11400000, guid: ba7969ce03752b748b55409cb16addd8, type: 2}
+  - {fileID: 11400000, guid: f36a237d37f86bf4e877056abfc7ecbe, type: 2}
+  - {fileID: 11400000, guid: ece63fd78017b0e42a1cc82f0273d666, type: 2}
+  - {fileID: 11400000, guid: 92393f4b465c6d341881c53a2e92ecf4, type: 2}
+  - {fileID: 11400000, guid: 83f653a3b6650d342879ad8d0ba173c1, type: 2}
+  - {fileID: 11400000, guid: f5d4f08384d505446a53f70f6d15e09e, type: 2}
+  - {fileID: 11400000, guid: 793f9620f88346846ba6f04e4a6791c5, type: 2}
+  - {fileID: 11400000, guid: 774af83433a52ed429042e66d3c80691, type: 2}
+  - {fileID: 11400000, guid: 0b9953bb9b2824b4ba1c6c6f869bd390, type: 2}
+  - {fileID: 11400000, guid: bc72a2a1b00a181469bbbd20b34be94c, type: 2}
+  - {fileID: 11400000, guid: 7122f35ff98e072428b735f9773e8083, type: 2}
+  - {fileID: 11400000, guid: 2dc507900133a8540836ac85bf560f1e, type: 2}
+  - {fileID: 11400000, guid: b4e61604ef89ff8409ac4a501b196694, type: 2}
+  - {fileID: 11400000, guid: 003427674543bf54fbd2f840c0c6cc2d, type: 2}
+  - {fileID: 11400000, guid: 265c4fba4f7d54747826a2b05ae28b33, type: 2}
+  - {fileID: 11400000, guid: 8911bdc80c107d34dabb331e9bc85dbc, type: 2}
+  - {fileID: 11400000, guid: d9f2b4b3abc81c845803fbd686d0085c, type: 2}
+  - {fileID: 11400000, guid: 00471610a80cd3143b396c9d54cc4faa, type: 2}
+  - {fileID: 11400000, guid: 7da7e87f4355c9741b10d25dcdad16da, type: 2}
+  - {fileID: 11400000, guid: 500f67625c44d6f4da686c5b2282d602, type: 2}
+  _towerTypeUpgradeDataList:
+  - {fileID: 11400000, guid: f3847521dbdf4e946b272a1c9dc37e13, type: 2}
+  - {fileID: 11400000, guid: 2e94c65694122b84bbf71503d038a022, type: 2}
+  - {fileID: 11400000, guid: 5a570a95b4a2b7b4ab960aa17103e40b, type: 2}
+  - {fileID: 11400000, guid: 79bdb1f6f65b0834487d0f5f11fbce3a, type: 2}
+  - {fileID: 11400000, guid: 20fc8f9816bba814bb50cfdbc01f93ca, type: 2}
+  - {fileID: 11400000, guid: 5be4f441502eab6429374ced3948cfe6, type: 2}
   _rewardSelectionSettings:
     _cardCount: 3
     _minimumNewTowerCards: 1

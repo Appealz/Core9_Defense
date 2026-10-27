@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5658b5a87081c514abf45502bca679ac, type: 3}
   m_Name: BurstTowerPartData
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
+  _towerType: 2
   _towerName: Burst
   _maxHp: 2
   _attackDamage: 2

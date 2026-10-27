@@ -11,14 +11,21 @@ public class TowerManager
     private readonly CoreManager _coreManager;
     private readonly CoreLayout _coreLayout;
     private readonly TowerStatModifiers _globalStatModifiers;
+    private readonly TowerTypeUpgradeState _typeUpgradeState;
     private readonly List<Tower> _activeTowers = new();
 
-    public TowerManager(TowerFactory towerFactory, CoreManager coreManager, CoreLayout coreLayout, TowerStatModifiers globalStatModifiers)
+    public TowerManager(
+        TowerFactory towerFactory,
+        CoreManager coreManager,
+        CoreLayout coreLayout,
+        TowerStatModifiers globalStatModifiers,
+        TowerTypeUpgradeState typeUpgradeState)
     {
         _towerFactory = towerFactory;
         _coreManager = coreManager;
         _coreLayout = coreLayout;
         _globalStatModifiers = globalStatModifiers;
+        _typeUpgradeState = typeUpgradeState;
         _coreManager.SlotEffectsChanged += HandleSlotEffectsChanged;
     }
 
@@ -85,6 +92,39 @@ public class TowerManager
         return true;
     }
 
+    public bool HasTowerType(TowerType towerType)
+    {
+        for (int i = 0; i < _activeTowers.Count; i++)
+        {
+            if (_activeTowers[i] != null && _activeTowers[i].TowerType == towerType)
+                return true;
+        }
+
+        return false;
+    }
+
+    public int GetTowerTypeUpgradeLevel(TowerType towerType) => _typeUpgradeState.GetLevel(towerType);
+    public int GetTowerTypeUpgradeMaxLevel(TowerType towerType) => _typeUpgradeState.GetMaxLevel(towerType);
+
+    public bool CanApplyTowerTypeUpgrade(TowerTypeUpgradeData data, int targetLevel)
+    {
+        return data != null && HasTowerType(data.TowerType) && _typeUpgradeState.CanApply(data, targetLevel);
+    }
+
+    public bool TryApplyTowerTypeUpgrade(TowerTypeUpgradeData data, int targetLevel)
+    {
+        if (!CanApplyTowerTypeUpgrade(data, targetLevel) || !_typeUpgradeState.TryApply(data, targetLevel))
+            return false;
+
+        for (int slotNumber = 1; slotNumber <= CoreBoard.SlotCount; slotNumber++)
+        {
+            if (_coreManager.TryGetTower(slotNumber, out Tower tower) && tower.TowerType == data.TowerType)
+                RefreshTowerForSlot(slotNumber, false);
+        }
+
+        return true;
+    }
+
     private void HandleSlotEffectsChanged(int slotNumber)
     {
         RefreshTowerForSlot(slotNumber);
@@ -103,8 +143,10 @@ public class TowerManager
         for (int i = 0; i < effects.Count; i++)
             effects[i].AddStatModifiers(slotModifiers);
 
-        tower.Stats.ApplyModifiers(_globalStatModifiers, slotModifiers);
+        TowerStatModifiers typeModifiers = _typeUpgradeState.GetStatModifiers(tower.TowerType);
+        tower.Stats.ApplyModifiers(_globalStatModifiers, slotModifiers, typeModifiers);
         tower.Health.UpdateMaxHp(tower.Stats.MaxHp);
+        tower.RefreshAttackEffect();
 
         if (rebindRuntimeEffects)
             tower.BindSlotEffects(effects);

@@ -35,9 +35,20 @@ public sealed class TowerStatModifiers
         float baseValue,
         TowerStatModifiers additionalModifiers)
     {
+        return Calculate(statType, baseValue, additionalModifiers, null);
+    }
+
+    public float Calculate(
+        TowerStatType statType,
+        float baseValue,
+        TowerStatModifiers firstAdditionalModifiers,
+        TowerStatModifiers secondAdditionalModifiers)
+    {
         int index = (int)statType;
-        float additionalFlat = additionalModifiers?.GetFlat(statType) ?? 0f;
-        float additionalPercent = additionalModifiers?.GetPercent(statType) ?? 0f;
+        float additionalFlat = (firstAdditionalModifiers?.GetFlat(statType) ?? 0f) +
+            (secondAdditionalModifiers?.GetFlat(statType) ?? 0f);
+        float additionalPercent = (firstAdditionalModifiers?.GetPercent(statType) ?? 0f) +
+            (secondAdditionalModifiers?.GetPercent(statType) ?? 0f);
 
         return (baseValue + _flatValues[index] + additionalFlat) *
             (1f + _percentValues[index] + additionalPercent);

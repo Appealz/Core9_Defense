@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5658b5a87081c514abf45502bca679ac, type: 3}
   m_Name: basicTowerPartData
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
+  _towerType: 0
   _towerName: basic
   _maxHp: 3
   _attackDamage: 2

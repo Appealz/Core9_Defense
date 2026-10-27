@@ -4,13 +4,14 @@ public sealed class BurstFireMode : IFireMode
 {
     private readonly int _shotCount;
     private readonly float _shotInterval;
+    private readonly TowerUniqueModifiers _uniqueModifiers;
 
     private int _remainingShots;
     private float _shotTimer;
 
     public bool IsFiring => _remainingShots > 0;
 
-    public BurstFireMode(int shotCount, float shotInterval)
+    public BurstFireMode(int shotCount, float shotInterval, TowerUniqueModifiers uniqueModifiers)
     {
         if (shotCount <= 0)
             throw new ArgumentOutOfRangeException(nameof(shotCount));
@@ -20,11 +21,12 @@ public sealed class BurstFireMode : IFireMode
 
         _shotCount = shotCount;
         _shotInterval = shotInterval;
+        _uniqueModifiers = uniqueModifiers ?? throw new ArgumentNullException(nameof(uniqueModifiers));
     }
 
     public void Start()
     {
-        _remainingShots = _shotCount;
+        _remainingShots = _uniqueModifiers.CalculateInt(TowerUniqueStatType.BurstShotCount, _shotCount);
         _shotTimer = 0f;
     }
 

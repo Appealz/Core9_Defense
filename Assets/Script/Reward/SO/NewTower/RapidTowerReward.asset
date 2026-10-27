@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bcde33cd237de243902bf6f92d3bf96, type: 3}
+  m_Name: RapidTowerReward
+  m_EditorClassIdentifier: Assembly-CSharp::RewardData
+  _rewardName: Rapid Tower
+  _description: Place a new Rapid Tower.
+  _icon: {fileID: 9098142356674041305, guid: 96430dabf8148694dbe5dd71acd649c5, type: 3}
+  _rarity: 0
+  _category: 1
+  _selectionWeight: 1
+  _rewardDefinition:
+    rid: 1776079130660175872
+  _rewardDefinitions:
+  - rid: 1776079130660175872
+  references:
+    version: 2
+    RefIds:
+    - rid: 1776079130660175872
+      type: {class: NewTowerRewardDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _towerPartData: {fileID: 11400000, guid: 2c5b8ac52fc1fe941a201b0eebb1da35, type: 2}

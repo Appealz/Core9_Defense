@@ -13,11 +13,13 @@ public class Projectile : MonoBehaviour
     private float _damage;
     private float _speed;
     private bool _isHoming;
+    private int _enemyLayerMask;
 
     private void Awake()
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _defaultSprite = _spriteRenderer.sprite;
+        _enemyLayerMask = LayerMask.GetMask("Enemy");
     }
 
     public void Initialize(Vector3 origin, IDamageable target, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
@@ -59,14 +61,41 @@ public class Projectile : MonoBehaviour
         float distance = direction.magnitude;
         float moveDistance = _speed * deltaTime;
 
+        if (!_isHoming && TryHitEnemyAlongPath(transform.position, direction, distance, moveDistance))
+            return false;
+
         if (distance <= moveDistance)
         {
             transform.position = _lastTargetPosition;
-            _impact.Impact(_lastTargetPosition, _target, _damage);
+
+            if (_isHoming)
+                _impact.Impact(_lastTargetPosition, _target, _damage);
+
             return false;
         }
 
         transform.position += direction / distance * moveDistance;
+        return true;
+    }
+
+    private bool TryHitEnemyAlongPath(Vector3 start, Vector3 direction, float distance, float moveDistance)
+    {
+        if (distance <= 0f)
+            return false;
+
+        Vector3 end = start + direction / distance * Mathf.Min(distance, moveDistance);
+        RaycastHit2D hit = Physics2D.Linecast(start, end, _enemyLayerMask);
+
+        if (hit.collider == null)
+            return false;
+
+        Enemy enemy = hit.collider.GetComponentInParent<Enemy>();
+
+        if (enemy == null || !enemy.IsAlive)
+            return false;
+
+        transform.position = hit.point;
+        _impact.Impact(hit.point, enemy, _damage);
         return true;
     }
 

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5658b5a87081c514abf45502bca679ac, type: 3}
   m_Name: BombMissileTowerPartData
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
+  _towerType: 3
   _towerName: BombMissile
   _maxHp: 2
   _attackDamage: 5

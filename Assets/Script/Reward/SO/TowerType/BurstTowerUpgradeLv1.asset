@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bcde33cd237de243902bf6f92d3bf96, type: 3}
+  m_Name: BurstTowerUpgradeLv1
+  m_EditorClassIdentifier: Assembly-CSharp::RewardData
+  _rewardName: Burst Tower Lv.1
+  _description: 
+  _icon: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
+  _rarity: 0
+  _category: 4
+  _selectionWeight: 1
+  _rewardDefinition:
+    rid: 1776079130660175881
+  _rewardDefinitions:
+  - rid: 1776079130660175881
+  references:
+    version: 2
+    RefIds:
+    - rid: 1776079130660175881
+      type: {class: TowerTypeUpgradeRewardDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        _upgradeData: {fileID: 11400000, guid: 5a570a95b4a2b7b4ab960aa17103e40b, type: 2}
+        _targetLevel: 1

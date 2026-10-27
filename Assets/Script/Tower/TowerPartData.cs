@@ -4,6 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "TowerPartData", menuName = "Scriptable Objects/TowerPartData")]
 public class TowerPartData : ScriptableObject
 {
+    [SerializeField] private TowerType _towerType;
     [SerializeField] private string _towerName;
     [SerializeField] private int _maxHp;
     [SerializeField] private float _attackDamage;
@@ -30,6 +31,7 @@ public class TowerPartData : ScriptableObject
     [SerializeReference, HideInInspector] private List<TowerAttackDefinition> _attackDefinitions = new();
     [SerializeReference, HideInInspector] private List<FireModeDefinition> _fireModeDefinitions = new();
 
+    public TowerType TowerType => _towerType;
     public string TowerName => _towerName;
     public int MaxHp => _maxHp;
     public float AttackDamage => _attackDamage;

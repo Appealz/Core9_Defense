@@ -79,9 +79,19 @@ public sealed class GameBootstrapper : SceneBootstrapper
         var towerTargetSelector = new TowerTargetSelector(enemyQuery);
         var attackDependencies = new TowerAttackDependencies(projectileManager, explosionEffectManager, laserManager);
         var globalStatModifiers = new TowerStatModifiers();
+        var towerTypeUpgradeState = new TowerTypeUpgradeState(_gameStartData.TowerTypeUpgradeDataList);
 
-        var towerFactory = new TowerFactory(towerTargetSelector, attackDependencies, globalStatModifiers);
-        var towerManager = new TowerManager(towerFactory, coreManager, _coreLayout, globalStatModifiers);
+        var towerFactory = new TowerFactory(
+            towerTargetSelector,
+            attackDependencies,
+            globalStatModifiers,
+            towerTypeUpgradeState);
+        var towerManager = new TowerManager(
+            towerFactory,
+            coreManager,
+            _coreLayout,
+            globalStatModifiers,
+            towerTypeUpgradeState);
 
         CoreSlotEnhancementSelectionController slotEnhancementSelection =
             GetComponent<CoreSlotEnhancementSelectionController>();

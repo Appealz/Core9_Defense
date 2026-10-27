@@ -8,12 +8,18 @@ public class TowerFactory
     private readonly TowerTargetSelector _targetSelector;
     private readonly TowerAttackDependencies _attackDependencies;
     private readonly TowerStatModifiers _globalStatModifiers;
+    private readonly TowerTypeUpgradeState _typeUpgradeState;
 
-    public TowerFactory(TowerTargetSelector targetSelector, TowerAttackDependencies attackDependencies, TowerStatModifiers globalStatModifiers)
+    public TowerFactory(
+        TowerTargetSelector targetSelector,
+        TowerAttackDependencies attackDependencies,
+        TowerStatModifiers globalStatModifiers,
+        TowerTypeUpgradeState typeUpgradeState)
     {
         _targetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
         _attackDependencies = attackDependencies ?? throw new ArgumentNullException(nameof(attackDependencies));
         _globalStatModifiers = globalStatModifiers ?? throw new ArgumentNullException(nameof(globalStatModifiers));
+        _typeUpgradeState = typeUpgradeState ?? throw new ArgumentNullException(nameof(typeUpgradeState));
     }
 
     public async UniTask<Tower> CreateAsync(TowerPartData partData)
@@ -22,16 +28,18 @@ public class TowerFactory
             throw new ArgumentNullException(nameof(partData));
 
         if (partData.AttackDefinition == null)
-            throw new InvalidOperationException("AttackDefinition¿Ã º≥¡§µ«¡ˆ æ æ“Ω¿¥œ¥Ÿ.");
+            throw new InvalidOperationException("AttackDefinitionÏù¥ ÏÑ§Ï†ïÎêòÏßÄ ÏïäÏïòÏäµÎãàÎã§.");
 
         if (partData.FireModeDefinition == null)
-            throw new InvalidOperationException("FireModeDefinition¿Ã º≥¡§µ«¡ˆ æ æ“Ω¿¥œ¥Ÿ.");
+            throw new InvalidOperationException("FireModeDefinitionÏù¥ ÏÑ§Ï†ïÎêòÏßÄ ÏïäÏïòÏäµÎãàÎã§.");
 
-        TowerStats stats = new TowerStats(partData, _globalStatModifiers);
+        TowerStatModifiers typeStatModifiers = _typeUpgradeState.GetStatModifiers(partData.TowerType);
+        TowerUniqueModifiers uniqueModifiers = _typeUpgradeState.GetUniqueModifiers(partData.TowerType);
+        TowerStats stats = new TowerStats(partData, _globalStatModifiers, typeStatModifiers);
         TowerHealth health = new TowerHealth(stats.MaxHp);
 
-        ITowerAttack attack = partData.AttackDefinition.CreateAttack(_attackDependencies);
-        IFireMode fireMode = partData.FireModeDefinition.CreateFireMode();
+        ITowerAttack attack = partData.AttackDefinition.CreateAttack(_attackDependencies, uniqueModifiers);
+        IFireMode fireMode = partData.FireModeDefinition.CreateFireMode(uniqueModifiers);
 
         TowerAttack towerAttack = new TowerAttack(stats, attack, fireMode, _targetSelector);
 
@@ -39,10 +47,8 @@ public class TowerFactory
         Tower tower = towerObject.GetComponent<Tower>();
 
         tower.gameObject.name = partData.TowerName;
-        tower.Initialize(health, stats, towerAttack, partData.Sprite);
-
         ITowerAttackEffect effect = partData.AttackDefinition.CreateEffect();
-        effect?.Show(tower.transform, stats);
+        tower.Initialize(health, stats, towerAttack, partData.Sprite, partData.TowerType, effect);
 
         return tower;
     }
