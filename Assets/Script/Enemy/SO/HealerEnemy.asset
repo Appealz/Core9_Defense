@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce9c90edd99d407488fa18271cc59465, type: 3}
   m_Name: HealerEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
+  _role: 1
+  _retreatDuration: 0.35
   _maxHp: 5
   _moveSpeed: 2
   _attackDamage: 0

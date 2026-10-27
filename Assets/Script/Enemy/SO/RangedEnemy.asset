@@ -33,4 +33,5 @@ MonoBehaviour:
       type: {class: RangedAttackDefinition, ns: , asm: Assembly-CSharp}
       data:
         _projectileSpeed: 5
+        _projectileLifetime: 5
         _projectileSprite: {fileID: -2413806693520163455, guid: 38d339ba03ffe9145811230948fd538a, type: 3}

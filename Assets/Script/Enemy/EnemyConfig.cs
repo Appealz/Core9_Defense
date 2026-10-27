@@ -4,6 +4,12 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "EnemyConfig", menuName = "Scriptable Objects/EnemyConfig")]
 public class EnemyConfig : ScriptableObject
 {
+    [Header("Role")]
+    [SerializeField] private EnemyRole _role = EnemyRole.Combat;
+    [Tooltip("Seconds used by support enemies when leaving after combat enemies are gone.")]
+    [SerializeField, Min(0.01f)] private float _retreatDuration = 0.35f;
+
+    [Header("Stats")]
     [SerializeField] private float _maxHp;
     [SerializeField] private float _moveSpeed;
     [SerializeField] private float _attackDamage;
@@ -17,6 +23,8 @@ public class EnemyConfig : ScriptableObject
     [SerializeReference] private EnemyAbilityDefinition _abilityDefinition;
     [SerializeReference] private EnemyDeathBehaviorDefinition _deathBehaviorDefinition;
 
+    public EnemyRole Role => _role;
+    public float RetreatDuration => Mathf.Max(0.01f, _retreatDuration);
     public float MaxHp => _maxHp;
     public float MoveSpeed => _moveSpeed;
     public float AttackDamage => _attackDamage;

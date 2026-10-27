@@ -34,6 +34,18 @@ public class CoreBoundary : MonoBehaviour
         return _coreManager != null && _coreManager.TryApplyDamage(damage);
     }
 
+    public bool ContainsPoint(Vector3 worldPosition)
+    {
+        if (_collider == null)
+            return false;
+
+        if (_collider.OverlapPoint(worldPosition))
+            return true;
+
+        Vector2 closestPoint = _collider.ClosestPoint(worldPosition);
+        return (closestPoint - (Vector2)worldPosition).sqrMagnitude <= 0.0001f;
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!other.TryGetComponent(out Enemy enemy))

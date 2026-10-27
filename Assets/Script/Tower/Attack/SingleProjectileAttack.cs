@@ -6,15 +6,18 @@ public class SingleProjectileAttack : ITargetedTowerAttack
     private readonly ProjectileManager _projectileManager;
     private readonly IProjectileImpact _impact;
     private readonly float _projectileSpeed;
+    private readonly float _straightProjectileLifetime;
     private readonly TowerUniqueModifiers _uniqueModifiers;
 
     public SingleProjectileAttack(
         ProjectileManager projectileManager,
         float projectileSpeed,
+        float straightProjectileLifetime,
         TowerUniqueModifiers uniqueModifiers)
     {
         _projectileManager = projectileManager;
         _projectileSpeed = projectileSpeed;
+        _straightProjectileLifetime = Mathf.Max(0.01f, straightProjectileLifetime);
         _uniqueModifiers = uniqueModifiers;
 
         _impact = new DirectHitImpact();
@@ -36,7 +39,9 @@ public class SingleProjectileAttack : ITargetedTowerAttack
             float centeredIndex = i - (projectileCount - 1) * 0.5f;
             Vector3 shotOrigin = origin + perpendicular * (centeredIndex * spacing);
 
-            if (spreadAngle <= 0f)
+            bool useStraightProjectile = projectileCount > 1 || spreadAngle > 0f || spacing > 0f;
+
+            if (!useStraightProjectile)
             {
                 _projectileManager.FireAsync(
                     shotOrigin,
@@ -47,14 +52,26 @@ public class SingleProjectileAttack : ITargetedTowerAttack
                 continue;
             }
 
-            Vector3 shotDirection = Quaternion.Euler(0f, 0f, centeredIndex * spreadAngle) * direction;
-            Vector3 targetPosition = shotOrigin + shotDirection * stats.AttackRange;
+            float angle = GetSpreadAngle(i, spreadAngle);
+            Vector3 shotDirection = Quaternion.Euler(0f, 0f, angle) * direction;
             _projectileManager.FireFixedAsync(
                 shotOrigin,
-                targetPosition,
+                shotDirection,
+                stats.AttackRange,
+                _straightProjectileLifetime,
                 damage,
                 _projectileSpeed,
-                _impact).Forget();
+                _impact,
+                ProjectileCollisionTarget.Enemy).Forget();
         }
+    }
+
+    private static float GetSpreadAngle(int projectileIndex, float spreadAngle)
+    {
+        if (projectileIndex <= 0 || spreadAngle <= 0f)
+            return 0f;
+
+        int step = (projectileIndex + 1) / 2;
+        return step * spreadAngle * (projectileIndex % 2 == 1 ? 1f : -1f);
     }
 }

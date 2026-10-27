@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
@@ -9,17 +10,21 @@ public class Projectile : MonoBehaviour
     private IDamageable _target;
     private IProjectileImpact _impact;
     private Vector3 _lastTargetPosition;
+    private Vector3 _fixedDirection;
+    private readonly List<RaycastHit2D> _collisionResults = new(8);
 
     private float _damage;
     private float _speed;
+    private float _remainingDistance;
+    private float _remainingLifetime;
     private bool _isHoming;
-    private int _enemyLayerMask;
+    private bool _hasImpacted;
+    private ProjectileCollisionTarget _collisionTarget;
+    private CoreBoundary _collisionBoundary;
 
     private void Awake()
     {
-        _spriteRenderer = GetComponent<SpriteRenderer>();
-        _defaultSprite = _spriteRenderer.sprite;
-        _enemyLayerMask = LayerMask.GetMask("Enemy");
+        EnsureRenderer();
     }
 
     public void Initialize(Vector3 origin, IDamageable target, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
@@ -29,24 +34,41 @@ public class Projectile : MonoBehaviour
         _target = target;
         _lastTargetPosition = target.Position;
         _isHoming = true;
+        _collisionTarget = ProjectileCollisionTarget.None;
     }
 
-    public void InitializeFixed(Vector3 origin, Vector3 targetPosition, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
+    public void InitializeFixed(
+        Vector3 origin,
+        Vector3 direction,
+        float maxDistance,
+        float lifetime,
+        float damage,
+        float speed,
+        IProjectileImpact impact,
+        ProjectileCollisionTarget collisionTarget,
+        CoreBoundary collisionBoundary,
+        Sprite sprite = null)
     {
         InitializeCommon(origin, damage, speed, impact, sprite);
 
         _target = null;
-        _lastTargetPosition = targetPosition;
+        _fixedDirection = direction.normalized;
+        _remainingDistance = Mathf.Max(0f, maxDistance);
+        _remainingLifetime = Mathf.Max(0.01f, lifetime);
         _isHoming = false;
+        _collisionTarget = collisionTarget;
+        _collisionBoundary = collisionBoundary;
     }
 
     private void InitializeCommon(Vector3 origin, float damage, float speed, IProjectileImpact impact, Sprite sprite)
     {
+        EnsureRenderer();
         transform.position = origin;
 
         _damage = damage;
         _speed = speed;
         _impact = impact;
+        _hasImpacted = false;
 
         _spriteRenderer.sprite = sprite != null ? sprite : _defaultSprite;
     }
@@ -54,23 +76,24 @@ public class Projectile : MonoBehaviour
     public bool ProjectileUpdate(float deltaTime)
     {
         if (_isHoming)
-            UpdateTargetState();
+            return UpdateHoming(deltaTime);
+
+        return UpdateFixed(deltaTime);
+    }
+
+    private bool UpdateHoming(float deltaTime)
+    {
+        UpdateTargetState();
 
         Vector3 direction = _lastTargetPosition - transform.position;
 
         float distance = direction.magnitude;
         float moveDistance = _speed * deltaTime;
 
-        if (!_isHoming && TryHitEnemyAlongPath(transform.position, direction, distance, moveDistance))
-            return false;
-
         if (distance <= moveDistance)
         {
             transform.position = _lastTargetPosition;
-
-            if (_isHoming)
-                _impact.Impact(_lastTargetPosition, _target, _damage);
-
+            ApplyImpact(_lastTargetPosition, _target);
             return false;
         }
 
@@ -78,25 +101,110 @@ public class Projectile : MonoBehaviour
         return true;
     }
 
-    private bool TryHitEnemyAlongPath(Vector3 start, Vector3 direction, float distance, float moveDistance)
+    private bool UpdateFixed(float deltaTime)
     {
-        if (distance <= 0f)
+        _remainingLifetime -= deltaTime;
+
+        if (_remainingLifetime <= 0f || _remainingDistance <= 0f || _fixedDirection.sqrMagnitude <= 0f)
             return false;
 
-        Vector3 end = start + direction / distance * Mathf.Min(distance, moveDistance);
-        RaycastHit2D hit = Physics2D.Linecast(start, end, _enemyLayerMask);
+        float moveDistance = Mathf.Min(_speed * deltaTime, _remainingDistance);
+        Vector3 start = transform.position;
+        Vector3 end = start + _fixedDirection * moveDistance;
 
-        if (hit.collider == null)
+        if (TryFindCollision(start, end, out RaycastHit2D hit, out IDamageable target))
+        {
+            transform.position = hit.point;
+            ApplyImpact(hit.point, target);
+            return false;
+        }
+
+        transform.position = end;
+        _remainingDistance -= moveDistance;
+
+        if (_remainingDistance <= 0f &&
+            _collisionTarget == ProjectileCollisionTarget.CoreBoundary &&
+            _collisionBoundary != null &&
+            _collisionBoundary.ContainsPoint(end))
+        {
+            ApplyImpact(end, null);
+            return false;
+        }
+
+        return _remainingDistance > 0f && _remainingLifetime > 0f;
+    }
+
+    private bool TryFindCollision(
+        Vector3 start,
+        Vector3 end,
+        out RaycastHit2D nearestHit,
+        out IDamageable target)
+    {
+        nearestHit = default;
+        target = null;
+
+        if (_collisionTarget == ProjectileCollisionTarget.None)
             return false;
 
-        Enemy enemy = hit.collider.GetComponentInParent<Enemy>();
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = true;
+        filter.SetLayerMask(_collisionTarget == ProjectileCollisionTarget.Enemy
+            ? LayerMask.GetMask("Enemy")
+            : Physics2D.AllLayers);
 
-        if (enemy == null || !enemy.IsAlive)
+        _collisionResults.Clear();
+        Physics2D.Linecast(start, end, filter, _collisionResults);
+
+        float nearestFraction = float.MaxValue;
+
+        for (int i = 0; i < _collisionResults.Count; i++)
+        {
+            RaycastHit2D candidate = _collisionResults[i];
+
+            if (!TryResolveCollision(candidate.collider, out IDamageable candidateTarget) ||
+                candidate.fraction >= nearestFraction)
+            {
+                continue;
+            }
+
+            nearestFraction = candidate.fraction;
+            nearestHit = candidate;
+            target = candidateTarget;
+        }
+
+        return nearestFraction < float.MaxValue;
+    }
+
+    private bool TryResolveCollision(Collider2D collider, out IDamageable target)
+    {
+        target = null;
+
+        if (collider == null)
             return false;
 
-        transform.position = hit.point;
-        _impact.Impact(hit.point, enemy, _damage);
-        return true;
+        if (_collisionTarget == ProjectileCollisionTarget.Enemy)
+        {
+            Enemy enemy = collider.GetComponentInParent<Enemy>();
+
+            if (enemy == null || !enemy.IsAlive)
+                return false;
+
+            target = enemy;
+            return true;
+        }
+
+        return _collisionTarget == ProjectileCollisionTarget.CoreBoundary &&
+            _collisionBoundary != null &&
+            collider.GetComponentInParent<CoreBoundary>() == _collisionBoundary;
+    }
+
+    private void ApplyImpact(Vector3 position, IDamageable target)
+    {
+        if (_hasImpacted)
+            return;
+
+        _hasImpacted = true;
+        _impact.Impact(position, target, _damage);
     }
 
     public void Reset()
@@ -104,12 +212,31 @@ public class Projectile : MonoBehaviour
         _target = null;
         _impact = null;
         _lastTargetPosition = Vector3.zero;
+        _fixedDirection = Vector3.zero;
 
         _damage = 0f;
         _speed = 0f;
+        _remainingDistance = 0f;
+        _remainingLifetime = 0f;
         _isHoming = false;
+        _hasImpacted = false;
+        _collisionTarget = ProjectileCollisionTarget.None;
+        _collisionBoundary = null;
+        _collisionResults.Clear();
 
-        _spriteRenderer.sprite = _defaultSprite;
+        if (_spriteRenderer != null)
+            _spriteRenderer.sprite = _defaultSprite;
+    }
+
+    private void EnsureRenderer()
+    {
+        if (_spriteRenderer != null)
+            return;
+
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (_spriteRenderer != null)
+            _defaultSprite = _spriteRenderer.sprite;
     }
 
     private void UpdateTargetState()

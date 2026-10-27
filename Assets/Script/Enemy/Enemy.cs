@@ -18,6 +18,7 @@ public class Enemy : MonoBehaviour, IDamageable
 
     public event Action<Enemy> Died;
     public event Action<Enemy> CoreReached;
+    public event Action<Enemy> Retreated;
 
     private EnemyController _controller;
     private Transform _moveTarget;
@@ -93,6 +94,18 @@ public class Enemy : MonoBehaviour, IDamageable
 #endif
     }
 
+    public bool TryBeginRetreat()
+    {
+        if (!IsAlive || Config == null || Config.Role != EnemyRole.Support)
+            return false;
+
+        _isRemoved = true;
+        Visual.StopSpawnSpread();
+        _ability?.Stop();
+        Visual.PlayRetreat(Config.RetreatDuration, CompleteRetreat);
+        return true;
+    }
+
     private void Update()
     {
         if (_controller == null || _coreBoundary == null || !IsAlive || Visual.IsSpawnSpreading)
@@ -113,6 +126,11 @@ public class Enemy : MonoBehaviour, IDamageable
         _ability?.Stop();
 
         Died?.Invoke(this);
+    }
+
+    private void CompleteRetreat()
+    {
+        Retreated?.Invoke(this);
     }
 
     private void OnDisable()

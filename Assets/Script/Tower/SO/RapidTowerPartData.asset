@@ -38,6 +38,7 @@ MonoBehaviour:
       type: {class: SingleProjectileAttackDefinition, ns: , asm: Assembly-CSharp}
       data:
         _projectileSpeed: 10
+        _straightProjectileLifetime: 3
     - rid: 1776078645934161997
       type: {class: SingleFireModeDefinition, ns: , asm: Assembly-CSharp}
       data: 

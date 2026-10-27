@@ -40,7 +40,7 @@ public class WaveManager
             await UniTask.WhenAll(spawnTasks);
 
             await UniTask.WaitUntil(
-                () => _enemyManager.AliveCount == 0 && _enemyManager.PendingSpawnCount == 0,
+                TryCompleteWaveOrBeginSupportRetreat,
                 cancellationToken: cancellationToken
             );
         }
@@ -49,6 +49,23 @@ public class WaveManager
             _enemyManager.EnemyRemoved -= HandleEnemyRemoved;
             _enemyManager.SpawnCountAdjusted -= HandleSpawnCountAdjusted;
         }
+    }
+
+    private bool TryCompleteWaveOrBeginSupportRetreat()
+    {
+        if (_enemyManager.PendingSpawnCount > 0)
+            return false;
+
+        if (_enemyManager.AliveCount == 0)
+            return true;
+
+        if (_enemyManager.CombatAliveCount > 0)
+            return false;
+
+        if (_enemyManager.SupportAliveCount > 0)
+            _enemyManager.TryRetreatSupportEnemies();
+
+        return false;
     }
 
     private int CalculateTotalEnemyCount(WaveData waveData)

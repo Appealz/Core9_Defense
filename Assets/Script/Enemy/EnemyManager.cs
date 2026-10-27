@@ -12,6 +12,8 @@ public class EnemyManager
     private readonly HashSet<Enemy> _aliveEnemies = new();
 
     public int AliveCount => _aliveEnemies.Count;
+    public int CombatAliveCount => CountAliveByRole(EnemyRole.Combat);
+    public int SupportAliveCount => CountAliveByRole(EnemyRole.Support);
     public int PendingSpawnCount { get; private set; }
 
     internal IReadOnlyCollection<Enemy> AliveEnemies => _aliveEnemies;
@@ -31,6 +33,7 @@ public class EnemyManager
 
         enemy.Died += OnEnemyDied;
         enemy.CoreReached += OnEnemyCoreReached;
+        enemy.Retreated += OnEnemyRetreated;
     }
 
     public void ReserveAdditionalSpawns(int count)
@@ -45,7 +48,7 @@ public class EnemyManager
     public void CompleteReservedSpawn(bool succeeded)
     {
         if (PendingSpawnCount <= 0)
-            throw new InvalidOperationException("¿¹¾àµÈ Enemy ½ºÆùÀÌ ¾ø½À´Ï´Ù.");
+            throw new InvalidOperationException("ì˜ˆì•½ëœ Enemy ìŠ¤í°ì´ ì—†ìŠµë‹ˆë‹¤.");
 
         PendingSpawnCount--;
 
@@ -63,6 +66,32 @@ public class EnemyManager
         RemoveEnemy(enemy, false);
     }
 
+    private void OnEnemyRetreated(Enemy enemy)
+    {
+        RemoveEnemy(enemy, false);
+    }
+
+    public int TryRetreatSupportEnemies()
+    {
+        List<Enemy> supportEnemies = new();
+
+        foreach (Enemy enemy in _aliveEnemies)
+        {
+            if (enemy != null && enemy.IsAlive && enemy.Config != null && enemy.Config.Role == EnemyRole.Support)
+                supportEnemies.Add(enemy);
+        }
+
+        int startedCount = 0;
+
+        for (int i = 0; i < supportEnemies.Count; i++)
+        {
+            if (supportEnemies[i].TryBeginRetreat())
+                startedCount++;
+        }
+
+        return startedCount;
+    }
+
     private void RemoveEnemy(Enemy enemy, bool wasKilled)
     {
         if (!_aliveEnemies.Remove(enemy))
@@ -70,11 +99,25 @@ public class EnemyManager
 
         enemy.Died -= OnEnemyDied;
         enemy.CoreReached -= OnEnemyCoreReached;
+        enemy.Retreated -= OnEnemyRetreated;
 
         if (wasKilled)
             EnemyKilled?.Invoke(enemy);
 
         _enemyFactory.Release(enemy);
         EnemyRemoved?.Invoke();
+    }
+
+    private int CountAliveByRole(EnemyRole role)
+    {
+        int count = 0;
+
+        foreach (Enemy enemy in _aliveEnemies)
+        {
+            if (enemy != null && enemy.IsAlive && enemy.Config != null && enemy.Config.Role == role)
+                count++;
+        }
+
+        return count;
     }
 }

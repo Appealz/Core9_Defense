@@ -29,14 +29,39 @@ public class ProjectileManager : IUpdatable
         _activeProjectiles.Add(projectile);
     }
 
-    public async UniTask FireFixedAsync(Vector3 origin, Vector3 targetPosition, float damage, float speed, IProjectileImpact impact, Sprite sprite = null)
+    public async UniTask FireFixedAsync(
+        Vector3 origin,
+        Vector3 direction,
+        float maxDistance,
+        float lifetime,
+        float damage,
+        float speed,
+        IProjectileImpact impact,
+        ProjectileCollisionTarget collisionTarget,
+        CoreBoundary collisionBoundary = null,
+        Sprite sprite = null)
     {
-        if (damage <= 0f || speed <= 0f || impact == null)
+        if (direction.sqrMagnitude <= 0f || maxDistance <= 0f || lifetime <= 0f ||
+            damage <= 0f || speed <= 0f || impact == null ||
+            collisionTarget == ProjectileCollisionTarget.None ||
+            (collisionTarget == ProjectileCollisionTarget.CoreBoundary && collisionBoundary == null))
+        {
             return;
+        }
 
         Projectile projectile = await _projectilePool.GetAsync();
 
-        projectile.InitializeFixed(origin, targetPosition, damage, speed, impact, sprite);
+        projectile.InitializeFixed(
+            origin,
+            direction,
+            maxDistance,
+            lifetime,
+            damage,
+            speed,
+            impact,
+            collisionTarget,
+            collisionBoundary,
+            sprite);
         projectile.gameObject.SetActive(true);
 
         _activeProjectiles.Add(projectile);
