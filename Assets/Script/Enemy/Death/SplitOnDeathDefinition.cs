@@ -21,13 +21,13 @@ public class SplitOnDeathDefinition : EnemyDeathBehaviorDefinition
     {
         if (_childConfig == null || _childCount <= 0)
         {
-            Debug.LogWarning($"ºÐ¿­ ¼³Á¤ÀÌ ¿Ã¹Ù¸£Áö ¾Ê½À´Ï´Ù: {context.SourceConfig.name}");
+            Debug.LogWarning($"ë¶„ì—´ ì„¤ì •ì´ ì˜¬ë°”ë¥´ì§€ ì•ŠìŠµë‹ˆë‹¤: {context.SourceConfig.name}");
             return;
         }
 
         if (HasCycle(context.SourceConfig))
         {
-            Debug.LogError($"Enemy ºÐ¿­ ¼øÈ¯ ÂüÁ¶ ¹ß°ß: {context.SourceConfig.name}");
+            Debug.LogError($"Enemy ë¶„ì—´ ìˆœí™˜ ì°¸ì¡° ë°œê²¬: {context.SourceConfig.name}");
             return;
         }
 
@@ -82,8 +82,17 @@ public class SplitOnDeathDefinition : EnemyDeathBehaviorDefinition
 
             try
             {
-                await context.SpawnManager.SpawnEnemyAsync(childConfig, context.Position, context.Position + offset, duration);
+                await context.SpawnManager.SpawnEnemyAsync(
+                    childConfig,
+                    context.Position,
+                    context.Position + offset,
+                    duration,
+                    context.RuntimeModifiers,
+                    context.CancellationToken);
                 succeeded = true;
+            }
+            catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+            {
             }
             catch (Exception exception)
             {

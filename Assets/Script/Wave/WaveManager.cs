@@ -1,6 +1,5 @@
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -20,11 +19,15 @@ public class WaveManager
         _enemyManager = enemyManager;
     }
 
-    public async UniTask PlayWaveAsync(WaveData waveData, CancellationToken cancellationToken = default)
+    public async UniTask PlayWaveAsync(WavePlan wavePlan, CancellationToken cancellationToken = default)
     {
-        _totalEnemyCount = CalculateTotalEnemyCount(waveData);
+        if (wavePlan == null)
+            throw new ArgumentNullException(nameof(wavePlan));
+
+        _totalEnemyCount = wavePlan.TotalEnemyCount;
         _processedEnemyCount = 0;
         _enemyManager.SetSupportRetreatWaiting(false);
+        int waveVersion = _spawnManager.BeginWave(wavePlan.RuntimeModifiers, cancellationToken);
 
         ProgressChanged?.Invoke(_processedEnemyCount, _totalEnemyCount);
 
@@ -33,12 +36,7 @@ public class WaveManager
 
         try
         {
-            List<UniTask> spawnTasks = new();
-
-            foreach (WaveSpawnEntry entry in waveData.SpawnEntries)
-                spawnTasks.Add(SpawnEntryAsync(entry, cancellationToken));
-
-            await UniTask.WhenAll(spawnTasks);
+            await SpawnPlanAsync(wavePlan, cancellationToken);
 
             await UniTask.WaitUntil(
                 TryCompleteWaveOrBeginSupportRetreat,
@@ -47,6 +45,7 @@ public class WaveManager
         }
         finally
         {
+            _spawnManager.EndWave(waveVersion);
             _enemyManager.SetSupportRetreatWaiting(false);
             _enemyManager.EnemyRemoved -= HandleEnemyRemoved;
             _enemyManager.SpawnCountAdjusted -= HandleSpawnCountAdjusted;
@@ -73,16 +72,6 @@ public class WaveManager
         return false;
     }
 
-    private int CalculateTotalEnemyCount(WaveData waveData)
-    {
-        int totalCount = 0;
-
-        foreach (WaveSpawnEntry entry in waveData.SpawnEntries)
-            totalCount += Math.Max(0, entry.SpawnCount);
-
-        return totalCount;
-    }
-
     private void HandleEnemyRemoved()
     {
         _processedEnemyCount = Math.Min(_processedEnemyCount + 1, _totalEnemyCount);
@@ -95,22 +84,28 @@ public class WaveManager
         ProgressChanged?.Invoke(_processedEnemyCount, _totalEnemyCount);
     }
 
-    private async UniTask SpawnEntryAsync(WaveSpawnEntry entry, CancellationToken cancellationToken)
+    private async UniTask SpawnPlanAsync(WavePlan wavePlan, CancellationToken cancellationToken)
     {
-        if (entry.SpawnCount <= 0)
-            return;
+        float previousSpawnTime = 0f;
 
-        if (entry.StartDelay > 0f)
-            await UniTask.Delay(TimeSpan.FromSeconds(entry.StartDelay), cancellationToken: cancellationToken);
-
-        for (int i = 0; i < entry.SpawnCount; i++)
+        for (int i = 0; i < wavePlan.SpawnInstructions.Count; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            WaveSpawnInstruction instruction = wavePlan.SpawnInstructions[i];
+            float delay = Math.Max(0f, instruction.SpawnTime - previousSpawnTime);
 
-            await _spawnManager.SpawnEnemyAsync(entry.EnemyConfig);
+            if (delay > 0f)
+            {
+                await UniTask.Delay(
+                    TimeSpan.FromSeconds(delay),
+                    cancellationToken: cancellationToken);
+            }
 
-            if (i < entry.SpawnCount - 1)
-                await UniTask.Delay(TimeSpan.FromSeconds(Math.Max(0f, entry.SpawnInterval)), cancellationToken: cancellationToken);
+            await _spawnManager.SpawnEnemyAsync(
+                instruction.EnemyConfig,
+                wavePlan.RuntimeModifiers,
+                cancellationToken);
+            previousSpawnTime = instruction.SpawnTime;
         }
     }
 }

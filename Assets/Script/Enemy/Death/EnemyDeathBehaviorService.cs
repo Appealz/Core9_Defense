@@ -21,7 +21,13 @@ public sealed class EnemyDeathBehaviorService : IDisposable
         if (config == null || config.DeathBehaviorDefinition == null)
             return;
 
-        EnemyDeathContext context = new EnemyDeathContext(config, enemy.Position, _spawnManager, _enemyManager);
+        EnemyDeathContext context = new EnemyDeathContext(
+            config,
+            enemy.RuntimeModifiers,
+            _spawnManager.WaveCancellationToken,
+            enemy.Position,
+            _spawnManager,
+            _enemyManager);
         config.DeathBehaviorDefinition.Execute(context);
     }
 

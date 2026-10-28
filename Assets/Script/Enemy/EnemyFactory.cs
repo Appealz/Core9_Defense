@@ -1,5 +1,6 @@
 
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -24,6 +25,19 @@ public class EnemyFactory
 
     public async UniTask<Enemy> CreateAsync(EnemyConfig config, Transform moveTarget)
     {
+        return await CreateAsync(
+            config,
+            moveTarget,
+            EnemyRuntimeModifiers.Default,
+            CancellationToken.None);
+    }
+
+    public async UniTask<Enemy> CreateAsync(
+        EnemyConfig config,
+        Transform moveTarget,
+        EnemyRuntimeModifiers runtimeModifiers,
+        CancellationToken cancellationToken)
+    {
         if (config == null)
             throw new ArgumentNullException(nameof(config));
 
@@ -35,15 +49,33 @@ public class EnemyFactory
 
         Enemy enemy = await _enemyPool.GetAsync();
 
-        EnemyHealth health = new EnemyHealth(config.MaxHp);
-        EnemyStats stats = new EnemyStats(config.MoveSpeed, config.AttackDamage, config.AttackRange, config.AttackCooldown);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            _enemyPool.Return(enemy);
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        EnemyHealth health = new EnemyHealth(config.MaxHp * runtimeModifiers.HpMultiplier);
+        EnemyStats stats = new EnemyStats(
+            config.MoveSpeed,
+            config.AttackDamage * runtimeModifiers.DamageMultiplier,
+            config.AttackRange,
+            config.AttackCooldown);
 
         IEnemyMovement movement = config.MovementDefinition.CreateMovement();
         IEnemyAttack attack = config.AttackDefinition?.CreateAttack(enemy.transform, _projectileManager, _coreBoundary);
 
         EnemyController controller = new EnemyController(stats, movement, attack, _coreBoundary);
 
-        enemy.Initialize(health, stats, controller, attack, moveTarget, config, _cameraBoundsProvider);
+        enemy.Initialize(
+            health,
+            stats,
+            controller,
+            attack,
+            moveTarget,
+            config,
+            runtimeModifiers,
+            _cameraBoundsProvider);
 
         return enemy;
     }

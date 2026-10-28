@@ -26,6 +26,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
     private TowerGoldUpgradeManager _towerGoldUpgradeManager;
     private TowerSelectionManager _towerSelectionManager;
     private TowerManager _towerManager;
+    private GameManager _gameManager;
 
     private GoldManager _goldManager;
     private EnemyGoldRewardService _enemyGoldRewardService;
@@ -59,9 +60,21 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        if (_gameStartData.WaveDataList.Count == 0)
+        if (_gameStartData.WaveGenerationSettings == null)
         {
-            Debug.LogError("WaveDataList가 비어 있습니다.", this);
+            Debug.LogError("WaveGenerationSettings가 설정되지 않았습니다.", this);
+            return;
+        }
+
+        WavePlanGenerator wavePlanGenerator;
+
+        try
+        {
+            wavePlanGenerator = new WavePlanGenerator(_gameStartData.WaveGenerationSettings);
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogException(exception, _gameStartData.WaveGenerationSettings);
             return;
         }
 
@@ -178,12 +191,14 @@ public sealed class GameBootstrapper : SceneBootstrapper
         _deathBehaviorService = new EnemyDeathBehaviorService(enemyManager, spawnManager);
 
         var waveManager = new WaveManager(spawnManager, enemyManager);
-        var gameManager = new GameManager(
+        _gameManager = new GameManager(
             gameStateManager,
             waveManager,
             rewardSelectionManager,
-            _gameStartData.WaveDataList,
+            wavePlanGenerator,
+            _gameStartData.WaveGenerationSettings,
             playerProgression);
+        GameManager gameManager = _gameManager;
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
@@ -266,6 +281,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
         _rewardSelectionPresenter?.Dispose();
 
         _deathBehaviorService?.Dispose();
+        _gameManager?.Dispose();
         _enemyGoldRewardService?.Dispose();
         _enemyExperienceRewardService?.Dispose();
         _towerSelectionManager?.Dispose();

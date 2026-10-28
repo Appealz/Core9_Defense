@@ -9,6 +9,7 @@ public class Enemy : MonoBehaviour, IDamageable
     public EnemyStats Stats { get; private set; }
     public IEnemyAttack Attack { get; private set; }
     public EnemyConfig Config { get; private set; }
+    public EnemyRuntimeModifiers RuntimeModifiers { get; private set; } = EnemyRuntimeModifiers.Default;
     public EnemyVisual Visual { get; private set; }
 
     public bool IsAlive => Health != null && Health.IsAlive && !_isRemoved;
@@ -51,6 +52,7 @@ public class Enemy : MonoBehaviour, IDamageable
         IEnemyAttack attack,
         Transform moveTarget,
         EnemyConfig config,
+        EnemyRuntimeModifiers runtimeModifiers,
         CameraBoundsProvider cameraBoundsProvider)
     {
         if (Health != null)
@@ -60,6 +62,7 @@ public class Enemy : MonoBehaviour, IDamageable
         Stats = stats;
         Attack = attack;
         Config = config;
+        RuntimeModifiers = runtimeModifiers;
         _cameraBoundsProvider = cameraBoundsProvider ?? throw new ArgumentNullException(nameof(cameraBoundsProvider));
         _controller = controller;
 

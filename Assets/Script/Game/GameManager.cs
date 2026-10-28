@@ -1,17 +1,22 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public class GameManager : IUpdatable
+public class GameManager : IUpdatable, IDisposable
 {
     private const float RearrangementDuration = 30f;
 
     private readonly GameStateManager _gameStateManager;
     private readonly WaveManager _waveManager;
     private readonly RewardSelectionManager _rewardSelectionManager;
-    private readonly IReadOnlyList<WaveData> _waveDataList;
+    private readonly WavePlanGenerator _wavePlanGenerator;
+    private readonly WaveGenerationSettings _waveGenerationSettings;
     private readonly PlayerProgression _playerProgression;
+
+    private CancellationTokenSource _waveCancellationSource;
+    private int _waveRunVersion;
 
     private int _currentWaveNumber = 1;
     private float _rearrangementTimeRemaining;
@@ -29,21 +34,27 @@ public class GameManager : IUpdatable
         GameStateManager gameStateManager,
         WaveManager waveManager,
         RewardSelectionManager rewardSelectionManager,
-        IReadOnlyList<WaveData> waveDataList,
+        WavePlanGenerator wavePlanGenerator,
+        WaveGenerationSettings waveGenerationSettings,
         PlayerProgression playerProgression)
     {
         _gameStateManager = gameStateManager;
         _waveManager = waveManager;
         _rewardSelectionManager = rewardSelectionManager;
-        _waveDataList = waveDataList;
+        _wavePlanGenerator = wavePlanGenerator ?? throw new ArgumentNullException(nameof(wavePlanGenerator));
+        _waveGenerationSettings = waveGenerationSettings != null
+            ? waveGenerationSettings
+            : throw new ArgumentNullException(nameof(waveGenerationSettings));
         _playerProgression = playerProgression ?? throw new ArgumentNullException(nameof(playerProgression));
     }
 
     public void StartGame()
     {
+        CancelCurrentWave();
+        _currentWaveNumber = 1;
         _playerProgression.Reset();
         _gameStateManager.ChangeState(GameState.Playing);
-        PlayCurrentWaveAsync().Forget();
+        BeginCurrentWave();
     }
 
     public void StartNextWave()
@@ -54,7 +65,7 @@ public class GameManager : IUpdatable
         _rearrangementTimeRemaining = 0f;
         _currentWaveNumber++;
         _gameStateManager.ChangeState(GameState.Playing);
-        PlayCurrentWaveAsync().Forget();
+        BeginCurrentWave();
     }
 
     public async UniTask SelectRewardAsync(RewardData rewardData)
@@ -103,8 +114,14 @@ public class GameManager : IUpdatable
         if (_gameStateManager.CurrentState == GameState.GameOver)
             return;
 
+        CancelCurrentWave();
         _gameStateManager.ChangeState(GameState.GameOver);
         Debug.Log("Game Over");
+    }
+
+    public void Dispose()
+    {
+        CancelCurrentWave();
     }
 
     public void Update(float deltaTime)
@@ -126,15 +143,38 @@ public class GameManager : IUpdatable
             StartNextWave();
     }
 
-    private async UniTask PlayCurrentWaveAsync()
+    private void BeginCurrentWave()
     {
-        if (_waveDataList.Count == 0)
+        CancelCurrentWave();
+        _waveCancellationSource = new CancellationTokenSource();
+        int runVersion = unchecked(++_waveRunVersion);
+        PlayCurrentWaveAsync(runVersion, _waveCancellationSource.Token).Forget();
+    }
+
+    private async UniTask PlayCurrentWaveAsync(int runVersion, CancellationToken cancellationToken)
+    {
+        try
+        {
+            int seed = _waveGenerationSettings.UseFixedRandomSeed
+                ? unchecked(_waveGenerationSettings.RandomSeed + _currentWaveNumber)
+                : unchecked(Environment.TickCount * 397 ^ _currentWaveNumber ^ runVersion);
+            WavePlan wavePlan = _wavePlanGenerator.CreatePlan(_currentWaveNumber, seed);
+            await _waveManager.PlayWaveAsync(wavePlan, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
             return;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception);
+            GameOver();
+            return;
+        }
 
-        int waveDataIndex = (_currentWaveNumber - 1) % _waveDataList.Count;
-        await _waveManager.PlayWaveAsync(_waveDataList[waveDataIndex]);
-
-        if (_gameStateManager.CurrentState == GameState.GameOver)
+        if (cancellationToken.IsCancellationRequested ||
+            runVersion != _waveRunVersion ||
+            _gameStateManager.CurrentState == GameState.GameOver)
             return;
 
         _gameStateManager.ChangeState(GameState.WaveClear);
@@ -149,6 +189,16 @@ public class GameManager : IUpdatable
         _rewardBatchTotal = _playerProgression.PendingRewardCount;
         _rewardBatchProcessed = 0;
         ShowNextRewardSelection();
+    }
+
+    private void CancelCurrentWave()
+    {
+        if (_waveCancellationSource == null)
+            return;
+
+        _waveCancellationSource.Cancel();
+        _waveCancellationSource.Dispose();
+        _waveCancellationSource = null;
     }
 
     private void ShowNextRewardSelection()
