@@ -3,12 +3,39 @@ using UnityEngine;
 
 public class CoreLayout : MonoBehaviour
 {
+    public event Action LayoutChanged;
+
     [SerializeField] private int _gridSize = 3;
     [SerializeField] private Vector2 _towerSize = Vector2.one;
     [SerializeField] private float _spacing = 1f;
 
+    [Header("Automatic Positioning")]
+    [Tooltip("World-space offset applied after centering the core in CombatBounds.")]
+    [SerializeField] private Vector2 _corePositionOffset = Vector2.zero;
+
     public int GridSize => _gridSize;
     public int SlotCount => _gridSize * _gridSize;
+    public Vector2 PositionOffset => _corePositionOffset;
+
+    public Vector2 GetPositionForCombatCenter(Vector2 combatCenter)
+    {
+        return combatCenter + _corePositionOffset;
+    }
+
+    public void SetCenter(Vector2 center)
+    {
+        Vector3 currentPosition = transform.position;
+        Vector2 targetPosition = GetPositionForCombatCenter(center);
+
+        if (Mathf.Approximately(currentPosition.x, targetPosition.x) &&
+            Mathf.Approximately(currentPosition.y, targetPosition.y))
+        {
+            return;
+        }
+
+        transform.position = new Vector3(targetPosition.x, targetPosition.y, currentPosition.z);
+        LayoutChanged?.Invoke();
+    }
 
     public Vector3 GetSlotPosition(int slotNumber)
     {

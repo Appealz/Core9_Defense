@@ -41,6 +41,25 @@ public class CoreManager
         return tower != null;
     }
 
+    public bool TryFindTowerSlotNumber(Tower tower, out int slotNumber)
+    {
+        slotNumber = 0;
+
+        if (tower == null)
+            return false;
+
+        for (int currentSlot = 1; _coreBoard.TryGetSlot(currentSlot, out CoreSlot slot); currentSlot++)
+        {
+            if (slot.CurrentTower != tower)
+                continue;
+
+            slotNumber = currentSlot;
+            return true;
+        }
+
+        return false;
+    }
+
     public bool TryGetSlotEffects(int slotNumber, out IReadOnlyList<CoreSlotEffect> effects)
     {
         if (!_coreBoard.TryGetSlot(slotNumber, out CoreSlot slot))

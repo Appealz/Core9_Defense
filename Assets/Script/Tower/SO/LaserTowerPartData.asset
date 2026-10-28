@@ -16,7 +16,7 @@ MonoBehaviour:
   _towerName: Laser
   _maxHp: 3
   _attackDamage: 10
-  _attackRange: 20
+  _attackRange: 12
   _attackRate: 2
   _criticalChance: 0
   _criticalDamageMultiplier: 2

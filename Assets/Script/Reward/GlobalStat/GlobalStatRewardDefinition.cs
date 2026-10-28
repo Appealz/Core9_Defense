@@ -41,6 +41,7 @@ public sealed class GlobalStatRewardDefinition : RewardDefinition
             TowerStatType.AttackSpeed => "Attack Speed",
             TowerStatType.CriticalChance => "Critical Chance",
             TowerStatType.AttackRange => "Attack Range",
+            TowerStatType.CriticalDamage => "Critical Damage",
             _ => "Stat"
         };
     }

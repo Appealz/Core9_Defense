@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerPartData
   _towerType: 0
   _towerName: basic
-  _maxHp: 3
-  _attackDamage: 2
-  _attackRange: 8
-  _attackRate: 1
+  _maxHp: 5
+  _attackDamage: 5
+  _attackRange: 10
+  _attackRate: 0.5
   _criticalChance: 0
   _criticalDamageMultiplier: 2
   _criticalChanceCap: 1
@@ -40,6 +40,6 @@ MonoBehaviour:
     - rid: 8566528603791294539
       type: {class: SingleProjectileAttackDefinition, ns: , asm: Assembly-CSharp}
       data:
-        _projectileSpeed: 10
+        _projectileSpeed: 20
         _straightProjectileLifetime: 3
         _projectileCollisionRadius: 0.05

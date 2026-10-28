@@ -3,14 +3,14 @@ using UnityEngine;
 public sealed class EnemySpawnPositionProvider
 {
     private readonly CoreLayout _coreLayout;
-    private readonly CameraBoundsProvider _boundsProvider;
+    private readonly CombatBoundsProvider _boundsProvider;
     private readonly SpawnPositionCalculator _calculator;
 
     private readonly float _spawnMargin;
 
     public EnemySpawnPositionProvider(
         CoreLayout coreLayout,
-        CameraBoundsProvider boundsProvider,
+        CombatBoundsProvider boundsProvider,
         SpawnPositionCalculator calculator,
         float spawnMargin)
     {
@@ -25,7 +25,7 @@ public sealed class EnemySpawnPositionProvider
         Vector2 origin =
             _coreLayout.transform.position;
 
-        CameraBounds bounds =
+        CombatBounds bounds =
             _boundsProvider.GetBounds();
 
         float angle =

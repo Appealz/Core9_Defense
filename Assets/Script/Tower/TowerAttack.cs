@@ -53,7 +53,7 @@ public class TowerAttack
         if (_attackTimer > 0f)
             return;
 
-        if (!_targetSelector.TryFindNearestTarget(origin, _stats.AttackRange, out Enemy target))
+        if (!TryFindTarget(origin, targetedAttack, out Enemy target))
         {
             _attackTimer = TargetSearchInterval;
             return;
@@ -104,7 +104,7 @@ public class TowerAttack
                 target = firstTarget;
                 useFirstTarget = false;
             }
-            else if (!_targetSelector.TryFindNearestTarget(origin, _stats.AttackRange, out target))
+            else if (!TryFindTarget(origin, targetedAttack, out target))
             {
                 continue;
             }
@@ -131,6 +131,23 @@ public class TowerAttack
 
             nonTargetedAttack.Attack(origin, _stats, damage);
         }
+    }
+
+    private bool TryFindTarget(
+        Vector3 origin,
+        ITargetedTowerAttack targetedAttack,
+        out Enemy target)
+    {
+        if (targetedAttack is ITowerTargetingPolicy targetingPolicy)
+        {
+            return targetingPolicy.TryFindTarget(
+                _targetSelector,
+                origin,
+                _stats.AttackRange,
+                out target);
+        }
+
+        return _targetSelector.TryFindNearestTarget(origin, _stats.AttackRange, out target);
     }
 
     private void SynchronizeAttackInterval()

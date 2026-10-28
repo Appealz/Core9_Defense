@@ -42,6 +42,34 @@ public sealed class EnemyQuery
         return target != null;
     }
 
+    public bool TryFindNearestInBounds(
+        Vector3 origin,
+        CombatBounds bounds,
+        out Enemy target)
+    {
+        target = null;
+        float nearestDistanceSqr = float.MaxValue;
+
+        foreach (Enemy enemy in _enemyManager.AliveEnemies)
+        {
+            if (enemy == null || !enemy.IsAlive || !bounds.Intersects(enemy.WorldBounds))
+                continue;
+
+            Vector3 enemyPosition = enemy.Position;
+            float deltaX = enemyPosition.x - origin.x;
+            float deltaY = enemyPosition.y - origin.y;
+            float distanceSqr = deltaX * deltaX + deltaY * deltaY;
+
+            if (distanceSqr >= nearestDistanceSqr)
+                continue;
+
+            nearestDistanceSqr = distanceSqr;
+            target = enemy;
+        }
+
+        return target != null;
+    }
+
     public void CollectInRadius(Vector3 origin, float radius, List<Enemy> results)
     {
         if (results == null)

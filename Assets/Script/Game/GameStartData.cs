@@ -9,6 +9,8 @@ public class GameStartData : ScriptableObject
     [SerializeField] private List<WaveData> _waveDataList = new();
     [SerializeField] private List<RewardData> _rewardDataList = new();
     [SerializeField] private List<TowerTypeUpgradeData> _towerTypeUpgradeDataList = new();
+    [SerializeField] private List<CoreGoldUpgradeData> _coreGoldUpgradeDataList = new();
+    [SerializeField] private List<TowerGoldUpgradeData> _towerGoldUpgradeDataList = new();
     [SerializeField] private RewardSelectionSettings _rewardSelectionSettings = new();
     [SerializeField] private PlayerLevelData _playerLevelData;
 
@@ -17,6 +19,8 @@ public class GameStartData : ScriptableObject
     public IReadOnlyList<WaveData> WaveDataList => _waveDataList;
     public IReadOnlyList<RewardData> RewardDataList => _rewardDataList;
     public IReadOnlyList<TowerTypeUpgradeData> TowerTypeUpgradeDataList => _towerTypeUpgradeDataList;
+    public IReadOnlyList<CoreGoldUpgradeData> CoreGoldUpgradeDataList => _coreGoldUpgradeDataList;
+    public IReadOnlyList<TowerGoldUpgradeData> TowerGoldUpgradeDataList => _towerGoldUpgradeDataList;
     public RewardSelectionSettings RewardSelectionSettings => _rewardSelectionSettings;
     public PlayerLevelData PlayerLevelData => _playerLevelData;
 }

@@ -17,7 +17,7 @@ MonoBehaviour:
   _retreatMoveSpeed: 8
   _retreatExitMargin: 1
   _maxHp: 3
-  _moveSpeed: 5
+  _moveSpeed: 3
   _attackDamage: 1
   _attackRange: 1
   _attackCooldown: 1

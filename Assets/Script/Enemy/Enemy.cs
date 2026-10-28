@@ -17,6 +17,9 @@ public class Enemy : MonoBehaviour, IDamageable
     public int GoldReward { get; private set; }
     public int SpawnVersion { get; private set; }
     public bool IsRetreating => _isRetreating;
+    public Bounds WorldBounds => _hitCollider != null
+        ? _hitCollider.bounds
+        : new Bounds(Position, Vector3.zero);
 
     public event Action<Enemy> Died;
     public event Action<Enemy> CoreReached;
@@ -27,6 +30,7 @@ public class Enemy : MonoBehaviour, IDamageable
     private CoreBoundary _coreBoundary;
     private IEnemyAbility _ability;
     private CameraBoundsProvider _cameraBoundsProvider;
+    private Collider2D _hitCollider;
 
     private bool _isRemoved;
     private bool _isRetreatWaiting;
@@ -37,6 +41,7 @@ public class Enemy : MonoBehaviour, IDamageable
     private void Awake()
     {
         Visual = GetComponent<EnemyVisual>();
+        _hitCollider = GetComponent<Collider2D>();
     }
 
     public void Initialize(

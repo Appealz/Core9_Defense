@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce9c90edd99d407488fa18271cc59465, type: 3}
   m_Name: RangedEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
+  _role: 0
+  _retreatDelay: 5
+  _retreatMoveSpeed: 8
+  _retreatExitMargin: 1
   _maxHp: 5
-  _moveSpeed: 3
+  _moveSpeed: 2
   _attackDamage: 1
   _attackRange: 5
   _attackCooldown: 1
@@ -24,9 +28,15 @@ MonoBehaviour:
     rid: 1776079044188569676
   _attackDefinition:
     rid: 1776079048582365259
+  _abilityDefinition:
+    rid: -2
+  _deathBehaviorDefinition:
+    rid: -2
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 1776079044188569676
       type: {class: StopAtRangeMovementDefinition, ns: , asm: Assembly-CSharp}
       data: 

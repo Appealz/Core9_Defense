@@ -7,6 +7,7 @@ public class TowerStats
     private readonly float _baseAttackSpeed;
     private readonly float _baseAttackRange;
     private readonly float _baseCriticalChance;
+    private readonly float _baseCriticalDamageMultiplier;
     private readonly float _minimumAttackInterval;
     private readonly float _criticalChanceCap;
 
@@ -18,6 +19,7 @@ public class TowerStats
     public float BaseMaxHp => _baseMaxHp;
     public float BaseAttackSpeed => _baseAttackSpeed;
     public float BaseAttackRange => _baseAttackRange;
+    public float BaseCriticalDamageMultiplier => _baseCriticalDamageMultiplier;
     public float AttackDamage { get; private set; }
     public float MaxHp { get; private set; }
     public float AttackSpeed { get; private set; }
@@ -25,7 +27,7 @@ public class TowerStats
     public float AttackRate => AttackInterval;
     public float AttackRange { get; private set; }
     public float CriticalChance { get; private set; }
-    public float CriticalDamageMultiplier { get; }
+    public float CriticalDamageMultiplier { get; private set; }
 
 #if UNITY_EDITOR
     public float EffectiveCriticalChance => _debugCriticalChanceOverride ?? CriticalChance;
@@ -36,6 +38,15 @@ public class TowerStats
         TowerPartData partData,
         TowerStatModifiers globalModifiers,
         TowerStatModifiers typeModifiers = null)
+        : this(partData, globalModifiers, null, typeModifiers)
+    {
+    }
+
+    public TowerStats(
+        TowerPartData partData,
+        TowerStatModifiers globalModifiers,
+        TowerStatModifiers coreGoldModifiers,
+        TowerStatModifiers typeModifiers)
     {
         _baseAttackDamage = Mathf.Max(0f, partData.AttackDamage);
         _baseMaxHp = Mathf.Max(1f, partData.MaxHp);
@@ -46,10 +57,9 @@ public class TowerStats
         _baseAttackRange = Mathf.Max(0f, partData.AttackRange);
         _baseCriticalChance = Mathf.Clamp01(partData.CriticalChance);
         _criticalChanceCap = Mathf.Clamp01(partData.CriticalChanceCap);
+        _baseCriticalDamageMultiplier = Mathf.Max(1f, partData.CriticalDamageMultiplier);
 
-        CriticalDamageMultiplier = Mathf.Max(1f, partData.CriticalDamageMultiplier);
-
-        ApplyModifiers(globalModifiers, null, typeModifiers);
+        ApplyModifiers(globalModifiers, coreGoldModifiers, null, typeModifiers);
     }
 
     public void ApplyModifiers(TowerStatModifiers modifiers)
@@ -69,27 +79,91 @@ public class TowerStats
         TowerStatModifiers slotModifiers,
         TowerStatModifiers typeModifiers)
     {
+        ApplyModifiers(globalModifiers, null, slotModifiers, typeModifiers);
+    }
+
+    public void ApplyModifiers(
+        TowerStatModifiers globalModifiers,
+        TowerStatModifiers coreGoldModifiers,
+        TowerStatModifiers slotModifiers,
+        TowerStatModifiers typeModifiers)
+    {
+        ApplyModifiers(
+            globalModifiers,
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            null);
+    }
+
+    public void ApplyModifiers(
+        TowerStatModifiers globalModifiers,
+        TowerStatModifiers coreGoldModifiers,
+        TowerStatModifiers slotModifiers,
+        TowerStatModifiers typeModifiers,
+        TowerStatModifiers individualGoldModifiers)
+    {
         AttackDamage = Mathf.Max(
             0f,
-            globalModifiers.Calculate(TowerStatType.AttackDamage, _baseAttackDamage, slotModifiers, typeModifiers)
+            globalModifiers.Calculate(
+                TowerStatType.AttackDamage,
+                _baseAttackDamage,
+                coreGoldModifiers,
+                slotModifiers,
+                typeModifiers,
+                individualGoldModifiers)
         );
         MaxHp = Mathf.Max(
             1f,
-            globalModifiers.Calculate(TowerStatType.MaxHp, _baseMaxHp, slotModifiers, typeModifiers)
+            globalModifiers.Calculate(
+                TowerStatType.MaxHp,
+                _baseMaxHp,
+                coreGoldModifiers,
+                slotModifiers,
+                typeModifiers,
+                individualGoldModifiers)
         );
         AttackSpeed = Mathf.Max(
             0.01f,
-            globalModifiers.Calculate(TowerStatType.AttackSpeed, _baseAttackSpeed, slotModifiers, typeModifiers)
+            globalModifiers.Calculate(
+                TowerStatType.AttackSpeed,
+                _baseAttackSpeed,
+                coreGoldModifiers,
+                slotModifiers,
+                typeModifiers,
+                individualGoldModifiers)
         );
         AttackInterval = Mathf.Max(_minimumAttackInterval, 1f / AttackSpeed);
         CriticalChance = Mathf.Clamp(
-            globalModifiers.Calculate(TowerStatType.CriticalChance, _baseCriticalChance, slotModifiers, typeModifiers),
+            globalModifiers.Calculate(
+                TowerStatType.CriticalChance,
+                _baseCriticalChance,
+                coreGoldModifiers,
+                slotModifiers,
+                typeModifiers,
+                individualGoldModifiers),
             0f,
             _criticalChanceCap
         );
         AttackRange = Mathf.Max(
             0f,
-            globalModifiers.Calculate(TowerStatType.AttackRange, _baseAttackRange, slotModifiers, typeModifiers)
+            globalModifiers.Calculate(
+                TowerStatType.AttackRange,
+                _baseAttackRange,
+                coreGoldModifiers,
+                slotModifiers,
+                typeModifiers,
+                individualGoldModifiers)
+        );
+        CriticalDamageMultiplier = Mathf.Max(
+            1f,
+            globalModifiers.Calculate(
+                TowerStatType.CriticalDamage,
+                _baseCriticalDamageMultiplier,
+                coreGoldModifiers,
+                slotModifiers,
+                typeModifiers,
+                individualGoldModifiers)
         );
     }
 

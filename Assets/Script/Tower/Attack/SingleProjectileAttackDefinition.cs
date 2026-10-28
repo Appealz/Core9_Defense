@@ -4,7 +4,7 @@ using UnityEngine;
 [Serializable]
 public class SingleProjectileAttackDefinition : TowerAttackDefinition
 {
-    [SerializeField] private float _projectileSpeed = 10f;
+    [SerializeField] private float _projectileSpeed = 15f;
     [SerializeField, Min(0.01f)] private float _straightProjectileLifetime = 3f;
     [SerializeField, Min(0f)] private float _projectileCollisionRadius = 0.05f;
 

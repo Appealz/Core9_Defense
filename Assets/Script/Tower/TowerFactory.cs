@@ -8,17 +8,20 @@ public class TowerFactory
     private readonly TowerTargetSelector _targetSelector;
     private readonly TowerAttackDependencies _attackDependencies;
     private readonly TowerStatModifiers _globalStatModifiers;
+    private readonly TowerStatModifiers _coreGoldStatModifiers;
     private readonly TowerTypeUpgradeState _typeUpgradeState;
 
     public TowerFactory(
         TowerTargetSelector targetSelector,
         TowerAttackDependencies attackDependencies,
         TowerStatModifiers globalStatModifiers,
+        TowerStatModifiers coreGoldStatModifiers,
         TowerTypeUpgradeState typeUpgradeState)
     {
         _targetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
         _attackDependencies = attackDependencies ?? throw new ArgumentNullException(nameof(attackDependencies));
         _globalStatModifiers = globalStatModifiers ?? throw new ArgumentNullException(nameof(globalStatModifiers));
+        _coreGoldStatModifiers = coreGoldStatModifiers ?? throw new ArgumentNullException(nameof(coreGoldStatModifiers));
         _typeUpgradeState = typeUpgradeState ?? throw new ArgumentNullException(nameof(typeUpgradeState));
     }
 
@@ -35,7 +38,11 @@ public class TowerFactory
 
         TowerStatModifiers typeStatModifiers = _typeUpgradeState.GetStatModifiers(partData.TowerType);
         TowerUniqueModifiers uniqueModifiers = _typeUpgradeState.GetUniqueModifiers(partData.TowerType);
-        TowerStats stats = new TowerStats(partData, _globalStatModifiers, typeStatModifiers);
+        TowerStats stats = new TowerStats(
+            partData,
+            _globalStatModifiers,
+            _coreGoldStatModifiers,
+            typeStatModifiers);
         TowerHealth health = new TowerHealth(stats.MaxHp);
 
         ITowerAttack attack = partData.AttackDefinition.CreateAttack(_attackDependencies, uniqueModifiers);
@@ -48,7 +55,14 @@ public class TowerFactory
 
         tower.gameObject.name = partData.TowerName;
         ITowerAttackEffect effect = partData.AttackDefinition.CreateEffect();
-        tower.Initialize(health, stats, towerAttack, partData.Sprite, partData.TowerType, effect);
+        tower.Initialize(
+            health,
+            stats,
+            towerAttack,
+            partData.Sprite,
+            partData.TowerType,
+            effect,
+            partData.TowerName);
 
         return tower;
     }

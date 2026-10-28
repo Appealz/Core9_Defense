@@ -3,14 +3,16 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
-public class TowerManager
+public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, IDisposable
 {
     public event Action AllTowersDestroyed;
+    public event Action<Tower> TowerRemoved;
 
     private readonly TowerFactory _towerFactory;
     private readonly CoreManager _coreManager;
     private readonly CoreLayout _coreLayout;
     private readonly TowerStatModifiers _globalStatModifiers;
+    private readonly TowerStatModifiers _coreGoldStatModifiers;
     private readonly TowerTypeUpgradeState _typeUpgradeState;
     private readonly List<Tower> _activeTowers = new();
 
@@ -19,14 +21,17 @@ public class TowerManager
         CoreManager coreManager,
         CoreLayout coreLayout,
         TowerStatModifiers globalStatModifiers,
+        TowerStatModifiers coreGoldStatModifiers,
         TowerTypeUpgradeState typeUpgradeState)
     {
         _towerFactory = towerFactory;
         _coreManager = coreManager;
         _coreLayout = coreLayout;
         _globalStatModifiers = globalStatModifiers;
+        _coreGoldStatModifiers = coreGoldStatModifiers;
         _typeUpgradeState = typeUpgradeState;
         _coreManager.SlotEffectsChanged += HandleSlotEffectsChanged;
+        _coreLayout.LayoutChanged += HandleCoreLayoutChanged;
     }
 
     public async UniTask<bool> TryPlaceTowerAsync(int slotNumber, TowerPartData partData)
@@ -86,10 +91,94 @@ public class TowerManager
         if (!_globalStatModifiers.TryAdd(statType, modifierType, value))
             return false;
 
-        for (int slotNumber = 1; slotNumber <= CoreBoard.SlotCount; slotNumber++)
-            RefreshTowerForSlot(slotNumber, false);
+        RefreshAllTowers();
 
         return true;
+    }
+
+    public bool CanApplyCoreGoldUpgrade(TowerStatType statType, float flatValue)
+    {
+        return TowerStatModifiers.CanModify(statType, StatModifierType.Flat, flatValue);
+    }
+
+    public bool TryApplyCoreGoldUpgrade(TowerStatType statType, float flatValue)
+    {
+        if (!CanApplyCoreGoldUpgrade(statType, flatValue) ||
+            !_coreGoldStatModifiers.TryAdd(statType, StatModifierType.Flat, flatValue))
+        {
+            return false;
+        }
+
+        try
+        {
+            RefreshAllTowers();
+            return true;
+        }
+        catch
+        {
+            _coreGoldStatModifiers.TryRemove(statType, StatModifierType.Flat, flatValue);
+
+            try
+            {
+                RefreshAllTowers();
+            }
+            catch
+            {
+                // Preserve the purchase failure after restoring the modifier state.
+            }
+
+            return false;
+        }
+    }
+
+    public bool IsTowerActive(Tower tower)
+    {
+        return tower != null && tower.IsAlive && _activeTowers.Contains(tower);
+    }
+
+    public bool CanApplyTowerGoldUpgrade(Tower tower, TowerStatType statType, float flatValue)
+    {
+        return IsTowerActive(tower) &&
+            TowerStatModifiers.CanModify(statType, StatModifierType.Flat, flatValue) &&
+            (statType == TowerStatType.AttackDamage ||
+             statType == TowerStatType.AttackSpeed ||
+             statType == TowerStatType.MaxHp);
+    }
+
+    public bool TryApplyTowerGoldUpgrade(Tower tower, TowerStatType statType, float flatValue)
+    {
+        if (!CanApplyTowerGoldUpgrade(tower, statType, flatValue) ||
+            !tower.IndividualGoldModifiers.TryAdd(statType, StatModifierType.Flat, flatValue))
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!_coreManager.TryFindTowerSlotNumber(tower, out int slotNumber))
+                throw new InvalidOperationException("The tower is not placed in a core slot.");
+
+            RefreshTowerForSlot(slotNumber, false);
+            return true;
+        }
+        catch
+        {
+            tower.IndividualGoldModifiers.TryRemove(statType, StatModifierType.Flat, flatValue);
+
+            if (_coreManager.TryFindTowerSlotNumber(tower, out int slotNumber))
+            {
+                try
+                {
+                    RefreshTowerForSlot(slotNumber, false);
+                }
+                catch
+                {
+                    // Keep the original transaction failure after restoring modifier state.
+                }
+            }
+
+            return false;
+        }
     }
 
     public bool HasTowerType(TowerType towerType)
@@ -130,6 +219,15 @@ public class TowerManager
         RefreshTowerForSlot(slotNumber);
     }
 
+    private void HandleCoreLayoutChanged()
+    {
+        for (int slotNumber = 1; slotNumber <= CoreBoard.SlotCount; slotNumber++)
+        {
+            if (_coreManager.TryGetTower(slotNumber, out Tower tower))
+                tower.transform.position = _coreLayout.GetSlotPosition(slotNumber);
+        }
+    }
+
     private void RefreshTowerForSlot(int slotNumber, bool rebindRuntimeEffects = true)
     {
         if (!_coreManager.TryGetTower(slotNumber, out Tower tower) ||
@@ -144,7 +242,12 @@ public class TowerManager
             effects[i].AddStatModifiers(slotModifiers);
 
         TowerStatModifiers typeModifiers = _typeUpgradeState.GetStatModifiers(tower.TowerType);
-        tower.Stats.ApplyModifiers(_globalStatModifiers, slotModifiers, typeModifiers);
+        tower.Stats.ApplyModifiers(
+            _globalStatModifiers,
+            _coreGoldStatModifiers,
+            slotModifiers,
+            typeModifiers,
+            tower.IndividualGoldModifiers);
         tower.Health.UpdateMaxHp(tower.Stats.MaxHp);
         tower.RefreshAttackEffect();
 
@@ -152,16 +255,33 @@ public class TowerManager
             tower.BindSlotEffects(effects);
     }
 
+    private void RefreshAllTowers()
+    {
+        for (int slotNumber = 1; slotNumber <= CoreBoard.SlotCount; slotNumber++)
+            RefreshTowerForSlot(slotNumber, false);
+    }
+
     private void HandleTowerDied(Tower tower)
     {
-        _activeTowers.Remove(tower);
+        if (!_activeTowers.Remove(tower))
+            return;
 
-        if (!_coreManager.TryRemoveTower(tower))
+        bool removedFromBoard = _coreManager.TryRemoveTower(tower);
+
+        TowerRemoved?.Invoke(tower);
+
+        if (!removedFromBoard)
             return;
 
         _towerFactory.Release(tower);
 
         if (!_coreManager.HasAnyTower())
             AllTowersDestroyed?.Invoke();
+    }
+
+    public void Dispose()
+    {
+        _coreManager.SlotEffectsChanged -= HandleSlotEffectsChanged;
+        _coreLayout.LayoutChanged -= HandleCoreLayoutChanged;
     }
 }

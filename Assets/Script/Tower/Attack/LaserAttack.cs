@@ -2,7 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public class LaserAttack : ITargetedTowerAttack
+public class LaserAttack : ITargetedTowerAttack, ITowerTargetingPolicy
 {
     private readonly LaserManager _laserManager;
     private readonly float _width;
@@ -35,9 +35,17 @@ public class LaserAttack : ITargetedTowerAttack
             origin,
             direction,
             damage,
-            stats.AttackRange,
             _uniqueModifiers.Calculate(TowerUniqueStatType.LaserWidth, _width),
             _duration,
             _damageInterval).Forget();
+    }
+
+    public bool TryFindTarget(
+        TowerTargetSelector targetSelector,
+        Vector3 origin,
+        float defaultRange,
+        out Enemy target)
+    {
+        return targetSelector.TryFindNearestTargetInCombatBounds(origin, out target);
     }
 }

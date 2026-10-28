@@ -3,7 +3,7 @@ using UnityEngine;
 public sealed class SpawnPositionCalculator
 {
     public Vector2 Calculate(
-        CameraBounds bounds,
+        CombatBounds bounds,
         Vector2 origin,
         Vector2 direction,
         float margin)
@@ -32,5 +32,18 @@ public sealed class SpawnPositionCalculator
 
         return origin +
                direction * (distanceToEdge + margin);
+    }
+
+    public Vector2 Calculate(
+        CameraBounds bounds,
+        Vector2 origin,
+        Vector2 direction,
+        float margin)
+    {
+        return Calculate(
+            new CombatBounds(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top),
+            origin,
+            direction,
+            margin);
     }
 }

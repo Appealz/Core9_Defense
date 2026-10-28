@@ -12,7 +12,7 @@ public sealed class GoldManager
         if (amount <= 0)
             return;
 
-        CurrentGold += amount;
+        CurrentGold = (int)Math.Min(int.MaxValue, (long)CurrentGold + amount);
         GoldChanged?.Invoke(CurrentGold);
     }
 

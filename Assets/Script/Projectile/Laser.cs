@@ -11,10 +11,12 @@ public sealed class Laser : MonoBehaviour
     private ContactFilter2D _contactFilter;
 
     private Vector3 _origin;
+    private Vector3 _end;
     private Vector3 _direction;
+    private CombatBounds _combatBounds;
 
     private float _damage;
-    private float _range;
+    private float _length;
     private float _width;
     private float _duration;
     private float _damageInterval;
@@ -35,21 +37,20 @@ public sealed class Laser : MonoBehaviour
 
     public void Initialize(
         Vector3 origin,
-        Vector3 direction,
+        Vector3 end,
+        CombatBounds combatBounds,
         float damage,
-        float range,
         float width,
         float duration,
         float damageInterval)
     {
-        if (direction.sqrMagnitude <= 0f)
-            throw new ArgumentException("Laser ¹æÇâÀÌ À¯È¿ÇÏÁö ¾Ê½À´Ï´Ù.", nameof(direction));
+        Vector3 segment = end - origin;
+
+        if (segment.sqrMagnitude <= 0f)
+            throw new ArgumentException("Laser êµ¬ê°„ì´ ìœ íš¨í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.", nameof(end));
 
         if (damage <= 0f)
             throw new ArgumentOutOfRangeException(nameof(damage));
-
-        if (range <= 0f)
-            throw new ArgumentOutOfRangeException(nameof(range));
 
         if (width <= 0f)
             throw new ArgumentOutOfRangeException(nameof(width));
@@ -61,10 +62,12 @@ public sealed class Laser : MonoBehaviour
             throw new ArgumentOutOfRangeException(nameof(damageInterval));
 
         _origin = origin;
-        _direction = direction.normalized;
+        _end = end;
+        _direction = segment.normalized;
+        _combatBounds = combatBounds;
 
         _damage = damage;
-        _range = range;
+        _length = segment.magnitude;
         _width = width;
         _duration = duration;
         _damageInterval = damageInterval;
@@ -94,10 +97,12 @@ public sealed class Laser : MonoBehaviour
     public void Clear()
     {
         _origin = Vector3.zero;
+        _end = Vector3.zero;
         _direction = Vector3.zero;
+        _combatBounds = default;
 
         _damage = 0f;
-        _range = 0f;
+        _length = 0f;
         _width = 0f;
         _duration = 0f;
         _damageInterval = 0f;
@@ -114,8 +119,8 @@ public sealed class Laser : MonoBehaviour
     {
         _results.Clear();
 
-        Vector3 center = _origin + _direction * (_range * 0.5f);
-        Vector2 size = new Vector2(_range, _width);
+        Vector3 center = Vector3.Lerp(_origin, _end, 0.5f);
+        Vector2 size = new Vector2(_length, _width);
         float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
 
         Physics2D.OverlapBox(center, size, angle, _contactFilter, _results);
@@ -124,8 +129,13 @@ public sealed class Laser : MonoBehaviour
         {
             Collider2D hit = _results[i];
 
-            if (hit == null || !hit.TryGetComponent(out Enemy enemy) || !enemy.IsAlive)
+            if (hit == null ||
+                !_combatBounds.Intersects(hit.bounds) ||
+                !hit.TryGetComponent(out Enemy enemy) ||
+                !enemy.IsAlive)
+            {
                 continue;
+            }
 
             enemy.TakeDamage(_damage);
         }
@@ -133,15 +143,13 @@ public sealed class Laser : MonoBehaviour
 
     private void SetVisual()
     {
-        Vector3 end = _origin + _direction * _range;
-
         _lineRenderer.positionCount = 5;
 
         _lineRenderer.SetPosition(0, _origin);
-        _lineRenderer.SetPosition(1, Vector3.Lerp(_origin, end, 0.05f));
-        _lineRenderer.SetPosition(2, Vector3.Lerp(_origin, end, 0.5f));
-        _lineRenderer.SetPosition(3, Vector3.Lerp(_origin, end, 0.95f));
-        _lineRenderer.SetPosition(4, end);
+        _lineRenderer.SetPosition(1, Vector3.Lerp(_origin, _end, 0.05f));
+        _lineRenderer.SetPosition(2, Vector3.Lerp(_origin, _end, 0.5f));
+        _lineRenderer.SetPosition(3, Vector3.Lerp(_origin, _end, 0.95f));
+        _lineRenderer.SetPosition(4, _end);
 
         _lineRenderer.widthMultiplier = _width;
 

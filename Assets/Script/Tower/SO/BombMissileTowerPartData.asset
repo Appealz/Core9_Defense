@@ -15,7 +15,7 @@ MonoBehaviour:
   _towerType: 3
   _towerName: BombMissile
   _maxHp: 2
-  _attackDamage: 5
+  _attackDamage: 10
   _attackRange: 20
   _attackRate: 3
   _criticalChance: 0
