@@ -38,12 +38,20 @@ public class CoreBoard
 
     public bool TryFindPlacementSlot(out CoreSlot targetSlot)
     {
+        return TryFindPlacementSlot(null, out targetSlot);
+    }
+
+    public bool TryFindPlacementSlot(
+        System.Collections.Generic.ISet<int> excludedSlotNumbers,
+        out CoreSlot targetSlot)
+    {
         for (int i = 0; i < _placementPriority.Length; i++)
         {
             int slotNumber = _placementPriority[i];
             CoreSlot slot = _slots[slotNumber - 1];
 
-            if (slot.IsOccupied)
+            if (slot.IsOccupied ||
+                (excludedSlotNumbers != null && excludedSlotNumbers.Contains(slotNumber)))
                 continue;
 
             targetSlot = slot;

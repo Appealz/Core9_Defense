@@ -15,7 +15,7 @@ MonoBehaviour:
   _rewardName: Burst Tower
   _description: Place a new Burst Tower.
   _icon: {fileID: -6022021418796239029, guid: 1f313c7a05bf4f046ad42d9cb76e8c0d, type: 3}
-  _rarity: 0
+  _rarity: 1
   _category: 1
   _selectionWeight: 1
   _rewardDefinition:

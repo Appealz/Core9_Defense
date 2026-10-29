@@ -15,7 +15,7 @@ MonoBehaviour:
   _rewardName: Area Tower
   _description: Place a new Area Tower.
   _icon: {fileID: 1803277974132308361, guid: 64f1a5f5354c37642b9b601ca7ce719c, type: 3}
-  _rarity: 0
+  _rarity: 2
   _category: 1
   _selectionWeight: 1
   _rewardDefinition:

@@ -182,11 +182,17 @@ public sealed class WaveSpawnScheduleSettings
     [SerializeField, Min(2)] private int _referenceEnemyCount = 20;
     [Tooltip("Seconds from the first spawn to the last spawn at the reference count.")]
     [SerializeField, Min(0f)] private float _referenceSpawnDuration = 15f;
+    [Tooltip("Spawn interval multiplier applied for each wave after Wave 1.")]
+    [SerializeField, Range(0f, 1f)] private float _spawnIntervalMultiplierPerWave = 0.96f;
+    [Tooltip("Minimum spawn interval in seconds after wave scaling.")]
+    [SerializeField, Min(0f)] private float _minimumSpawnInterval = 0.35f;
     [Tooltip("A different enemy is selected when this consecutive limit is reached and one is available.")]
     [SerializeField, Min(1)] private int _maximumConsecutiveSameType = 2;
 
     public int ReferenceEnemyCount => Math.Max(2, _referenceEnemyCount);
     public float ReferenceSpawnDuration => Math.Max(0f, _referenceSpawnDuration);
+    public float SpawnIntervalMultiplierPerWave => Math.Min(1f, Math.Max(0f, _spawnIntervalMultiplierPerWave));
+    public float MinimumSpawnInterval => Math.Max(0f, _minimumSpawnInterval);
     public int MaximumConsecutiveSameType => Math.Max(1, _maximumConsecutiveSameType);
     public float SpawnInterval => ReferenceSpawnDuration / (ReferenceEnemyCount - 1);
 }

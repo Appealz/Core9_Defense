@@ -15,7 +15,7 @@ MonoBehaviour:
   _rewardName: Rapid Corner
   _description: 
   _icon: {fileID: -5561890832025051401, guid: f2c76b5de9e10464092a2409d39c1cdf, type: 3}
-  _rarity: 0
+  _rarity: 2
   _category: 3
   _selectionWeight: 0.9
   _rewardDefinition:

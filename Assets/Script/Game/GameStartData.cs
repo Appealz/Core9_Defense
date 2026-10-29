@@ -25,4 +25,15 @@ public class GameStartData : ScriptableObject
     public IReadOnlyList<TowerGoldUpgradeData> TowerGoldUpgradeDataList => _towerGoldUpgradeDataList;
     public RewardSelectionSettings RewardSelectionSettings => _rewardSelectionSettings;
     public PlayerLevelData PlayerLevelData => _playerLevelData;
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (_rewardSelectionSettings != null &&
+            !_rewardSelectionSettings.TryValidate(out string error))
+        {
+            Debug.LogError(error, this);
+        }
+    }
+#endif
 }

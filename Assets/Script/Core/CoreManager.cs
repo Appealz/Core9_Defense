@@ -116,7 +116,14 @@ public class CoreManager
 
     public bool TryFindPlacementSlotNumber(out int slotNumber)
     {
-        if (!_coreBoard.TryFindPlacementSlot(out CoreSlot slot))
+        return TryFindPlacementSlotNumber(null, out slotNumber);
+    }
+
+    public bool TryFindPlacementSlotNumber(
+        ISet<int> excludedSlotNumbers,
+        out int slotNumber)
+    {
+        if (!_coreBoard.TryFindPlacementSlot(excludedSlotNumbers, out CoreSlot slot))
         {
             slotNumber = 0;
             return false;

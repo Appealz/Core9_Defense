@@ -158,6 +158,42 @@ public sealed class WavePlanGeneratorTests
         Assert.That(plan.SpawnDuration, Is.EqualTo(15f).Within(0.0001f));
     }
 
+    [TestCase(1)]
+    [TestCase(5)]
+    [TestCase(10)]
+    [TestCase(20)]
+    public void SpawnSchedule_UsesWaveScaledIntervalAndExpectedCompletionTime(int waveNumber)
+    {
+        WavePlan plan = _generator.CreatePlan(waveNumber, waveNumber);
+        float expectedInterval = System.Math.Max(
+            _settings.SpawnSchedule.MinimumSpawnInterval,
+            _settings.SpawnSchedule.SpawnInterval * (float)System.Math.Pow(0.96f, waveNumber - 1));
+        float actualInterval = plan.SpawnInstructions[1].SpawnTime -
+            plan.SpawnInstructions[0].SpawnTime;
+        float expectedCompletionTime = expectedInterval * (plan.TotalEnemyCount - 1);
+
+        Assert.That(
+            _settings.SpawnSchedule.SpawnIntervalMultiplierPerWave,
+            Is.EqualTo(0.96f).Within(0.0001f));
+        Assert.That(
+            _settings.SpawnSchedule.MinimumSpawnInterval,
+            Is.EqualTo(0.35f).Within(0.0001f));
+        Assert.That(actualInterval, Is.EqualTo(expectedInterval).Within(0.0001f));
+        Assert.That(plan.SpawnDuration, Is.EqualTo(expectedCompletionTime).Within(0.0001f));
+    }
+
+    [Test]
+    public void SpawnSchedule_DoesNotFallBelowConfiguredMinimumInterval()
+    {
+        WavePlan plan = _generator.CreatePlan(100, 100);
+        float actualInterval = plan.SpawnInstructions[1].SpawnTime -
+            plan.SpawnInstructions[0].SpawnTime;
+
+        Assert.That(
+            actualInterval,
+            Is.EqualTo(_settings.SpawnSchedule.MinimumSpawnInterval).Within(0.0001f));
+    }
+
     [Test]
     public void MaximumCounts_AreRespectedAndImpossibleConfigurationThrows()
     {

@@ -21,7 +21,7 @@ MonoBehaviour:
   _attackDamage: 1
   _attackRange: 1
   _attackCooldown: 1
-  _goldReward: 10
+  _goldReward: 3
   _experienceReward: 1
   _sprite: {fileID: -3320418183320529682, guid: bc3560275901d9546813b8ffac246806, type: 3}
   _movementDefinition:

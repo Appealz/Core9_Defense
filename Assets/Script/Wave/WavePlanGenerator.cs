@@ -31,7 +31,7 @@ public sealed class WavePlanGenerator
             totalCount,
             pattern,
             random);
-        List<WaveSpawnInstruction> schedule = CreateSchedule(counts, random);
+        List<WaveSpawnInstruction> schedule = CreateSchedule(waveNumber, counts, random);
         EnemyRuntimeModifiers modifiers = WaveDifficultyCalculator.GetRuntimeModifiers(
             waveNumber,
             _settings.Difficulty);
@@ -254,11 +254,21 @@ public sealed class WavePlanGenerator
     }
 
     private List<WaveSpawnInstruction> CreateSchedule(
+        int waveNumber,
         IReadOnlyDictionary<WaveEnemyType, int> counts,
         Random random)
     {
         var remainingByType = new Dictionary<WaveEnemyType, int>(counts);
         var result = new List<WaveSpawnInstruction>();
+        float scaledSpawnInterval = _settings.SpawnSchedule.SpawnInterval *
+            (float)Math.Pow(
+                _settings.SpawnSchedule.SpawnIntervalMultiplierPerWave,
+                waveNumber - 1);
+        float spawnInterval = waveNumber == 1
+            ? _settings.SpawnSchedule.SpawnInterval
+            : Math.Max(
+                _settings.SpawnSchedule.MinimumSpawnInterval,
+                scaledSpawnInterval);
         int totalCount = 0;
 
         for (int i = 0; i < EnemyTypes.Length; i++)
@@ -320,7 +330,7 @@ public sealed class WavePlanGenerator
                 : 1;
             previousType = selectedType;
             remainingByType[selectedType]--;
-            float spawnTime = spawnIndex * _settings.SpawnSchedule.SpawnInterval;
+            float spawnTime = spawnIndex * spawnInterval;
             result.Add(new WaveSpawnInstruction(
                 selectedType,
                 _phaseByType[selectedType].EnemyConfig,

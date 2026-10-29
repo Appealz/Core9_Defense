@@ -15,6 +15,11 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
     private readonly TowerStatModifiers _coreGoldStatModifiers;
     private readonly TowerTypeUpgradeState _typeUpgradeState;
     private readonly List<Tower> _activeTowers = new();
+    private readonly HashSet<int> _reservedPlacementSlots = new();
+    private int _currentWaveNumber = 1;
+
+    public int ActiveTowerCount => _activeTowers.Count;
+    public int MaxTowerCount => TowerCapacityPolicy.GetMaxTowerCount(_currentWaveNumber);
 
     public TowerManager(
         TowerFactory towerFactory,
@@ -36,33 +41,62 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
 
     public async UniTask<bool> TryPlaceTowerAsync(int slotNumber, TowerPartData partData)
     {
-        Tower tower = await _towerFactory.CreateAsync(partData);
-
-        if (!_coreManager.TryPlaceTower(slotNumber, tower))
-        {
-            _towerFactory.Release(tower);
+        if (!TryReservePlacement(slotNumber))
             return false;
+
+        Tower tower = null;
+
+        try
+        {
+            tower = await _towerFactory.CreateAsync(partData);
+
+            if (_activeTowers.Count >= MaxTowerCount ||
+                !_coreManager.TryPlaceTower(slotNumber, tower))
+            {
+                _towerFactory.Release(tower);
+                tower = null;
+                return false;
+            }
+
+            tower.transform.position = _coreLayout.GetSlotPosition(slotNumber);
+            Tower placedTower = tower;
+            tower.Health.Died += () => HandleTowerDied(placedTower);
+            _activeTowers.Add(tower);
+            RefreshTowerForSlot(slotNumber);
+
+            tower = null;
+            return true;
         }
+        catch
+        {
+            if (tower != null)
+                _towerFactory.Release(tower);
 
-        tower.transform.position = _coreLayout.GetSlotPosition(slotNumber);
-        tower.Health.Died += () => HandleTowerDied(tower);
-        _activeTowers.Add(tower);
-        RefreshTowerForSlot(slotNumber);
-
-        return true;
+            throw;
+        }
+        finally
+        {
+            _reservedPlacementSlots.Remove(slotNumber);
+        }
     }
 
     public bool CanPlaceNextTower()
     {
-        return _coreManager.TryFindPlacementSlotNumber(out _);
+        return ActiveTowerCount + _reservedPlacementSlots.Count < MaxTowerCount &&
+            TryFindAvailablePlacementSlotNumber(out _);
     }
 
     public async UniTask<bool> TryPlaceNextTowerAsync(TowerPartData partData)
     {
-        if (!_coreManager.TryFindPlacementSlotNumber(out int slotNumber))
+        if (!CanPlaceNextTower() || !TryFindAvailablePlacementSlotNumber(out int slotNumber))
             return false;
 
         return await TryPlaceTowerAsync(slotNumber, partData);
+    }
+
+    public void SetCurrentWaveNumber(int waveNumber)
+    {
+        _currentWaveNumber = waveNumber < 1 ? 1 : waveNumber;
     }
 
     public bool TryMoveOrSwapTower(int fromSlotNumber, int toSlotNumber)
@@ -217,6 +251,24 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
     private void HandleSlotEffectsChanged(int slotNumber)
     {
         RefreshTowerForSlot(slotNumber);
+    }
+
+    private bool TryReservePlacement(int slotNumber)
+    {
+        if (slotNumber < 1 || slotNumber > CoreBoard.SlotCount ||
+            ActiveTowerCount + _reservedPlacementSlots.Count >= MaxTowerCount ||
+            _reservedPlacementSlots.Contains(slotNumber) ||
+            _coreManager.TryGetTower(slotNumber, out _))
+        {
+            return false;
+        }
+
+        return _reservedPlacementSlots.Add(slotNumber);
+    }
+
+    private bool TryFindAvailablePlacementSlotNumber(out int slotNumber)
+    {
+        return _coreManager.TryFindPlacementSlotNumber(_reservedPlacementSlots, out slotNumber);
     }
 
     private void HandleCoreLayoutChanged()

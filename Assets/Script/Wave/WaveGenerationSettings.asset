@@ -130,12 +130,7 @@ MonoBehaviour:
     - _enemyType: 4
       _weight: 10
   _difficulty:
-    _initialEnemyCounts:
-    - 20
-    - 21
-    - 22
-    - 25
-    - 30
+    _initialEnemyCounts: 1e00000020000000230000002800000032000000
     _wavesPerGrowthSegment: 5
     _enemyIncreasePerSegment: 10
     _growthCurveExponent: 2
@@ -145,6 +140,8 @@ MonoBehaviour:
   _spawnSchedule:
     _referenceEnemyCount: 20
     _referenceSpawnDuration: 15
+    _spawnIntervalMultiplierPerWave: 0.96
+    _minimumSpawnInterval: 0.35
     _maximumConsecutiveSameType: 2
   _useFixedRandomSeed: 0
   _randomSeed: 9709

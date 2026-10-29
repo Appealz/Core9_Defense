@@ -75,8 +75,8 @@ MonoBehaviour:
   _rewardSelectionSettings:
     _cardCount: 3
     _minimumNewTowerCards: 1
-    _bronzeWeight: 1
-    _silverWeight: 0.65
-    _goldWeight: 0.35
-    _platinumWeight: 0.1
+    _bronzeProbability: 70
+    _silverProbability: 18.307058
+    _goldProbability: 8.949523
+    _platinumProbability: 2.7434158
   _playerLevelData: {fileID: 11400000, guid: ac4dcff31fb74ae3ac7ff94b4a64034d, type: 2}

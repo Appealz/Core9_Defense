@@ -173,6 +173,13 @@ public sealed class GameBootstrapper : SceneBootstrapper
             _goldManager,
             slotEnhancementSelection
         );
+
+        if (!_gameStartData.RewardSelectionSettings.TryValidate(out string rewardSettingsError))
+        {
+            Debug.LogError(rewardSettingsError, _gameStartData);
+            return;
+        }
+
         var rewardSelectionManager = new RewardSelectionManager(
             _gameStartData.RewardDataList,
             rewardDependencies,
@@ -197,7 +204,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
             rewardSelectionManager,
             wavePlanGenerator,
             _gameStartData.WaveGenerationSettings,
-            playerProgression);
+            playerProgression,
+            towerManager);
         GameManager gameManager = _gameManager;
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;

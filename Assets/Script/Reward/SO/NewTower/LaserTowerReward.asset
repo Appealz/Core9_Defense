@@ -15,7 +15,7 @@ MonoBehaviour:
   _rewardName: Laser Tower Reward
   _description: Add "One" Laser Tower
   _icon: {fileID: 4765240581426776098, guid: 0a9ef40896273504fa9ceec7c2bedaff, type: 3}
-  _rarity: 2
+  _rarity: 3
   _category: 1
   _selectionWeight: 1
   _rewardDefinition:

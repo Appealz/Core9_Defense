@@ -14,6 +14,7 @@ public class GameManager : IUpdatable, IDisposable
     private readonly WavePlanGenerator _wavePlanGenerator;
     private readonly WaveGenerationSettings _waveGenerationSettings;
     private readonly PlayerProgression _playerProgression;
+    private readonly TowerManager _towerManager;
 
     private CancellationTokenSource _waveCancellationSource;
     private int _waveRunVersion;
@@ -36,7 +37,8 @@ public class GameManager : IUpdatable, IDisposable
         RewardSelectionManager rewardSelectionManager,
         WavePlanGenerator wavePlanGenerator,
         WaveGenerationSettings waveGenerationSettings,
-        PlayerProgression playerProgression)
+        PlayerProgression playerProgression,
+        TowerManager towerManager)
     {
         _gameStateManager = gameStateManager;
         _waveManager = waveManager;
@@ -46,12 +48,14 @@ public class GameManager : IUpdatable, IDisposable
             ? waveGenerationSettings
             : throw new ArgumentNullException(nameof(waveGenerationSettings));
         _playerProgression = playerProgression ?? throw new ArgumentNullException(nameof(playerProgression));
+        _towerManager = towerManager ?? throw new ArgumentNullException(nameof(towerManager));
     }
 
     public void StartGame()
     {
         CancelCurrentWave();
         _currentWaveNumber = 1;
+        _towerManager.SetCurrentWaveNumber(_currentWaveNumber);
         _playerProgression.Reset();
         _gameStateManager.ChangeState(GameState.Playing);
         BeginCurrentWave();
@@ -64,6 +68,7 @@ public class GameManager : IUpdatable, IDisposable
 
         _rearrangementTimeRemaining = 0f;
         _currentWaveNumber++;
+        _towerManager.SetCurrentWaveNumber(_currentWaveNumber);
         _gameStateManager.ChangeState(GameState.Playing);
         BeginCurrentWave();
     }

@@ -12,11 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b63cdb2d29b4e34aa21f3c4a86fa067, type: 3}
   m_Name: PlayerLevelData
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLevelData
-  _requiredExperienceByLevel:
-  - 10
-  - 15
-  - 20
-  - 25
-  - 30
+  _requiredExperienceByLevel: 19000000230000002d0000003700000041000000
   _fallbackInitialRequirement: 10
-  _requirementIncreaseBeyondTable: 5
+  _requirementIncreaseBeyondTable: 10
