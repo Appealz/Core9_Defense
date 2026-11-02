@@ -18,5 +18,5 @@ MonoBehaviour:
   _visualPriority: 35
   _statType: 0
   _modifierType: 1
-  _value: 0.2
+  _value: 0.1
   _maxTotalValue: 0.5

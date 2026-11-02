@@ -90,6 +90,12 @@ public class ProjectileManager : IUpdatable
         }
     }
 
+    public void ClearAll()
+    {
+        for (int i = _activeProjectiles.Count - 1; i >= 0; i--)
+            Release(i, _activeProjectiles[i]);
+    }
+
     private void Release(int index, Projectile projectile)
     {
         _activeProjectiles.RemoveAt(index);

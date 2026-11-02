@@ -7,6 +7,7 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
 {
     public event Action AllTowersDestroyed;
     public event Action<Tower> TowerRemoved;
+    public event Action<Tower> TowerStatsChanged;
 
     private readonly TowerFactory _towerFactory;
     private readonly CoreManager _coreManager;
@@ -16,10 +17,12 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
     private readonly TowerTypeUpgradeState _typeUpgradeState;
     private readonly List<Tower> _activeTowers = new();
     private readonly HashSet<int> _reservedPlacementSlots = new();
+    private DestroyedTowerSnapshot _lastDestroyedTower;
     private int _currentWaveNumber = 1;
 
     public int ActiveTowerCount => _activeTowers.Count;
     public int MaxTowerCount => TowerCapacityPolicy.GetMaxTowerCount(_currentWaveNumber);
+    public bool CanRestoreLastDestroyedTower => _lastDestroyedTower != null;
 
     public TowerManager(
         TowerFactory towerFactory,
@@ -170,6 +173,23 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
         return tower != null && tower.IsAlive && _activeTowers.Contains(tower);
     }
 
+    public bool TryGetStatSummary(Tower tower, out TowerStatSummary summary)
+    {
+        if (!IsTowerActive(tower) || tower.Stats == null)
+        {
+            summary = default;
+            return false;
+        }
+
+        TowerStatModifiers typeModifiers = _typeUpgradeState.GetStatModifiers(tower.TowerType);
+        summary = tower.Stats.CreateStatSummary(
+            _globalStatModifiers,
+            _coreGoldStatModifiers,
+            typeModifiers,
+            tower.IndividualGoldModifiers);
+        return true;
+    }
+
     public bool CanApplyTowerGoldUpgrade(Tower tower, TowerStatType statType, float flatValue)
     {
         return IsTowerActive(tower) &&
@@ -248,6 +268,24 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
         return true;
     }
 
+    public async UniTask<bool> TryRestoreLastDestroyedTowerAsync()
+    {
+        DestroyedTowerSnapshot snapshot = _lastDestroyedTower;
+
+        if (snapshot == null || snapshot.PartData == null)
+            return false;
+
+        bool isPlaced = await TryPlaceTowerAsync(snapshot.SlotNumber, snapshot.PartData);
+
+        if (!isPlaced || !_coreManager.TryGetTower(snapshot.SlotNumber, out Tower tower))
+            return false;
+
+        tower.IndividualGoldModifiers.CopyFrom(snapshot.IndividualGoldModifiers);
+        RefreshTowerForSlot(snapshot.SlotNumber);
+        _lastDestroyedTower = null;
+        return true;
+    }
+
     private void HandleSlotEffectsChanged(int slotNumber)
     {
         RefreshTowerForSlot(slotNumber);
@@ -302,6 +340,7 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
             tower.IndividualGoldModifiers);
         tower.Health.UpdateMaxHp(tower.Stats.MaxHp);
         tower.RefreshAttackEffect();
+        TowerStatsChanged?.Invoke(tower);
 
         if (rebindRuntimeEffects)
             tower.BindSlotEffects(effects);
@@ -317,6 +356,14 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
     {
         if (!_activeTowers.Remove(tower))
             return;
+
+        if (_coreManager.TryFindTowerSlotNumber(tower, out int destroyedSlotNumber))
+        {
+            _lastDestroyedTower = new DestroyedTowerSnapshot(
+                destroyedSlotNumber,
+                tower.PartData,
+                tower.IndividualGoldModifiers.Clone());
+        }
 
         bool removedFromBoard = _coreManager.TryRemoveTower(tower);
 
@@ -335,5 +382,22 @@ public class TowerManager : ICoreGoldUpgradeApplier, ITowerGoldUpgradeApplier, I
     {
         _coreManager.SlotEffectsChanged -= HandleSlotEffectsChanged;
         _coreLayout.LayoutChanged -= HandleCoreLayoutChanged;
+    }
+
+    private sealed class DestroyedTowerSnapshot
+    {
+        public int SlotNumber { get; }
+        public TowerPartData PartData { get; }
+        public TowerStatModifiers IndividualGoldModifiers { get; }
+
+        public DestroyedTowerSnapshot(
+            int slotNumber,
+            TowerPartData partData,
+            TowerStatModifiers individualGoldModifiers)
+        {
+            SlotNumber = slotNumber;
+            PartData = partData;
+            IndividualGoldModifiers = individualGoldModifiers;
+        }
     }
 }

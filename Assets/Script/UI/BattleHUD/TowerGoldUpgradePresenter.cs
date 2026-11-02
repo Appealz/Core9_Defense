@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 public sealed class TowerGoldUpgradePresenter : IDisposable
 {
+    private const string TowerUpgradeColor = "#FFA43B";
+    private const string CoreUpgradeColor = "#61D17C";
+
     private readonly TowerGoldUpgradeView _view;
     private readonly TowerGoldUpgradeManager _upgradeManager;
     private readonly TowerSelectionManager _selectionManager;
+    private readonly TowerManager _towerManager;
     private readonly GoldManager _goldManager;
     private readonly GameStateManager _gameStateManager;
 
@@ -13,16 +18,19 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
         TowerGoldUpgradeView view,
         TowerGoldUpgradeManager upgradeManager,
         TowerSelectionManager selectionManager,
+        TowerManager towerManager,
         GoldManager goldManager,
         GameStateManager gameStateManager)
     {
         _view = view ?? throw new ArgumentNullException(nameof(view));
         _upgradeManager = upgradeManager ?? throw new ArgumentNullException(nameof(upgradeManager));
         _selectionManager = selectionManager ?? throw new ArgumentNullException(nameof(selectionManager));
+        _towerManager = towerManager ?? throw new ArgumentNullException(nameof(towerManager));
         _goldManager = goldManager ?? throw new ArgumentNullException(nameof(goldManager));
         _gameStateManager = gameStateManager ?? throw new ArgumentNullException(nameof(gameStateManager));
 
         _selectionManager.SelectionChanged += HandleSelectionChanged;
+        _towerManager.TowerStatsChanged += HandleTowerStatsChanged;
         _upgradeManager.UpgradeLevelChanged += HandleUpgradeLevelChanged;
         _upgradeManager.TowerUpgradeStateRemoved += HandleTowerUpgradeStateRemoved;
         _goldManager.GoldChanged += HandleGoldChanged;
@@ -35,6 +43,7 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
     public void Dispose()
     {
         _selectionManager.SelectionChanged -= HandleSelectionChanged;
+        _towerManager.TowerStatsChanged -= HandleTowerStatsChanged;
         _upgradeManager.UpgradeLevelChanged -= HandleUpgradeLevelChanged;
         _upgradeManager.TowerUpgradeStateRemoved -= HandleTowerUpgradeStateRemoved;
         _goldManager.GoldChanged -= HandleGoldChanged;
@@ -54,6 +63,12 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
     }
 
     private void HandleSelectionChanged(Tower _) => Refresh();
+    private void HandleTowerStatsChanged(Tower tower)
+    {
+        if (tower == _selectionManager.SelectedTower)
+            RefreshStatSummary();
+    }
+
     private void HandleGoldChanged(int _) => RefreshItems();
     private void HandleStateChanged(GameState _, GameState __) => Refresh();
     private void HandleUpgradeLevelChanged(Tower _, TowerGoldUpgradeData __, int ___) => RefreshItems();
@@ -72,7 +87,23 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
         }
 
         _view.ShowTower(tower.DisplayName);
+        RefreshStatSummary();
         RefreshItems();
+    }
+
+    private void RefreshStatSummary()
+    {
+        Tower tower = _selectionManager.SelectedTower;
+
+        if (!_towerManager.TryGetStatSummary(tower, out TowerStatSummary summary))
+            return;
+
+        _view.SetStatSummary(
+            $"ATK {FormatStat(summary.Final.AttackDamage, summary.NonCore.AttackDamage - summary.Base.AttackDamage, summary.Final.AttackDamage - summary.NonCore.AttackDamage)}" +
+            $"    ASPD {FormatStat(summary.Final.AttackSpeed, summary.NonCore.AttackSpeed - summary.Base.AttackSpeed, summary.Final.AttackSpeed - summary.NonCore.AttackSpeed, "/s")}" +
+            $"    MAX HP {FormatStat(summary.Final.MaxHp, summary.NonCore.MaxHp - summary.Base.MaxHp, summary.Final.MaxHp - summary.NonCore.MaxHp)}",
+            $"<color={TowerUpgradeColor}>● TOWER UPGRADE</color>  " +
+            $"<color={CoreUpgradeColor}>● CORE UPGRADE</color>");
     }
 
     private void RefreshItems()
@@ -112,4 +143,24 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
             ? $"+{value:0.##}/s"
             : $"+{value:0.##}";
     }
+
+    private static string FormatStat(
+        float finalValue,
+        float towerUpgradeIncrease,
+        float coreUpgradeIncrease,
+        string suffix = "")
+    {
+        string value = $"<color=#FFFFFF>{FormatNumber(finalValue)}{suffix}</color>";
+
+        if (towerUpgradeIncrease > 0.0001f)
+            value += $" <color={TowerUpgradeColor}>(+{FormatNumber(towerUpgradeIncrease)})</color>";
+
+        if (coreUpgradeIncrease > 0.0001f)
+            value += $" <color={CoreUpgradeColor}>(+{FormatNumber(coreUpgradeIncrease)})</color>";
+
+        return value;
+    }
+
+    private static string FormatNumber(float value) =>
+        value.ToString("0.##", CultureInfo.InvariantCulture);
 }

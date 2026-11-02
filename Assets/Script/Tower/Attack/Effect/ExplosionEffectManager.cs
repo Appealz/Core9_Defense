@@ -31,6 +31,12 @@ public sealed class ExplosionEffectManager : IUpdatable, IImpactEffect
         }
     }
 
+    public void ClearAll()
+    {
+        for (int i = _activeEffects.Count - 1; i >= 0; i--)
+            Release(i, _activeEffects[i]);
+    }
+
     private async UniTask PlayAsync(Vector3 position, float radius)
     {
         ExplosionEffect effect = await _effectPool.GetAsync();

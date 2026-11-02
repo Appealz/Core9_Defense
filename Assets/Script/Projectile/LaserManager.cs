@@ -69,6 +69,12 @@ public sealed class LaserManager : IUpdatable
         }
     }
 
+    public void ClearAll()
+    {
+        for (int i = _activeLasers.Count - 1; i >= 0; i--)
+            Release(i, _activeLasers[i]);
+    }
+
     private void Release(int index, Laser laser)
     {
         _activeLasers.RemoveAt(index);

@@ -85,6 +85,32 @@ public class EnemyManager
             supportEnemies[i].SetRetreatWaiting(shouldWait);
     }
 
+    public void ClearAll()
+    {
+        if (_aliveEnemies.Count == 0)
+        {
+            PendingSpawnCount = 0;
+            return;
+        }
+
+        List<Enemy> enemies = new List<Enemy>(_aliveEnemies);
+        _aliveEnemies.Clear();
+        PendingSpawnCount = 0;
+
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            Enemy enemy = enemies[i];
+
+            if (enemy == null)
+                continue;
+
+            enemy.Died -= OnEnemyDied;
+            enemy.CoreReached -= OnEnemyCoreReached;
+            enemy.Retreated -= OnEnemyRetreated;
+            _enemyFactory.Release(enemy);
+        }
+    }
+
     private void RemoveEnemy(Enemy enemy, bool wasKilled)
     {
         if (!_aliveEnemies.Remove(enemy))

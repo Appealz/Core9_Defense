@@ -116,12 +116,33 @@ public class GameManager : IUpdatable, IDisposable
 
     public void GameOver()
     {
-        if (_gameStateManager.CurrentState == GameState.GameOver)
+        if (_gameStateManager.CurrentState == GameState.GameOver ||
+            _gameStateManager.CurrentState == GameState.GameResult)
             return;
 
         CancelCurrentWave();
         _gameStateManager.ChangeState(GameState.GameOver);
         Debug.Log("Game Over");
+    }
+
+    public bool ResumeCurrentWaveAfterContinue()
+    {
+        if (_gameStateManager.CurrentState != GameState.GameOver)
+            return false;
+
+        _gameStateManager.ChangeState(GameState.Playing);
+        BeginCurrentWave();
+        return true;
+    }
+
+    public bool ShowGameResult()
+    {
+        if (_gameStateManager.CurrentState != GameState.GameOver)
+            return false;
+
+        CancelCurrentWave();
+        _gameStateManager.ChangeState(GameState.GameResult);
+        return true;
     }
 
     public void Dispose()
@@ -179,7 +200,7 @@ public class GameManager : IUpdatable, IDisposable
 
         if (cancellationToken.IsCancellationRequested ||
             runVersion != _waveRunVersion ||
-            _gameStateManager.CurrentState == GameState.GameOver)
+            _gameStateManager.CurrentState != GameState.Playing)
             return;
 
         _gameStateManager.ChangeState(GameState.WaveClear);

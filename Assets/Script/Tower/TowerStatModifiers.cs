@@ -134,4 +134,20 @@ public sealed class TowerStatModifiers
     {
         return _percentValues[(int)statType];
     }
+
+    public TowerStatModifiers Clone()
+    {
+        TowerStatModifiers clone = new TowerStatModifiers();
+        clone.CopyFrom(this);
+        return clone;
+    }
+
+    public void CopyFrom(TowerStatModifiers source)
+    {
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+
+        Array.Copy(source._flatValues, _flatValues, _flatValues.Length);
+        Array.Copy(source._percentValues, _percentValues, _percentValues.Length);
+    }
 }

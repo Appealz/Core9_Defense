@@ -15,6 +15,7 @@ public class Tower : MonoBehaviour, IDamageable
     public TowerAttack Attack { get; private set; }
     public TowerType TowerType { get; private set; }
     public string DisplayName { get; private set; }
+    public TowerPartData PartData { get; private set; }
     public TowerStatModifiers IndividualGoldModifiers { get; } = new();
 
     public bool IsAlive => Health != null && Health.IsAlive;
@@ -43,13 +44,15 @@ public class Tower : MonoBehaviour, IDamageable
         Sprite sprite,
         TowerType towerType,
         ITowerAttackEffect attackEffect,
-        string displayName = null)
+        string displayName = null,
+        TowerPartData partData = null)
     {
         Health = health;
         Stats = stats;
         Attack = attack;
         TowerType = towerType;
         DisplayName = string.IsNullOrWhiteSpace(displayName) ? gameObject.name : displayName;
+        PartData = partData;
         _attackEffect = attackEffect;
 
         if (_spriteRenderer != null)

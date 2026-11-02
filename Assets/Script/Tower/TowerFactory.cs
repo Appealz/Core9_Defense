@@ -62,7 +62,8 @@ public class TowerFactory
             partData.Sprite,
             partData.TowerType,
             effect,
-            partData.TowerName);
+            partData.TowerName,
+            partData);
 
         return tower;
     }

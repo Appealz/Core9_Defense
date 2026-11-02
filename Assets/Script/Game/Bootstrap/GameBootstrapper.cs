@@ -27,6 +27,10 @@ public sealed class GameBootstrapper : SceneBootstrapper
     private TowerSelectionManager _towerSelectionManager;
     private TowerManager _towerManager;
     private GameManager _gameManager;
+    private GameEndPresenter _gameEndPresenter;
+    private GameEndFlowManager _gameEndFlowManager;
+    private GameTimePauseService _gameTimePauseService;
+    private RunScoreCounter _runScoreCounter;
 
     private GoldManager _goldManager;
     private EnemyGoldRewardService _enemyGoldRewardService;
@@ -208,6 +212,36 @@ public sealed class GameBootstrapper : SceneBootstrapper
             towerManager);
         GameManager gameManager = _gameManager;
 
+        var gameEndRewardPolicy = new GameEndRewardPolicy();
+        _runScoreCounter = new RunScoreCounter(enemyManager, gameEndRewardPolicy);
+        _gameTimePauseService = new GameTimePauseService(gameStateManager);
+        var persistentCurrencyWallet = new PersistentCurrencyWallet();
+        var combatCleanupService = new GameCombatCleanupService(
+            enemyManager,
+            projectileManager,
+            laserManager,
+            explosionEffectManager);
+        _gameEndFlowManager = new GameEndFlowManager(
+            gameStateManager,
+            gameManager,
+            towerManager,
+            _runScoreCounter,
+            gameEndRewardPolicy,
+            persistentCurrencyWallet,
+            new MockRewardedAdService(),
+            combatCleanupService,
+            _gameTimePauseService);
+
+        GameEndView gameEndView = GetComponent<GameEndView>();
+
+        if (gameEndView == null)
+            gameEndView = gameObject.AddComponent<GameEndView>();
+
+        _gameEndPresenter = new GameEndPresenter(
+            gameEndView,
+            _gameEndFlowManager,
+            gameStateManager);
+
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
 
@@ -233,6 +267,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
             _towerGoldUpgradeView,
             _towerGoldUpgradeManager,
             _towerSelectionManager,
+            towerManager,
             _goldManager,
             gameStateManager);
 
@@ -280,6 +315,13 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
     protected override void OnDestroy()
     {
+        if (_towerManager != null && _gameManager != null)
+            _towerManager.AllTowersDestroyed -= _gameManager.GameOver;
+
+        _gameEndPresenter?.Dispose();
+        _gameEndFlowManager?.Dispose();
+        _gameTimePauseService?.Dispose();
+        _runScoreCounter?.Dispose();
         _towerGoldUpgradePresenter?.Dispose();
         _coreGoldUpgradePresenter?.Dispose();
         _rewardHUDPresenter?.Dispose();

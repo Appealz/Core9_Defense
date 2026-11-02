@@ -14,6 +14,8 @@ public sealed class TowerGoldUpgradeView : MonoBehaviour
 
     [SerializeField] private GameObject _panelRoot;
     [SerializeField] private TMP_Text _towerNameText;
+    [SerializeField] private TMP_Text _statSummaryText;
+    [SerializeField] private TMP_Text _statLegendText;
     [SerializeField] private Button _closeButton;
     [SerializeField] private RectTransform _itemContainer;
     [SerializeField] private GameObject _itemPrefab;
@@ -23,6 +25,7 @@ public sealed class TowerGoldUpgradeView : MonoBehaviour
     private Action _closeRequested;
 
     public bool IsConfigured => _panelRoot != null && _towerNameText != null &&
+        _statSummaryText != null && _statLegendText != null &&
         _closeButton != null && _itemContainer != null && _itemPrefab != null;
 
     public void Build(
@@ -61,6 +64,12 @@ public sealed class TowerGoldUpgradeView : MonoBehaviour
     {
         _towerNameText.text = string.IsNullOrWhiteSpace(towerName) ? "Tower" : towerName;
         SetVisible(true);
+    }
+
+    public void SetStatSummary(string summary, string legend)
+    {
+        _statSummaryText.text = summary ?? string.Empty;
+        _statLegendText.text = legend ?? string.Empty;
     }
 
     public void SetVisible(bool isVisible)

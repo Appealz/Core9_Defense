@@ -103,68 +103,128 @@ public class TowerStats
         TowerStatModifiers typeModifiers,
         TowerStatModifiers individualGoldModifiers)
     {
-        AttackDamage = Mathf.Max(
-            0f,
-            globalModifiers.Calculate(
-                TowerStatType.AttackDamage,
-                _baseAttackDamage,
-                coreGoldModifiers,
-                slotModifiers,
-                typeModifiers,
-                individualGoldModifiers)
-        );
-        MaxHp = Mathf.Max(
-            1f,
-            globalModifiers.Calculate(
-                TowerStatType.MaxHp,
-                _baseMaxHp,
-                coreGoldModifiers,
-                slotModifiers,
-                typeModifiers,
-                individualGoldModifiers)
-        );
-        AttackSpeed = Mathf.Max(
-            0.01f,
-            globalModifiers.Calculate(
-                TowerStatType.AttackSpeed,
-                _baseAttackSpeed,
-                coreGoldModifiers,
-                slotModifiers,
-                typeModifiers,
-                individualGoldModifiers)
-        );
+        AttackDamage = CalculateModifiedStat(
+            TowerStatType.AttackDamage,
+            globalModifiers,
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            individualGoldModifiers);
+        MaxHp = CalculateModifiedStat(
+            TowerStatType.MaxHp,
+            globalModifiers,
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            individualGoldModifiers);
+        AttackSpeed = CalculateModifiedStat(
+            TowerStatType.AttackSpeed,
+            globalModifiers,
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            individualGoldModifiers);
         AttackInterval = Mathf.Max(_minimumAttackInterval, 1f / AttackSpeed);
-        CriticalChance = Mathf.Clamp(
-            globalModifiers.Calculate(
-                TowerStatType.CriticalChance,
-                _baseCriticalChance,
+        CriticalChance = CalculateModifiedStat(
+            TowerStatType.CriticalChance,
+            globalModifiers,
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            individualGoldModifiers);
+        AttackRange = CalculateModifiedStat(
+            TowerStatType.AttackRange,
+            globalModifiers,
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            individualGoldModifiers);
+        CriticalDamageMultiplier = CalculateModifiedStat(
+            TowerStatType.CriticalDamage,
+            globalModifiers,
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            individualGoldModifiers);
+    }
+
+    public TowerStatSummary CreateStatSummary(
+        TowerStatModifiers globalModifiers,
+        TowerStatModifiers coreGoldModifiers,
+        TowerStatModifiers typeModifiers,
+        TowerStatModifiers individualGoldModifiers)
+    {
+        TowerStatValues baseValues = new(
+            _baseAttackDamage,
+            _baseAttackSpeed,
+            _baseMaxHp);
+        TowerStatValues nonCoreValues = new(
+            CalculateModifiedStat(
+                TowerStatType.AttackDamage,
+                globalModifiers,
                 coreGoldModifiers,
-                slotModifiers,
+                null,
                 typeModifiers,
                 individualGoldModifiers),
-            0f,
-            _criticalChanceCap
-        );
-        AttackRange = Mathf.Max(
-            0f,
-            globalModifiers.Calculate(
-                TowerStatType.AttackRange,
-                _baseAttackRange,
+            CalculateModifiedStat(
+                TowerStatType.AttackSpeed,
+                globalModifiers,
                 coreGoldModifiers,
-                slotModifiers,
+                null,
                 typeModifiers,
-                individualGoldModifiers)
-        );
-        CriticalDamageMultiplier = Mathf.Max(
-            1f,
-            globalModifiers.Calculate(
-                TowerStatType.CriticalDamage,
-                _baseCriticalDamageMultiplier,
+                individualGoldModifiers),
+            CalculateModifiedStat(
+                TowerStatType.MaxHp,
+                globalModifiers,
                 coreGoldModifiers,
-                slotModifiers,
+                null,
                 typeModifiers,
-                individualGoldModifiers)
-        );
+                individualGoldModifiers));
+        TowerStatValues finalValues = new(AttackDamage, AttackSpeed, MaxHp);
+
+        return new TowerStatSummary(baseValues, nonCoreValues, finalValues);
+    }
+
+    private float CalculateModifiedStat(
+        TowerStatType statType,
+        TowerStatModifiers globalModifiers,
+        TowerStatModifiers coreGoldModifiers,
+        TowerStatModifiers slotModifiers,
+        TowerStatModifiers typeModifiers,
+        TowerStatModifiers individualGoldModifiers)
+    {
+        float value = globalModifiers.Calculate(
+            statType,
+            GetBaseStat(statType),
+            coreGoldModifiers,
+            slotModifiers,
+            typeModifiers,
+            individualGoldModifiers);
+
+        return statType switch
+        {
+            TowerStatType.AttackDamage => Mathf.Max(0f, value),
+            TowerStatType.MaxHp => Mathf.Max(1f, value),
+            TowerStatType.AttackSpeed => Mathf.Max(0.01f, value),
+            TowerStatType.CriticalChance => Mathf.Clamp(value, 0f, _criticalChanceCap),
+            TowerStatType.AttackRange => Mathf.Max(0f, value),
+            TowerStatType.CriticalDamage => Mathf.Max(1f, value),
+            _ => value
+        };
+    }
+
+    private float GetBaseStat(TowerStatType statType)
+    {
+        return statType switch
+        {
+            TowerStatType.AttackDamage => _baseAttackDamage,
+            TowerStatType.MaxHp => _baseMaxHp,
+            TowerStatType.AttackSpeed => _baseAttackSpeed,
+            TowerStatType.CriticalChance => _baseCriticalChance,
+            TowerStatType.AttackRange => _baseAttackRange,
+            TowerStatType.CriticalDamage => _baseCriticalDamageMultiplier,
+            _ => 0f
+        };
     }
 
     public float CalculateAttackDamage(float criticalRoll)

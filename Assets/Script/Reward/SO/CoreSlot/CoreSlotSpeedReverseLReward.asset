@@ -30,4 +30,4 @@ MonoBehaviour:
       data:
         _pattern: {fileID: 11400000, guid: 6b1fa87ee4524a30b2f4a8442ea3779c, type: 2}
         _effects:
-        - {fileID: 11400000, guid: 444602734a394d67a3f0cc2f8628bc2d, type: 2}
+        - {fileID: 11400000, guid: 0fd0c5fa188b4d27bae8c63ab905c2be, type: 2}

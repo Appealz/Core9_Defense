@@ -9,7 +9,8 @@ public enum GameState
     CoreSlotSelection,
     Rearrangement,
     Paused,
-    GameOver
+    GameOver,
+    GameResult
 }
 
 public sealed class GameStateManager
