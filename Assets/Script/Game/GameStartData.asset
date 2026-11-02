@@ -66,6 +66,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 79bdb1f6f65b0834487d0f5f11fbce3a, type: 2}
   - {fileID: 11400000, guid: 20fc8f9816bba814bb50cfdbc01f93ca, type: 2}
   - {fileID: 11400000, guid: 5be4f441502eab6429374ced3948cfe6, type: 2}
+  _persistentUpgradeCatalog: {fileID: 11400000, guid: b2222222222222222222222222222222, type: 2}
   _coreGoldUpgradeDataList:
   - {fileID: 11400000, guid: d26e1025da7963d4b9b5b49a832ca2ed, type: 2}
   - {fileID: 11400000, guid: 8e6c978fcb2cd0345a23708986477cfd, type: 2}

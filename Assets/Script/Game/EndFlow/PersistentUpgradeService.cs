@@ -10,6 +10,8 @@ public interface IPersistentUpgradeStore
 {
     int GetLevel(string key);
     void SetLevel(string key, int level);
+    void DeleteLevel(string key);
+    void Save();
 }
 
 public sealed class PlayerPrefsPersistentUpgradeStore : IPersistentUpgradeStore
@@ -21,6 +23,9 @@ public sealed class PlayerPrefsPersistentUpgradeStore : IPersistentUpgradeStore
         PlayerPrefs.SetInt(key, Mathf.Max(0, level));
         PlayerPrefs.Save();
     }
+
+    public void DeleteLevel(string key) => PlayerPrefs.DeleteKey(key);
+    public void Save() => PlayerPrefs.Save();
 }
 
 public sealed class PersistentUpgradeService
@@ -52,6 +57,44 @@ public sealed class PersistentUpgradeService
         PermanentUpgradeKind kind)
     {
         return _store.GetLevel(CreateKey(target, towerType, statType, kind));
+    }
+
+    public bool TryLoadModifiers(
+        PermanentUpgradeTarget target,
+        TowerType towerType,
+        TowerStatModifiers destination)
+    {
+        if (destination == null)
+            throw new ArgumentNullException(nameof(destination));
+
+        var loadedModifiers = new TowerStatModifiers();
+
+        for (int i = 0; i < _catalog.Definitions.Count; i++)
+        {
+            PersistentUpgradeDefinition definition = _catalog.Definitions[i];
+
+            if (definition == null)
+                continue;
+
+            if (!TryAddStoredModifier(
+                    target,
+                    towerType,
+                    definition,
+                    PermanentUpgradeKind.Flat,
+                    loadedModifiers) ||
+                !TryAddStoredModifier(
+                    target,
+                    towerType,
+                    definition,
+                    PermanentUpgradeKind.Rate,
+                    loadedModifiers))
+            {
+                return false;
+            }
+        }
+
+        destination.CopyFrom(loadedModifiers);
+        return true;
     }
 
     public bool IsUnlocked(
@@ -95,6 +138,33 @@ public sealed class PersistentUpgradeService
         return true;
     }
 
+    public void ResetAllLevels()
+    {
+        for (int i = 0; i < _catalog.Definitions.Count; i++)
+        {
+            PersistentUpgradeDefinition definition = _catalog.Definitions[i];
+
+            if (definition == null)
+                continue;
+
+            DeleteStoredLevels(
+                PermanentUpgradeTarget.Core,
+                TowerType.Basic,
+                definition.StatType);
+
+            foreach (TowerType towerType in Enum.GetValues(typeof(TowerType)))
+            {
+                DeleteStoredLevels(
+                    PermanentUpgradeTarget.Tower,
+                    towerType,
+                    definition.StatType);
+            }
+        }
+
+        _store.Save();
+        ProgressChanged?.Invoke();
+    }
+
     private static string CreateKey(
         PermanentUpgradeTarget target,
         TowerType towerType,
@@ -105,5 +175,41 @@ public sealed class PersistentUpgradeService
             ? "Core"
             : $"Tower.{towerType}";
         return $"{KeyPrefix}.{targetId}.{statType}.{kind}";
+    }
+
+    private bool TryAddStoredModifier(
+        PermanentUpgradeTarget target,
+        TowerType towerType,
+        PersistentUpgradeDefinition definition,
+        PermanentUpgradeKind kind,
+        TowerStatModifiers destination)
+    {
+        int level = GetLevel(target, towerType, definition.StatType, kind);
+        float amount = definition.GetAccumulatedAmount(kind, level);
+
+        if (amount <= 0f)
+            return true;
+
+        StatModifierType modifierType = kind == PermanentUpgradeKind.Flat
+            ? StatModifierType.Flat
+            : StatModifierType.Percent;
+        return destination.TryAdd(definition.StatType, modifierType, amount);
+    }
+
+    private void DeleteStoredLevels(
+        PermanentUpgradeTarget target,
+        TowerType towerType,
+        TowerStatType statType)
+    {
+        _store.DeleteLevel(CreateKey(
+            target,
+            towerType,
+            statType,
+            PermanentUpgradeKind.Flat));
+        _store.DeleteLevel(CreateKey(
+            target,
+            towerType,
+            statType,
+            PermanentUpgradeKind.Rate));
     }
 }

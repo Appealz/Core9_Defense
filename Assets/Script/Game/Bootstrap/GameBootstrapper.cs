@@ -39,6 +39,18 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
     protected override async UniTask ComposeAsync()
     {
+        if (_gameStartData == null)
+        {
+            Debug.LogError("GameStartData is missing.", this);
+            return;
+        }
+
+        if (_gameStartData.PersistentUpgradeCatalog == null)
+        {
+            Debug.LogError("PersistentUpgradeCatalog is missing from GameStartData.", this);
+            return;
+        }
+
         CoreBoundary coreBoundary = _coreLayout.GetComponentInChildren<CoreBoundary>();
         CoreVisual coreVisual = _coreLayout.GetComponentInChildren<CoreVisual>();
         TowerSpawnTester towerSpawnTester = GetComponent<TowerSpawnTester>();
@@ -126,9 +138,38 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         var towerTargetSelector = new TowerTargetSelector(enemyQuery, combatBoundsProvider);
         var attackDependencies = new TowerAttackDependencies(projectileManager, explosionEffectManager, laserManager);
+        var persistentCurrencyWallet = new PersistentCurrencyWallet();
+        var persistentUpgradeService = new PersistentUpgradeService(
+            _gameStartData.PersistentUpgradeCatalog,
+            persistentCurrencyWallet);
         var globalStatModifiers = new TowerStatModifiers();
         var coreGoldStatModifiers = new TowerStatModifiers();
         var towerTypeUpgradeState = new TowerTypeUpgradeState(_gameStartData.TowerTypeUpgradeDataList);
+
+        if (!persistentUpgradeService.TryLoadModifiers(
+                PermanentUpgradeTarget.Core,
+                TowerType.Basic,
+                globalStatModifiers))
+        {
+            Debug.LogError("Failed to load CORE persistent upgrade modifiers.", _gameStartData);
+            return;
+        }
+
+        foreach (TowerType towerType in System.Enum.GetValues(typeof(TowerType)))
+        {
+            if (persistentUpgradeService.TryLoadModifiers(
+                    PermanentUpgradeTarget.Tower,
+                    towerType,
+                    towerTypeUpgradeState.GetStatModifiers(towerType)))
+            {
+                continue;
+            }
+
+            Debug.LogError(
+                $"Failed to load persistent upgrade modifiers for {towerType}.",
+                _gameStartData);
+            return;
+        }
 
         var towerFactory = new TowerFactory(
             towerTargetSelector,
@@ -215,7 +256,6 @@ public sealed class GameBootstrapper : SceneBootstrapper
         var gameEndRewardPolicy = new GameEndRewardPolicy();
         _runScoreCounter = new RunScoreCounter(enemyManager, gameEndRewardPolicy);
         _gameTimePauseService = new GameTimePauseService(gameStateManager);
-        var persistentCurrencyWallet = new PersistentCurrencyWallet();
         var combatCleanupService = new GameCombatCleanupService(
             enemyManager,
             projectileManager,

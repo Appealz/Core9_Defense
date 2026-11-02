@@ -10,6 +10,7 @@ public class GameStartData : ScriptableObject
     [SerializeField] private WaveGenerationSettings _waveGenerationSettings;
     [SerializeField] private List<RewardData> _rewardDataList = new();
     [SerializeField] private List<TowerTypeUpgradeData> _towerTypeUpgradeDataList = new();
+    [SerializeField] private PersistentUpgradeCatalog _persistentUpgradeCatalog;
     [SerializeField] private List<CoreGoldUpgradeData> _coreGoldUpgradeDataList = new();
     [SerializeField] private List<TowerGoldUpgradeData> _towerGoldUpgradeDataList = new();
     [SerializeField] private RewardSelectionSettings _rewardSelectionSettings = new();
@@ -21,6 +22,7 @@ public class GameStartData : ScriptableObject
     public WaveGenerationSettings WaveGenerationSettings => _waveGenerationSettings;
     public IReadOnlyList<RewardData> RewardDataList => _rewardDataList;
     public IReadOnlyList<TowerTypeUpgradeData> TowerTypeUpgradeDataList => _towerTypeUpgradeDataList;
+    public PersistentUpgradeCatalog PersistentUpgradeCatalog => _persistentUpgradeCatalog;
     public IReadOnlyList<CoreGoldUpgradeData> CoreGoldUpgradeDataList => _coreGoldUpgradeDataList;
     public IReadOnlyList<TowerGoldUpgradeData> TowerGoldUpgradeDataList => _towerGoldUpgradeDataList;
     public RewardSelectionSettings RewardSelectionSettings => _rewardSelectionSettings;

@@ -47,4 +47,11 @@ public sealed class PersistentCurrencyWallet : IPersistentCurrencyWallet, IPersi
         BalanceChanged?.Invoke(nextBalance);
         return true;
     }
+
+    public void Reset()
+    {
+        PlayerPrefs.DeleteKey(_playerPrefsKey);
+        PlayerPrefs.Save();
+        BalanceChanged?.Invoke(0);
+    }
 }
