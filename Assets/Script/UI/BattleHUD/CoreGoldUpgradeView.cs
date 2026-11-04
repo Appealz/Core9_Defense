@@ -65,6 +65,18 @@ public sealed class CoreGoldUpgradeView : MonoBehaviour
         }
     }
 
+    public void PlayPurchaseSuccess(CoreGoldUpgradeData data)
+    {
+        for (int i = 0; i < _items.Count; i++)
+        {
+            if (_items[i].Data != data)
+                continue;
+
+            _items[i].PlayPurchaseSuccess();
+            return;
+        }
+    }
+
     public void Clear()
     {
         for (int i = 0; i < _items.Count; i++)

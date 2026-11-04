@@ -10,17 +10,20 @@ public class EnemyFactory
     private readonly ProjectileManager _projectileManager;
     private readonly CoreBoundary _coreBoundary;
     private readonly CameraBoundsProvider _cameraBoundsProvider;
+    private readonly CombatTextManager _combatTextManager;
 
     public EnemyFactory(
         ObjectPool<Enemy> enemyPool,
         ProjectileManager projectileManager,
         CoreBoundary coreBoundary,
-        CameraBoundsProvider cameraBoundsProvider)
+        CameraBoundsProvider cameraBoundsProvider,
+        CombatTextManager combatTextManager)
     {
         _enemyPool = enemyPool ?? throw new ArgumentNullException(nameof(enemyPool));
         _projectileManager = projectileManager ?? throw new ArgumentNullException(nameof(projectileManager));
         _coreBoundary = coreBoundary != null ? coreBoundary : throw new ArgumentNullException(nameof(coreBoundary));
         _cameraBoundsProvider = cameraBoundsProvider ?? throw new ArgumentNullException(nameof(cameraBoundsProvider));
+        _combatTextManager = combatTextManager ?? throw new ArgumentNullException(nameof(combatTextManager));
     }
 
     public async UniTask<Enemy> CreateAsync(EnemyConfig config, Transform moveTarget)
@@ -75,7 +78,8 @@ public class EnemyFactory
             moveTarget,
             config,
             runtimeModifiers,
-            _cameraBoundsProvider);
+            _cameraBoundsProvider,
+            _combatTextManager);
 
         return enemy;
     }

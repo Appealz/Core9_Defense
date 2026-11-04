@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -234,6 +235,11 @@ public sealed class CoreGoldUpgradeManagerTests
         var serializedView = new SerializedObject(itemView);
         Assert.That(serializedView.FindProperty("_cardButton").objectReferenceValue, Is.EqualTo(cardButton));
         Assert.That(serializedView.FindProperty("_cardBackground").objectReferenceValue, Is.EqualTo(cardBackground));
+        Assert.That(serializedView.FindProperty("_pressScale").floatValue, Is.EqualTo(0.96f));
+        Assert.That(serializedView.FindProperty("_pressDuration").floatValue, Is.EqualTo(0.06f));
+        Assert.That(serializedView.FindProperty("_releaseDuration").floatValue, Is.EqualTo(0.10f));
+        Assert.That(serializedView.FindProperty("_highlightColor"), Is.Not.Null);
+        Assert.That(serializedView.FindProperty("_highlightDuration").floatValue, Is.EqualTo(0.12f));
 
         CoreGoldUpgradeData data = CreateUpgradeData(
             "attack_damage",
@@ -257,6 +263,31 @@ public sealed class CoreGoldUpgradeManagerTests
         Color unavailableColor = cardBackground.color;
         itemView.SetState(10, "+20", 0, true, false);
         Assert.That(cardBackground.color, Is.Not.EqualTo(unavailableColor));
+
+        itemView.SetState(1, "+2", 55, false, true);
+        Vector3 baseScale = itemView.transform.localScale;
+        Color baseColor = cardBackground.color;
+        itemView.PlayPurchaseSuccess();
+        InvokePrivate(itemView, "UpdateSuccessAnimation", 0.06f);
+
+        Assert.That(itemView.transform.localScale, Is.EqualTo(baseScale * 0.96f));
+        Assert.That(cardBackground.color, Is.Not.EqualTo(baseColor));
+
+        itemView.PlayPurchaseSuccess();
+        Assert.That(itemView.transform.localScale, Is.EqualTo(baseScale));
+        InvokePrivate(itemView, "UpdateSuccessAnimation", 0.16f);
+
+        Assert.That(itemView.transform.localScale, Is.EqualTo(baseScale));
+        Assert.That(cardBackground.color, Is.EqualTo(baseColor));
+    }
+
+    private static void InvokePrivate(object target, string methodName, params object[] arguments)
+    {
+        MethodInfo method = target.GetType().GetMethod(
+            methodName,
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(method, Is.Not.Null);
+        method.Invoke(target, arguments);
     }
 
     [Test]

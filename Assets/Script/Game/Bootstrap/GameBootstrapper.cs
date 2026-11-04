@@ -7,6 +7,10 @@ public sealed class GameBootstrapper : SceneBootstrapper
     [SerializeField] private GameStartData _gameStartData;
     [SerializeField] private CoreLayout _coreLayout;
     [SerializeField] private Camera _mainCamera;
+    [SerializeField] private Transform _objectPoolsRoot;
+    [SerializeField] private RectTransform _combatTextRoot;
+    [SerializeField] private BattleSettingsView _settingsView;
+    [SerializeField] private BattleSettingsInput _settingsInput;
     [SerializeField] private RewardSelectionView _rewardSelectionView;
     [SerializeField] private CoreRearrangementView _rearrangementView;
     [SerializeField] private WaveHUDView _waveHUDView;
@@ -30,6 +34,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
     private GameEndPresenter _gameEndPresenter;
     private GameEndFlowManager _gameEndFlowManager;
     private GameTimePauseService _gameTimePauseService;
+    private BattleSettingsPresenter _settingsPresenter;
     private RunScoreCounter _runScoreCounter;
 
     private GoldManager _goldManager;
@@ -67,8 +72,9 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        if (_rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null ||
-            _goldHUDView == null || _rewardHUDView == null || _coreGoldUpgradeView == null ||
+        if (_objectPoolsRoot == null || _combatTextRoot == null || _settingsView == null || !_settingsView.IsConfigured ||
+            _settingsInput == null || _rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null ||
+            _goldHUDView == null || !_goldHUDView.IsConfigured || _rewardHUDView == null || _coreGoldUpgradeView == null ||
             _towerGoldUpgradeView == null || !_coreGoldUpgradeView.IsConfigured ||
             !_towerGoldUpgradeView.IsConfigured || _gameStartData.PlayerLevelData == null)
         {
@@ -112,10 +118,17 @@ public sealed class GameBootstrapper : SceneBootstrapper
         coreVisual.Initialize(coreManager);
 
         var addressableProvider = new AddressableProvider();
-        var objectPoolManager = new ObjectPoolManager(addressableProvider);
+        var objectPoolManager = new ObjectPoolManager(
+            addressableProvider,
+            _objectPoolsRoot,
+            _combatTextRoot);
 
         await objectPoolManager.InitializeAsync();
 
+        var combatTextManager = new CombatTextManager(
+            objectPoolManager.GetPool<FloatingCombatText>(),
+            _combatTextRoot,
+            _mainCamera);
         var projectileManager = new ProjectileManager(objectPoolManager.GetPool<Projectile>());
         var explosionEffectManager = new ExplosionEffectManager(objectPoolManager.GetPool<ExplosionEffect>());
         var laserManager = new LaserManager(
@@ -127,7 +140,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
             objectPoolManager.GetPool<Enemy>(),
             projectileManager,
             coreBoundary,
-            cameraBoundsProvider);
+            cameraBoundsProvider,
+            combatTextManager);
         var enemyManager = new EnemyManager(enemyFactory);
         var enemyQuery = new EnemyQuery(enemyManager);
 
@@ -281,6 +295,11 @@ public sealed class GameBootstrapper : SceneBootstrapper
             gameEndView,
             _gameEndFlowManager,
             gameStateManager);
+        _settingsPresenter = new BattleSettingsPresenter(
+            _settingsView,
+            _settingsInput,
+            gameStateManager,
+            _gameEndFlowManager);
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
@@ -347,6 +366,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
         Register(projectileManager);
         Register(explosionEffectManager);
         Register(laserManager);
+        Register(combatTextManager);
         Register(combatLayoutCoordinator);
         Register(gameManager);
 
@@ -358,6 +378,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
         if (_towerManager != null && _gameManager != null)
             _towerManager.AllTowersDestroyed -= _gameManager.GameOver;
 
+        _settingsPresenter?.Dispose();
         _gameEndPresenter?.Dispose();
         _gameEndFlowManager?.Dispose();
         _gameTimePauseService?.Dispose();

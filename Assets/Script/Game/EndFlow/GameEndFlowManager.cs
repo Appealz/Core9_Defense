@@ -162,6 +162,24 @@ public sealed class GameEndFlowManager : IDisposable
         RestoreTimeAndLoad(MainMenuSceneName);
     }
 
+    public bool RestartFromPause()
+    {
+        if (_isBusy || _gameStateManager.CurrentState != GameState.Paused)
+            return false;
+
+        RestoreTimeAndLoad(BattleSceneName);
+        return true;
+    }
+
+    public bool GoToMainMenuFromPause()
+    {
+        if (_isBusy || _gameStateManager.CurrentState != GameState.Paused)
+            return false;
+
+        RestoreTimeAndLoad(MainMenuSceneName);
+        return true;
+    }
+
     private GameRunSnapshot CreateSnapshot()
     {
         int reachedWave = _gameManager.CurrentWaveNumber;

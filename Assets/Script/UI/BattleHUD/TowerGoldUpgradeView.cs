@@ -96,6 +96,18 @@ public sealed class TowerGoldUpgradeView : MonoBehaviour
         }
     }
 
+    public void PlayPurchaseSuccess(TowerGoldUpgradeData data)
+    {
+        for (int i = 0; i < _items.Count; i++)
+        {
+            if (_items[i].Data != data)
+                continue;
+
+            _items[i].View.PlayPurchaseSuccess();
+            return;
+        }
+    }
+
     public void Clear()
     {
         for (int i = 0; i < _items.Count; i++)

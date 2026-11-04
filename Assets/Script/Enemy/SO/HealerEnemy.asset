@@ -44,7 +44,7 @@ MonoBehaviour:
     - rid: 1776079096826822657
       type: {class: HealerAbilityDefinition, ns: , asm: Assembly-CSharp}
       data:
-        _healRadius: 3
+        _healRadius: 5
         _healAmount: 1
         _healInterval: 2
         _healAreaSprite: {fileID: -2413806693520163455, guid: 38d339ba03ffe9145811230948fd538a, type: 3}

@@ -263,11 +263,28 @@ public sealed class TowerGoldUpgradeManagerTests
         TowerGoldUpgradeView view = GetPrivateField<TowerGoldUpgradeView>(
             bootstrapper,
             "_towerGoldUpgradeView");
+        CoreGoldUpgradeView coreView = GetPrivateField<CoreGoldUpgradeView>(
+            bootstrapper,
+            "_coreGoldUpgradeView");
 
         Assert.That(gold, Is.Not.Null);
         Assert.That(selection, Is.Not.Null);
         Assert.That(upgrades, Is.Not.Null);
         Assert.That(view, Is.Not.Null);
+        Assert.That(coreView, Is.Not.Null);
+
+        gold.AddGold(500);
+        RectTransform coreItems = GetPrivateField<RectTransform>(coreView, "_itemContainer");
+        Assert.That(coreItems.childCount, Is.GreaterThan(0));
+        Button coreCard = coreItems.GetChild(0).GetComponent<Button>();
+        Vector3 coreBaseScale = coreCard.transform.localScale;
+        coreCard.onClick.Invoke();
+
+        yield return new WaitForSecondsRealtime(0.03f);
+        Assert.That(coreCard.transform.localScale.x, Is.LessThan(coreBaseScale.x));
+
+        yield return new WaitForSecondsRealtime(0.2f);
+        Assert.That(coreCard.transform.localScale, Is.EqualTo(coreBaseScale));
 
         gold.AddGold(500);
         int goldBefore = gold.CurrentGold;
@@ -300,9 +317,22 @@ public sealed class TowerGoldUpgradeManagerTests
         Assert.That(damageCard, Is.Not.Null);
         Assert.That(speedCard, Is.Not.Null);
         Assert.That(maxHpCard, Is.Not.Null);
+        Vector3 damageBaseScale = damageCard.transform.localScale;
+        Vector3 speedBaseScale = speedCard.transform.localScale;
+        Vector3 maxHpBaseScale = maxHpCard.transform.localScale;
         damageCard.onClick.Invoke();
         speedCard.onClick.Invoke();
         maxHpCard.onClick.Invoke();
+
+        yield return new WaitForSecondsRealtime(0.03f);
+        Assert.That(damageCard.transform.localScale.x, Is.LessThan(damageBaseScale.x));
+        Assert.That(speedCard.transform.localScale.x, Is.LessThan(speedBaseScale.x));
+        Assert.That(maxHpCard.transform.localScale.x, Is.LessThan(maxHpBaseScale.x));
+
+        yield return new WaitForSecondsRealtime(0.2f);
+        Assert.That(damageCard.transform.localScale, Is.EqualTo(damageBaseScale));
+        Assert.That(speedCard.transform.localScale, Is.EqualTo(speedBaseScale));
+        Assert.That(maxHpCard.transform.localScale, Is.EqualTo(maxHpBaseScale));
 
         Assert.That(upgrades.GetLevel(tower, damageData), Is.EqualTo(1));
         Assert.That(upgrades.GetLevel(tower, speedData), Is.EqualTo(1));
@@ -315,6 +345,12 @@ public sealed class TowerGoldUpgradeManagerTests
         Assert.That(tower.Stats.MaxHp,
             Is.EqualTo(maxHpBefore + maxHpData.FlatIncreasePerLevel).Within(0.0001f));
         Assert.That(tower.Health.MaxHp, Is.EqualTo(tower.Stats.MaxHp).Within(0.0001f));
+
+        Assert.That(gold.TrySpendGold(gold.CurrentGold), Is.True);
+        Assert.That(damageCard.interactable, Is.False);
+        damageCard.onClick.Invoke();
+        yield return new WaitForSecondsRealtime(0.03f);
+        Assert.That(damageCard.transform.localScale, Is.EqualTo(damageBaseScale));
 
         Button closeButton = panel.transform.Find("Header/CloseButton").GetComponent<Button>();
         closeButton.onClick.Invoke();

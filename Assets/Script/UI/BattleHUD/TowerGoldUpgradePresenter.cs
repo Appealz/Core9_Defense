@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -48,13 +49,18 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
         _upgradeManager.TowerUpgradeStateRemoved -= HandleTowerUpgradeStateRemoved;
         _goldManager.GoldChanged -= HandleGoldChanged;
         _gameStateManager.StateChanged -= HandleStateChanged;
-        _view.Clear();
-        _view.SetVisible(false);
+
+        // 종료 시 UI 오브젝트는 Unity가 정리하므로
+        // 여기에서는 이벤트 구독만 해제한다.
     }
 
     private void HandlePurchaseRequested(TowerGoldUpgradeData data)
     {
-        _upgradeManager.TryPurchase(_selectionManager.SelectedTower, data);
+        TowerGoldUpgradePurchaseResult result =
+            _upgradeManager.TryPurchase(_selectionManager.SelectedTower, data);
+
+        if (result == TowerGoldUpgradePurchaseResult.Success)
+            _view.PlayPurchaseSuccess(data);
     }
 
     private void HandleCloseRequested()
@@ -63,6 +69,7 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
     }
 
     private void HandleSelectionChanged(Tower _) => Refresh();
+
     private void HandleTowerStatsChanged(Tower tower)
     {
         if (tower == _selectionManager.SelectedTower)
@@ -121,6 +128,7 @@ public sealed class TowerGoldUpgradePresenter : IDisposable
             int level = _upgradeManager.GetLevel(tower, data);
             bool isMaxLevel = data.IsMaxLevelReached(level);
             data.TryGetNextCost(level, out int nextCost);
+
             TowerGoldUpgradePurchaseResult result =
                 _upgradeManager.GetPurchaseResult(tower, data, out int validatedCost);
 

@@ -15,19 +15,19 @@ public sealed class GameTimePauseService : IDisposable
 
     private void HandleStateChanged(GameState previousState, GameState nextState)
     {
-        if (nextState == GameState.GameOver)
+        if (nextState == GameState.GameOver || nextState == GameState.Paused)
         {
             Pause();
             return;
         }
 
-        if (nextState == GameState.Playing)
+        if (nextState == GameState.Playing || previousState == GameState.Paused)
             Restore();
     }
 
     private void Pause()
     {
-        if (_ownsPause)
+        if (_ownsPause || Time.timeScale <= 0f)
             return;
 
         _timeScaleBeforePause = Time.timeScale;
@@ -40,7 +40,7 @@ public sealed class GameTimePauseService : IDisposable
         if (!_ownsPause)
             return;
 
-        Time.timeScale = _timeScaleBeforePause <= 0f ? 1f : _timeScaleBeforePause;
+        Time.timeScale = _timeScaleBeforePause;
         _ownsPause = false;
     }
 

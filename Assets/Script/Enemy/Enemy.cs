@@ -31,6 +31,7 @@ public class Enemy : MonoBehaviour, IDamageable
     private CoreBoundary _coreBoundary;
     private IEnemyAbility _ability;
     private CameraBoundsProvider _cameraBoundsProvider;
+    private CombatTextManager _combatTextManager;
     private Collider2D _hitCollider;
 
     private bool _isRemoved;
@@ -53,10 +54,15 @@ public class Enemy : MonoBehaviour, IDamageable
         Transform moveTarget,
         EnemyConfig config,
         EnemyRuntimeModifiers runtimeModifiers,
-        CameraBoundsProvider cameraBoundsProvider)
+        CameraBoundsProvider cameraBoundsProvider,
+        CombatTextManager combatTextManager)
     {
         if (Health != null)
+        {
             Health.Died -= OnDied;
+            Health.Damaged -= OnDamaged;
+            Health.Healed -= OnHealed;
+        }
 
         Health = health;
         Stats = stats;
@@ -64,6 +70,7 @@ public class Enemy : MonoBehaviour, IDamageable
         Config = config;
         RuntimeModifiers = runtimeModifiers;
         _cameraBoundsProvider = cameraBoundsProvider ?? throw new ArgumentNullException(nameof(cameraBoundsProvider));
+        _combatTextManager = combatTextManager ?? throw new ArgumentNullException(nameof(combatTextManager));
         _controller = controller;
 
         _ability?.Stop();
@@ -89,6 +96,8 @@ public class Enemy : MonoBehaviour, IDamageable
         Visual.Initialize(config.Sprite);
 
         Health.Died += OnDied;
+        Health.Damaged += OnDamaged;
+        Health.Healed += OnHealed;
     }
 
     public void ReachCore()
@@ -201,6 +210,16 @@ public class Enemy : MonoBehaviour, IDamageable
         Died?.Invoke(this);
     }
 
+    private void OnDamaged(float amount)
+    {
+        _combatTextManager.ShowDamage(Position, amount);
+    }
+
+    private void OnHealed(float amount)
+    {
+        _combatTextManager.ShowHeal(Position, amount);
+    }
+
     private void UpdateRetreat(float deltaTime)
     {
         transform.position += _retreatDirection * (Config.RetreatMoveSpeed * deltaTime);
@@ -233,7 +252,11 @@ public class Enemy : MonoBehaviour, IDamageable
     private void OnDestroy()
     {
         if (Health != null)
+        {
             Health.Died -= OnDied;
+            Health.Damaged -= OnDamaged;
+            Health.Healed -= OnHealed;
+        }
 
         _ability?.Stop();
     }

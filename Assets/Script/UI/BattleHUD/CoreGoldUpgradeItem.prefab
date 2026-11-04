@@ -600,6 +600,11 @@ MonoBehaviour:
   _costText: {fileID: 8714058836133626419}
   _cardBackground: {fileID: 5135887057634884254}
   _cardButton: {fileID: 1672504778284008783}
+  _pressScale: 0.96
+  _pressDuration: 0.06
+  _releaseDuration: 0.1
+  _highlightColor: {r: 1, g: 1, b: 1, a: 1}
+  _highlightDuration: 0.12
 --- !u!114 &1672504778284008783
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -38,7 +38,10 @@ public sealed class CoreGoldUpgradePresenter : IDisposable
 
     private void HandlePurchaseRequested(CoreGoldUpgradeData data)
     {
-        _upgradeManager.TryPurchase(data);
+        CoreGoldUpgradePurchaseResult result = _upgradeManager.TryPurchase(data);
+
+        if (result == CoreGoldUpgradePurchaseResult.Success)
+            _view.PlayPurchaseSuccess(data);
     }
 
     private void HandleGoldChanged(int _)
