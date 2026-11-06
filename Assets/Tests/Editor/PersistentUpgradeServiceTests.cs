@@ -21,7 +21,6 @@ public sealed class PersistentUpgradeServiceTests
         var maxHp = new PersistentUpgradeDefinition();
         maxHp.Configure(TowerStatType.MaxHp, "Max HP", 2f, 0.01f, 10, 200, 10);
         _catalog.Configure(
-            new List<TowerPartData>(),
             new List<PersistentUpgradeDefinition> { attackDamage, attackSpeed, maxHp });
         _wallet = new MemoryWallet(5_000);
         _store = new MemoryStore();

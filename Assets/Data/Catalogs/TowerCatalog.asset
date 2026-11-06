@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2000000000000000000000000000002, type: 3}
+  m_Name: TowerCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::TowerCatalog
+  _initialTowerSlotNumber: 5
+  _startingTower: {fileID: 11400000, guid: c63c52fefe850a14fa32b783d1537da5, type: 2}
+  _towerParts:
+  - {fileID: 11400000, guid: c63c52fefe850a14fa32b783d1537da5, type: 2}
+  - {fileID: 11400000, guid: 2c5b8ac52fc1fe941a201b0eebb1da35, type: 2}
+  - {fileID: 11400000, guid: 5e6f83ac309a7714bb8a9482c6051e48, type: 2}
+  - {fileID: 11400000, guid: e3ab288cedfb61e4286d719a01e1235f, type: 2}
+  - {fileID: 11400000, guid: 81d5d6289cfa60f4491dd20fe1a25381, type: 2}
+  - {fileID: 11400000, guid: a6b5fb62d9640b04b947f1985df2b0ee, type: 2}
+  _towerTypeUpgrades:
+  - {fileID: 11400000, guid: f3847521dbdf4e946b272a1c9dc37e13, type: 2}
+  - {fileID: 11400000, guid: 2e94c65694122b84bbf71503d038a022, type: 2}
+  - {fileID: 11400000, guid: 5a570a95b4a2b7b4ab960aa17103e40b, type: 2}
+  - {fileID: 11400000, guid: 79bdb1f6f65b0834487d0f5f11fbce3a, type: 2}
+  - {fileID: 11400000, guid: 20fc8f9816bba814bb50cfdbc01f93ca, type: 2}
+  - {fileID: 11400000, guid: 5be4f441502eab6429374ced3948cfe6, type: 2}
+  _coreGoldUpgrades:
+  - {fileID: 11400000, guid: d26e1025da7963d4b9b5b49a832ca2ed, type: 2}
+  - {fileID: 11400000, guid: 8e6c978fcb2cd0345a23708986477cfd, type: 2}
+  - {fileID: 11400000, guid: a655b87b3215de640a4a4c7d577b57db, type: 2}
+  - {fileID: 11400000, guid: 74e5ed77d8f27c04c8451c39e1b70b2c, type: 2}
+  - {fileID: 11400000, guid: a62b3f6598cab4947a9d2712e6a91cb2, type: 2}
+  _towerGoldUpgrades:
+  - {fileID: 11400000, guid: 0a45c45c6ad9e0145a25a49b4c5f7f60, type: 2}
+  - {fileID: 11400000, guid: 3d7d5a504952daa449c608821d32ef6b, type: 2}
+  - {fileID: 11400000, guid: 5bd2d26dd0c4b0f40841b4a25bfe88a9, type: 2}
+  _persistentUpgrades: {fileID: 11400000, guid: b2222222222222222222222222222222, type: 2}

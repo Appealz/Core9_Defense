@@ -200,10 +200,10 @@ public sealed class TowerGoldUpgradeManagerTests
 
         GameStartData startData = AssetDatabase.LoadAssetAtPath<GameStartData>(
             "Assets/Script/Game/GameStartData.asset");
-        Assert.That(startData.TowerGoldUpgradeDataList, Has.Count.EqualTo(3));
+        Assert.That(startData.Towers.TowerGoldUpgrades, Has.Count.EqualTo(3));
 
-        for (int i = 0; i < startData.TowerGoldUpgradeDataList.Count; i++)
-            Assert.That(startData.TowerGoldUpgradeDataList[i].IsConfigurationValid(out _), Is.True);
+        for (int i = 0; i < startData.Towers.TowerGoldUpgrades.Count; i++)
+            Assert.That(startData.Towers.TowerGoldUpgrades[i].IsConfigurationValid(out _), Is.True);
     }
 
     [Test]

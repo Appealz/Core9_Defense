@@ -7,11 +7,13 @@ public sealed class WavePlanGenerator
         (WaveEnemyType[])Enum.GetValues(typeof(WaveEnemyType));
 
     private readonly WaveGenerationSettings _settings;
+    private readonly EnemyCatalog _enemyCatalog;
     private readonly Dictionary<WaveEnemyType, WaveEnemyPhaseDefinition> _phaseByType = new();
 
-    public WavePlanGenerator(WaveGenerationSettings settings)
+    public WavePlanGenerator(WaveGenerationSettings settings, EnemyCatalog enemyCatalog = null)
     {
         _settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
+        _enemyCatalog = enemyCatalog;
         ValidateAndIndexSettings();
     }
 
@@ -357,6 +359,9 @@ public sealed class WavePlanGenerator
 
             if (phase.EnemyConfig == null)
                 throw new WaveConfigurationException($"Enemy config for {phase.EnemyType} is missing.");
+
+            if (_enemyCatalog != null && !_enemyCatalog.Contains(phase.EnemyConfig))
+                throw new WaveConfigurationException($"Enemy config for {phase.EnemyType} is not registered in EnemyCatalog.");
 
             if (_phaseByType.ContainsKey(phase.EnemyType))
                 throw new WaveConfigurationException($"Enemy phase {phase.EnemyType} is duplicated.");

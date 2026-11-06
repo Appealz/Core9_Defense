@@ -10,6 +10,7 @@ public sealed class LobbySceneController : MonoBehaviour
     [SerializeField] private LobbyView _lobbyView;
     [SerializeField] private UpgradeView _upgradeView;
     [SerializeField] private PersistentUpgradeCatalog _upgradeCatalog;
+    [SerializeField] private TowerCatalog _towerCatalog;
     [SerializeField] private SceneTransition _sceneTransition;
     [SerializeField] private LobbyOptionsView _optionsView;
     [SerializeField] private ExitConfirmationView _exitConfirmationView;
@@ -26,6 +27,7 @@ public sealed class LobbySceneController : MonoBehaviour
         LobbyView lobbyView,
         UpgradeView upgradeView,
         PersistentUpgradeCatalog upgradeCatalog,
+        TowerCatalog towerCatalog = null,
         SceneTransition sceneTransition = null,
         LobbyOptionsView optionsView = null,
         ExitConfirmationView exitConfirmationView = null,
@@ -34,6 +36,7 @@ public sealed class LobbySceneController : MonoBehaviour
         _lobbyView = lobbyView;
         _upgradeView = upgradeView;
         _upgradeCatalog = upgradeCatalog;
+        _towerCatalog = towerCatalog;
         _sceneTransition = sceneTransition;
         _optionsView = optionsView;
         _exitConfirmationView = exitConfirmationView;
@@ -42,9 +45,9 @@ public sealed class LobbySceneController : MonoBehaviour
 
     private void Awake()
     {
-        if (_upgradeCatalog == null)
+        if (_upgradeCatalog == null || _towerCatalog == null)
         {
-            Debug.LogError("Lobby upgrade catalog is missing.", this);
+            Debug.LogError("Lobby tower or persistent upgrade catalog is missing.", this);
             enabled = false;
             return;
         }
@@ -64,7 +67,10 @@ public sealed class LobbySceneController : MonoBehaviour
         }
 
         _wallet = new PersistentCurrencyWallet();
-        _upgradeService = new PersistentUpgradeService(_upgradeCatalog, _wallet);
+        _upgradeService = new PersistentUpgradeService(
+            _upgradeCatalog,
+            _wallet,
+            towerCatalog: _towerCatalog);
         _lobbyPresenter = new LobbyPresenter(_lobbyView, _sceneTransition);
         _optionsPresenter = new LobbyOptionsPresenter(
             _optionsView,
@@ -77,6 +83,7 @@ public sealed class LobbySceneController : MonoBehaviour
         _upgradePresenter = new UpgradePresenter(
             _upgradeView,
             _upgradeCatalog,
+            _towerCatalog,
             _upgradeService,
             _wallet);
         _lobbyPresenter.UpgradeRequested += OpenUpgrade;

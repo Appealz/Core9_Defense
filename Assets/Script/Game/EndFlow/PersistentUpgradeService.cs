@@ -33,6 +33,7 @@ public sealed class PersistentUpgradeService
     private const string KeyPrefix = "Core9.PersistentUpgrade";
 
     private readonly PersistentUpgradeCatalog _catalog;
+    private readonly TowerCatalog _towerCatalog;
     private readonly IPersistentCurrencyWallet _wallet;
     private readonly IPersistentCurrencySpender _currencySpender;
     private readonly IPersistentUpgradeStore _store;
@@ -42,12 +43,14 @@ public sealed class PersistentUpgradeService
     public PersistentUpgradeService(
         PersistentUpgradeCatalog catalog,
         IPersistentCurrencyWallet wallet,
-        IPersistentUpgradeStore store = null)
+        IPersistentUpgradeStore store = null,
+        TowerCatalog towerCatalog = null)
     {
         _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         _wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
         _currencySpender = wallet as IPersistentCurrencySpender;
         _store = store ?? new PlayerPrefsPersistentUpgradeStore();
+        _towerCatalog = towerCatalog;
     }
 
     public int GetLevel(
@@ -152,12 +155,30 @@ public sealed class PersistentUpgradeService
                 TowerType.Basic,
                 definition.StatType);
 
-            foreach (TowerType towerType in Enum.GetValues(typeof(TowerType)))
+            if (_towerCatalog != null)
             {
-                DeleteStoredLevels(
-                    PermanentUpgradeTarget.Tower,
-                    towerType,
-                    definition.StatType);
+                for (int towerIndex = 0; towerIndex < _towerCatalog.TowerParts.Count; towerIndex++)
+                {
+                    TowerPartData tower = _towerCatalog.TowerParts[towerIndex];
+
+                    if (tower != null)
+                    {
+                        DeleteStoredLevels(
+                            PermanentUpgradeTarget.Tower,
+                            tower.TowerType,
+                            definition.StatType);
+                    }
+                }
+            }
+            else
+            {
+                foreach (TowerType towerType in Enum.GetValues(typeof(TowerType)))
+                {
+                    DeleteStoredLevels(
+                        PermanentUpgradeTarget.Tower,
+                        towerType,
+                        definition.StatType);
+                }
             }
         }
 

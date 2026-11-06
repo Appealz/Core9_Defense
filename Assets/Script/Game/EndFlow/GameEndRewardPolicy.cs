@@ -45,6 +45,14 @@ public sealed class GameEndRewardPolicy
         CurrencyPerWave = currencyPerWave;
     }
 
+    public GameEndRewardPolicy(EconomyBalanceData balance)
+        : this(
+            balance != null ? balance.ScorePerEnemy : throw new ArgumentNullException(nameof(balance)),
+            balance.BaseCoins,
+            balance.CoinsPerWave)
+    {
+    }
+
     public int CalculateScore(int defeatedEnemyCount)
     {
         if (defeatedEnemyCount <= 0)

@@ -1,8 +1,7 @@
-using System;
 using UnityEngine;
 
-[Serializable]
-public sealed class FlyingGemSettings
+[CreateAssetMenu(fileName = "FlyingGemSettings", menuName = "Core9/Balance/Flying Gem Settings")]
+public sealed class FlyingGemSettings : ScriptableObject
 {
     [Header("Spawn")]
     [SerializeField, Min(0.1f)] private float _spawnIntervalMin = 5f;

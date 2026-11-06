@@ -241,10 +241,10 @@ public sealed class CoreGoldUpgradeManagerTests
         GameStartData gameStartData = AssetDatabase.LoadAssetAtPath<GameStartData>(
             "Assets/Script/Game/GameStartData.asset");
         Assert.That(gameStartData, Is.Not.Null);
-        Assert.That(gameStartData.CoreGoldUpgradeDataList, Has.Count.EqualTo(5));
+        Assert.That(gameStartData.Towers.CoreGoldUpgrades, Has.Count.EqualTo(5));
 
-        for (int i = 0; i < gameStartData.CoreGoldUpgradeDataList.Count; i++)
-            Assert.That(gameStartData.CoreGoldUpgradeDataList[i].IsConfigurationValid(out _), Is.True);
+        for (int i = 0; i < gameStartData.Towers.CoreGoldUpgrades.Count; i++)
+            Assert.That(gameStartData.Towers.CoreGoldUpgrades[i].IsConfigurationValid(out _), Is.True);
     }
 
     [Test]

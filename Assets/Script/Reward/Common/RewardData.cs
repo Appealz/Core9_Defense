@@ -10,7 +10,7 @@ public class RewardData : ScriptableObject
     [SerializeField] private Sprite _icon;
 
     [Header("Selection")]
-    [Tooltip("Card rarity. Its global multiplier is configured in GameStartData.")]
+    [Tooltip("Card rarity. Its global multiplier is configured in RewardCatalog.")]
     [SerializeField] private RewardRarity _rarity = RewardRarity.Bronze;
     [Tooltip("Used by selection guarantees and future reward-specific policies.")]
     [SerializeField] private RewardCategory _category = RewardCategory.Standard;

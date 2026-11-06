@@ -77,10 +77,8 @@ public sealed class PersistentUpgradeDefinition
     menuName = "Core9/Persistent Upgrade Catalog")]
 public sealed class PersistentUpgradeCatalog : ScriptableObject
 {
-    [SerializeField] private List<TowerPartData> _towerParts = new();
     [SerializeField] private List<PersistentUpgradeDefinition> _definitions = new();
 
-    public IReadOnlyList<TowerPartData> TowerParts => _towerParts;
     public IReadOnlyList<PersistentUpgradeDefinition> Definitions => _definitions;
 
     public bool TryGetDefinition(
@@ -102,28 +100,8 @@ public sealed class PersistentUpgradeCatalog : ScriptableObject
         return false;
     }
 
-    public bool TryGetTowerPart(TowerType towerType, out TowerPartData towerPart)
+    public void Configure(List<PersistentUpgradeDefinition> definitions)
     {
-        for (int i = 0; i < _towerParts.Count; i++)
-        {
-            TowerPartData candidate = _towerParts[i];
-
-            if (candidate != null && candidate.TowerType == towerType)
-            {
-                towerPart = candidate;
-                return true;
-            }
-        }
-
-        towerPart = null;
-        return false;
-    }
-
-    public void Configure(
-        List<TowerPartData> towerParts,
-        List<PersistentUpgradeDefinition> definitions)
-    {
-        _towerParts = towerParts ?? new List<TowerPartData>();
         _definitions = definitions ?? new List<PersistentUpgradeDefinition>();
     }
 }

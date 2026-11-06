@@ -76,13 +76,13 @@ public sealed class RewardProbabilityDistributionTests
     [Test]
     public void SerializedProbabilityChanges_SupportUndoAndRedo()
     {
-        GameStartData gameStartData = ScriptableObject.CreateInstance<GameStartData>();
+        RewardCatalog rewardCatalog = ScriptableObject.CreateInstance<RewardCatalog>();
 
         try
         {
             Undo.ClearAll();
-            SerializedObject serializedObject = new SerializedObject(gameStartData);
-            SerializedProperty settings = serializedObject.FindProperty("_rewardSelectionSettings");
+            SerializedObject serializedObject = new SerializedObject(rewardCatalog);
+            SerializedProperty settings = serializedObject.FindProperty("_selectionSettings");
             SerializedProperty bronze = settings.FindPropertyRelative("_bronzeProbability");
             SerializedProperty silver = settings.FindPropertyRelative("_silverProbability");
             SerializedProperty gold = settings.FindPropertyRelative("_goldProbability");
@@ -99,7 +99,7 @@ public sealed class RewardProbabilityDistributionTests
             gold.floatValue = redistributed[2];
             platinum.floatValue = redistributed[3];
             Assert.That(serializedObject.ApplyModifiedProperties(), Is.True);
-            Assert.That(gameStartData.RewardSelectionSettings.GetRarityProbability(RewardRarity.Bronze),
+            Assert.That(rewardCatalog.SelectionSettings.GetRarityProbability(RewardRarity.Bronze),
                 Is.EqualTo(60f).Within(0.0001f));
 
             Undo.PerformUndo();
@@ -113,7 +113,7 @@ public sealed class RewardProbabilityDistributionTests
         finally
         {
             Undo.ClearAll();
-            Object.DestroyImmediate(gameStartData);
+            Object.DestroyImmediate(rewardCatalog);
         }
     }
 

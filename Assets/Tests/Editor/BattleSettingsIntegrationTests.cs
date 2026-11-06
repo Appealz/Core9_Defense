@@ -34,8 +34,11 @@ public sealed class BattleSettingsIntegrationTests
         Assert.That(
             serializedBootstrapper.FindProperty("_exitConfirmationView").objectReferenceValue,
             Is.SameAs(popup));
-        Assert.That(
-            serializedBootstrapper.FindProperty("_earlyExitCoinsPenaltyRate").floatValue,
+        GameStartData startData = serializedBootstrapper
+            .FindProperty("_gameStartData")
+            .objectReferenceValue as GameStartData;
+        Assert.That(startData, Is.Not.Null);
+        Assert.That(startData.Balance.Economy.EarlyExitCoinsPenaltyRate,
             Is.EqualTo(0.2f).Within(0.0001f));
     }
 

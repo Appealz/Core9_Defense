@@ -26,11 +26,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
     [Header("Flying Gems")]
     [SerializeField] private FlyingGem _flyingGemPrefab;
     [SerializeField] private Transform _flyingGemPoolRoot;
-    [SerializeField] private FlyingGemSettings _flyingGemSettings = new();
     [SerializeField] private float _enemySpawnMargin = 1f;
     [SerializeField, Min(0f)] private float _battleStartDelay = 1f;
-    [Header("Early Exit Reward")]
-    [SerializeField, Range(0f, 1f)] private float _earlyExitCoinsPenaltyRate = 0.2f;
 
     private RewardSelectionPresenter _rewardSelectionPresenter;
     private CoreRearrangementPresenter _rearrangementPresenter;
@@ -69,25 +66,23 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        if (_gameStartData.PersistentUpgradeCatalog == null)
+        EnemyCatalog enemyCatalog = _gameStartData.Enemies;
+        TowerCatalog towerCatalog = _gameStartData.Towers;
+        RewardCatalog rewardCatalog = _gameStartData.Rewards;
+        BalanceCatalog balanceCatalog = _gameStartData.Balance;
+
+        if (enemyCatalog == null || towerCatalog == null || rewardCatalog == null ||
+            balanceCatalog == null || towerCatalog.PersistentUpgrades == null)
         {
-            Debug.LogError("PersistentUpgradeCatalog is missing from GameStartData.", this);
+            Debug.LogError("GameStartData catalogs are incomplete.", this);
             return;
         }
 
         CoreBoundary coreBoundary = _coreLayout.GetComponentInChildren<CoreBoundary>();
         CoreVisual coreVisual = _coreLayout.GetComponentInChildren<CoreVisual>();
-        TowerSpawnTester towerSpawnTester = GetComponent<TowerSpawnTester>();
-
         if (coreBoundary == null || coreVisual == null)
         {
             Debug.LogError("CoreBoundary 또는 CoreVisual을 찾을 수 없습니다.", this);
-            return;
-        }
-
-        if (towerSpawnTester == null)
-        {
-            Debug.LogError("TowerSpawnTester를 찾을 수 없습니다.", this);
             return;
         }
 
@@ -103,14 +98,14 @@ public sealed class GameBootstrapper : SceneBootstrapper
             !_towerGoldUpgradeView.IsConfigured || _gameSpeedView == null || !_gameSpeedView.IsConfigured ||
             _preparationAutoSkipView == null || !_preparationAutoSkipView.IsConfigured ||
             _flyingGemPrefab == null || !_flyingGemPrefab.IsConfigured ||
-            _flyingGemPoolRoot == null || _flyingGemSettings == null ||
-            _gameStartData.PlayerLevelData == null)
+            _flyingGemPoolRoot == null || balanceCatalog.FlyingGems == null ||
+            balanceCatalog.PlayerLevels == null || balanceCatalog.Economy == null)
         {
             Debug.LogError("게임 UI 참조가 설정되지 않았습니다.", this);
             return;
         }
 
-        if (_gameStartData.WaveGenerationSettings == null)
+        if (balanceCatalog.WaveGeneration == null)
         {
             Debug.LogError("WaveGenerationSettings가 설정되지 않았습니다.", this);
             return;
@@ -120,11 +115,11 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         try
         {
-            wavePlanGenerator = new WavePlanGenerator(_gameStartData.WaveGenerationSettings);
+            wavePlanGenerator = new WavePlanGenerator(balanceCatalog.WaveGeneration, enemyCatalog);
         }
         catch (System.Exception exception)
         {
-            Debug.LogException(exception, _gameStartData.WaveGenerationSettings);
+            Debug.LogException(exception, balanceCatalog.WaveGeneration);
             return;
         }
 
@@ -161,7 +156,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
         _flyingGemService = new FlyingGemService(
             _flyingGemPrefab,
             _flyingGemPoolRoot,
-            _flyingGemSettings,
+            balanceCatalog.FlyingGems,
             gameStateManager,
             _mainCamera,
             combatBoundsProvider,
@@ -186,18 +181,21 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         _goldManager = new GoldManager();
         _enemyGoldRewardService = new EnemyGoldRewardService(enemyManager, _goldManager);
-        var playerProgression = new PlayerProgression(_gameStartData.PlayerLevelData);
+        var playerProgression = new PlayerProgression(balanceCatalog.PlayerLevels);
         _enemyExperienceRewardService = new EnemyExperienceRewardService(enemyManager, playerProgression);
 
         var towerTargetSelector = new TowerTargetSelector(enemyQuery, combatBoundsProvider);
         var attackDependencies = new TowerAttackDependencies(projectileManager, explosionEffectManager, laserManager);
         var persistentCurrencyWallet = new PersistentCurrencyWallet();
         var persistentUpgradeService = new PersistentUpgradeService(
-            _gameStartData.PersistentUpgradeCatalog,
-            persistentCurrencyWallet);
+            towerCatalog.PersistentUpgrades,
+            persistentCurrencyWallet,
+            towerCatalog: towerCatalog);
         var globalStatModifiers = new TowerStatModifiers();
         var coreGoldStatModifiers = new TowerStatModifiers();
-        var towerTypeUpgradeState = new TowerTypeUpgradeState(_gameStartData.TowerTypeUpgradeDataList);
+        var towerTypeUpgradeState = new TowerTypeUpgradeState(
+            towerCatalog.TowerTypeUpgrades,
+            towerCatalog.TowerParts);
 
         if (!persistentUpgradeService.TryLoadModifiers(
                 PermanentUpgradeTarget.Core,
@@ -208,8 +206,15 @@ public sealed class GameBootstrapper : SceneBootstrapper
             return;
         }
 
-        foreach (TowerType towerType in System.Enum.GetValues(typeof(TowerType)))
+        for (int i = 0; i < towerCatalog.TowerParts.Count; i++)
         {
+            TowerPartData towerPart = towerCatalog.TowerParts[i];
+
+            if (towerPart == null)
+                continue;
+
+            TowerType towerType = towerPart.TowerType;
+
             if (persistentUpgradeService.TryLoadModifiers(
                     PermanentUpgradeTarget.Tower,
                     towerType,
@@ -243,7 +248,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
             _goldManager,
             gameStateManager,
             towerManager,
-            _gameStartData.CoreGoldUpgradeDataList);
+            towerCatalog.CoreGoldUpgrades);
 
         for (int i = 0; i < coreGoldUpgradeManager.ConfigurationErrors.Count; i++)
             Debug.LogWarning(coreGoldUpgradeManager.ConfigurationErrors[i], _gameStartData);
@@ -252,7 +257,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
             _goldManager,
             gameStateManager,
             towerManager,
-            _gameStartData.TowerGoldUpgradeDataList);
+            towerCatalog.TowerGoldUpgrades);
         _towerSelectionManager = new TowerSelectionManager(gameStateManager, towerManager);
 
         for (int i = 0; i < _towerGoldUpgradeManager.ConfigurationErrors.Count; i++)
@@ -272,16 +277,16 @@ public sealed class GameBootstrapper : SceneBootstrapper
             slotEnhancementSelection
         );
 
-        if (!_gameStartData.RewardSelectionSettings.TryValidate(out string rewardSettingsError))
+        if (!rewardCatalog.TryValidate(out string rewardSettingsError))
         {
             Debug.LogError(rewardSettingsError, _gameStartData);
             return;
         }
 
         var rewardSelectionManager = new RewardSelectionManager(
-            _gameStartData.RewardDataList,
+            rewardCatalog.Rewards,
             rewardDependencies,
-            _gameStartData.RewardSelectionSettings
+            rewardCatalog.SelectionSettings
         );
 
         var spawnPositionCalculator = new SpawnPositionCalculator();
@@ -302,13 +307,13 @@ public sealed class GameBootstrapper : SceneBootstrapper
             waveManager,
             rewardSelectionManager,
             wavePlanGenerator,
-            _gameStartData.WaveGenerationSettings,
+            balanceCatalog.WaveGeneration,
             playerProgression,
             towerManager,
             preparationAutoSkipSetting);
         GameManager gameManager = _gameManager;
 
-        var gameEndRewardPolicy = new GameEndRewardPolicy();
+        var gameEndRewardPolicy = new GameEndRewardPolicy(balanceCatalog.Economy);
         _runScoreCounter = new RunScoreCounter(enemyManager, gameEndRewardPolicy);
         var gameSpeedAccess = new GameSpeedAccess(hasRemoveAdsEntitlement: false);
         _gameTimePauseService = new GameTimePauseService(gameStateManager, gameSpeedAccess);
@@ -327,7 +332,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
             new MockRewardedAdService(),
             combatCleanupService,
             _gameTimePauseService,
-            _earlyExitCoinsPenaltyRate);
+            balanceCatalog.Economy.EarlyExitCoinsPenaltyRate);
 
         GameEndView gameEndView = GetComponent<GameEndView>();
 
@@ -354,9 +359,9 @@ public sealed class GameBootstrapper : SceneBootstrapper
             gameStateManager);
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
-        towerSpawnTester.Initialize(towerManager);
-
-        bool isPlaced = await towerManager.TryPlaceTowerAsync(_gameStartData.InitialTowerSlotNumber, _gameStartData.BasicTowerPartData);
+        bool isPlaced = await towerManager.TryPlaceTowerAsync(
+            towerCatalog.InitialTowerSlotNumber,
+            towerCatalog.StartingTower);
 
         if (!isPlaced)
         {
@@ -414,7 +419,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
             coreManager,
             globalStatModifiers,
             rewardSelectionManager,
-            _gameStartData.RewardDataList
+            rewardCatalog.Rewards
         );
 #endif
 
@@ -488,10 +493,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        _flyingGemSettings?.Validate();
         _enemySpawnMargin = Mathf.Max(0f, _enemySpawnMargin);
         _battleStartDelay = Mathf.Max(0f, _battleStartDelay);
-        _earlyExitCoinsPenaltyRate = Mathf.Clamp01(_earlyExitCoinsPenaltyRate);
     }
 #endif
 }

@@ -11,6 +11,7 @@ public sealed class UpgradePresenter : IDisposable
 
     private readonly UpgradeView _view;
     private readonly PersistentUpgradeCatalog _catalog;
+    private readonly TowerCatalog _towerCatalog;
     private readonly PersistentUpgradeService _service;
     private readonly IPersistentCurrencyWallet _wallet;
 
@@ -24,15 +25,17 @@ public sealed class UpgradePresenter : IDisposable
     public UpgradePresenter(
         UpgradeView view,
         PersistentUpgradeCatalog catalog,
+        TowerCatalog towerCatalog,
         PersistentUpgradeService service,
         IPersistentCurrencyWallet wallet)
     {
         _view = view ?? throw new ArgumentNullException(nameof(view));
         _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+        _towerCatalog = towerCatalog ?? throw new ArgumentNullException(nameof(towerCatalog));
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
 
-        _view.Initialize();
+        _view.Initialize(_towerCatalog.TowerParts);
         _view.BackClicked += HandleBackClicked;
         _view.TargetClicked += HandleTargetClicked;
         _view.TowerClicked += HandleTowerClicked;

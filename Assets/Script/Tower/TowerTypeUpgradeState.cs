@@ -8,13 +8,22 @@ public sealed class TowerTypeUpgradeState
     private readonly Dictionary<TowerType, TowerStatModifiers> _statModifiersByType = new();
     private readonly Dictionary<TowerType, TowerUniqueModifiers> _uniqueModifiersByType = new();
 
-    public TowerTypeUpgradeState(IReadOnlyList<TowerTypeUpgradeData> upgradeDataList)
+    public TowerTypeUpgradeState(
+        IReadOnlyList<TowerTypeUpgradeData> upgradeDataList,
+        IReadOnlyList<TowerPartData> registeredTowers = null)
     {
-        foreach (TowerType towerType in Enum.GetValues(typeof(TowerType)))
+        if (registeredTowers != null)
         {
-            _levelByType[towerType] = 0;
-            _statModifiersByType[towerType] = new TowerStatModifiers();
-            _uniqueModifiersByType[towerType] = new TowerUniqueModifiers();
+            for (int i = 0; i < registeredTowers.Count; i++)
+            {
+                if (registeredTowers[i] != null)
+                    Register(registeredTowers[i].TowerType);
+            }
+        }
+        else
+        {
+            foreach (TowerType towerType in Enum.GetValues(typeof(TowerType)))
+                Register(towerType);
         }
 
         if (upgradeDataList == null)
@@ -27,6 +36,13 @@ public sealed class TowerTypeUpgradeState
             if (data != null)
                 _dataByType[data.TowerType] = data;
         }
+    }
+
+    private void Register(TowerType towerType)
+    {
+        _levelByType.TryAdd(towerType, 0);
+        _statModifiersByType.TryAdd(towerType, new TowerStatModifiers());
+        _uniqueModifiersByType.TryAdd(towerType, new TowerUniqueModifiers());
     }
 
     public int GetLevel(TowerType towerType) => _levelByType[towerType];

@@ -3997,7 +3997,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1845550278}
   - component: {fileID: 1845550279}
-  - component: {fileID: 1845550280}
   - component: {fileID: 3100000001}
   - component: {fileID: 3400000000}
   m_Layer: 0
@@ -4056,47 +4055,8 @@ MonoBehaviour:
   _preparationAutoSkipView: {fileID: 3400000000}
   _flyingGemPrefab: {fileID: 6850552506546929942, guid: 76e176f5cb2b43bf95b681491b6855b7, type: 3}
   _flyingGemPoolRoot: {fileID: 2100000051}
-  _flyingGemSettings:
-    _spawnIntervalMin: 5
-    _spawnIntervalMax: 10
-    _maxActiveGems: 1
-    _moveSpeed: 3
-    _bounceRandomAngle: 8
-    _leftMargin: 1
-    _rightMargin: 1
-    _bottomMargin: 2.5
-    _topMargin: 7
-    _visualScale: 1
-    _touchHitboxScale: 1.5
-    _lifetimeMin: 60
-    _lifetimeMax: 120
-    _rewardMin: 1
-    _rewardMax: 3
-    _enableTouchHint: 1
-    _touchHintInterval: 30
-    _touchHintDuration: 2
-    _touchHintBlinkCount: 3
   _enemySpawnMargin: 1
   _battleStartDelay: 1
-  _earlyExitCoinsPenaltyRate: 0.2
---- !u!114 &1845550280
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1845550277}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b7167cdc1b3bc1747b698b4584447a84, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::TowerSpawnTester
-  _basicTower: {fileID: 11400000, guid: c63c52fefe850a14fa32b783d1537da5, type: 2}
-  _rapidTower: {fileID: 11400000, guid: 2c5b8ac52fc1fe941a201b0eebb1da35, type: 2}
-  _burstTower: {fileID: 11400000, guid: 5e6f83ac309a7714bb8a9482c6051e48, type: 2}
-  _bombMissileTower: {fileID: 11400000, guid: e3ab288cedfb61e4286d719a01e1235f, type: 2}
-  _laserTower: {fileID: 11400000, guid: 81d5d6289cfa60f4491dd20fe1a25381, type: 2}
-  _areaTower: {fileID: 11400000, guid: a6b5fb62d9640b04b947f1985df2b0ee, type: 2}
 --- !u!1 &1935497321
 GameObject:
   m_ObjectHideFlags: 0

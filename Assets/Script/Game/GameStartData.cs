@@ -1,41 +1,23 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "GameStartData", menuName = "Scriptable Objects/GameStartData")]
 public class GameStartData : ScriptableObject
 {
-    [SerializeField] private int _initialTowerSlotNumber = 5;
-    [SerializeField] private TowerPartData _basicTowerPartData;
-    [SerializeField] private List<WaveData> _waveDataList = new();
-    [SerializeField] private WaveGenerationSettings _waveGenerationSettings;
-    [SerializeField] private List<RewardData> _rewardDataList = new();
-    [SerializeField] private List<TowerTypeUpgradeData> _towerTypeUpgradeDataList = new();
-    [SerializeField] private PersistentUpgradeCatalog _persistentUpgradeCatalog;
-    [SerializeField] private List<CoreGoldUpgradeData> _coreGoldUpgradeDataList = new();
-    [SerializeField] private List<TowerGoldUpgradeData> _towerGoldUpgradeDataList = new();
-    [SerializeField] private RewardSelectionSettings _rewardSelectionSettings = new();
-    [SerializeField] private PlayerLevelData _playerLevelData;
+    [SerializeField] private EnemyCatalog _enemies;
+    [SerializeField] private TowerCatalog _towers;
+    [SerializeField] private RewardCatalog _rewards;
+    [SerializeField] private BalanceCatalog _balance;
 
-    public int InitialTowerSlotNumber => _initialTowerSlotNumber;
-    public TowerPartData BasicTowerPartData => _basicTowerPartData;
-    public IReadOnlyList<WaveData> WaveDataList => _waveDataList;
-    public WaveGenerationSettings WaveGenerationSettings => _waveGenerationSettings;
-    public IReadOnlyList<RewardData> RewardDataList => _rewardDataList;
-    public IReadOnlyList<TowerTypeUpgradeData> TowerTypeUpgradeDataList => _towerTypeUpgradeDataList;
-    public PersistentUpgradeCatalog PersistentUpgradeCatalog => _persistentUpgradeCatalog;
-    public IReadOnlyList<CoreGoldUpgradeData> CoreGoldUpgradeDataList => _coreGoldUpgradeDataList;
-    public IReadOnlyList<TowerGoldUpgradeData> TowerGoldUpgradeDataList => _towerGoldUpgradeDataList;
-    public RewardSelectionSettings RewardSelectionSettings => _rewardSelectionSettings;
-    public PlayerLevelData PlayerLevelData => _playerLevelData;
+    public EnemyCatalog Enemies => _enemies;
+    public TowerCatalog Towers => _towers;
+    public RewardCatalog Rewards => _rewards;
+    public BalanceCatalog Balance => _balance;
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (_rewardSelectionSettings != null &&
-            !_rewardSelectionSettings.TryValidate(out string error))
-        {
-            Debug.LogError(error, this);
-        }
+        if (_enemies == null || _towers == null || _rewards == null || _balance == null)
+            Debug.LogError("GameStartData requires all four domain catalogs.", this);
     }
 #endif
 }

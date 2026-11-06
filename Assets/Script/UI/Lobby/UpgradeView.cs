@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -64,7 +65,9 @@ public sealed class UpgradeView : MonoBehaviour
         _rateRows = rateRows;
     }
 
-    public void Initialize()
+    public void Initialize() => Initialize(null);
+
+    public void Initialize(IReadOnlyList<TowerPartData> towers)
     {
         if (_initialized)
             return;
@@ -74,6 +77,9 @@ public sealed class UpgradeView : MonoBehaviour
         _coreTabButton.onClick.AddListener(() => TargetClicked?.Invoke(PermanentUpgradeTarget.Core));
         _towerTabButton.onClick.AddListener(() => TargetClicked?.Invoke(PermanentUpgradeTarget.Tower));
 
+        if (towers != null && towers.Count > 0)
+            ConfigureTowerItems(towers);
+
         for (int i = 0; i < _towerItems.Length; i++)
         {
             _towerItems[i].Initialize();
@@ -82,6 +88,35 @@ public sealed class UpgradeView : MonoBehaviour
 
         InitializeRows(_flatRows);
         InitializeRows(_rateRows);
+    }
+
+    private void ConfigureTowerItems(IReadOnlyList<TowerPartData> towers)
+    {
+        if (_towerItems == null || _towerItems.Length == 0)
+            throw new InvalidOperationException("UpgradeView requires at least one tower item template.");
+
+        var items = new List<TowerSelectionItemView>(_towerItems);
+
+        while (items.Count < towers.Count)
+        {
+            TowerSelectionItemView clone = Instantiate(
+                items[0],
+                items[0].transform.parent,
+                false);
+            clone.name = $"TowerSelectionItem_{items.Count}";
+            items.Add(clone);
+        }
+
+        _towerItems = items.ToArray();
+
+        for (int i = 0; i < _towerItems.Length; i++)
+        {
+            bool registered = i < towers.Count && towers[i] != null;
+            _towerItems[i].gameObject.SetActive(registered);
+
+            if (registered)
+                _towerItems[i].ConfigureTowerPart(towers[i]);
+        }
     }
 
     public void SetVisible(bool visible)

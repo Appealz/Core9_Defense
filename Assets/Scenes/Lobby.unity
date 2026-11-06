@@ -13223,6 +13223,7 @@ MonoBehaviour:
   _lobbyView: {fileID: 1979002973}
   _upgradeView: {fileID: 1039322322}
   _upgradeCatalog: {fileID: 11400000, guid: b2222222222222222222222222222222, type: 2}
+  _towerCatalog: {fileID: 11400000, guid: ca222222222222222222222222222222, type: 2}
   _sceneTransition: {fileID: 3200000002}
   _optionsView: {fileID: 3700000002}
   _exitConfirmationView: {fileID: 3600000002}

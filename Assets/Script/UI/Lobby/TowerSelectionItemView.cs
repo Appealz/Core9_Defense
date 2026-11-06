@@ -35,6 +35,20 @@ public sealed class TowerSelectionItemView : MonoBehaviour
         _nameText = nameText;
     }
 
+    public void ConfigureTowerPart(TowerPartData towerPart)
+    {
+        _towerPart = towerPart;
+
+        if (_towerImage != null)
+        {
+            _towerImage.sprite = towerPart != null ? towerPart.Sprite : null;
+            _towerImage.enabled = towerPart != null && towerPart.Sprite != null;
+        }
+
+        if (_nameText != null)
+            _nameText.text = towerPart != null ? towerPart.TowerName : string.Empty;
+    }
+
     public void Initialize()
     {
         if (_initialized)
@@ -42,12 +56,7 @@ public sealed class TowerSelectionItemView : MonoBehaviour
 
         _initialized = true;
 
-        if (_towerPart != null)
-        {
-            _towerImage.sprite = _towerPart.Sprite;
-            _towerImage.enabled = _towerPart.Sprite != null;
-            _nameText.text = _towerPart.TowerType.ToString();
-        }
+        ConfigureTowerPart(_towerPart);
 
         _button.onClick.AddListener(() => Clicked?.Invoke(TowerType));
     }

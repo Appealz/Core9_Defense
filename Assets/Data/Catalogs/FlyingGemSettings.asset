@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b46f5c1592bf4389852804da48d3b413, type: 3}
+  m_Name: FlyingGemSettings
+  m_EditorClassIdentifier: Assembly-CSharp::FlyingGemSettings
+  _spawnIntervalMin: 5
+  _spawnIntervalMax: 10
+  _maxActiveGems: 1
+  _moveSpeed: 3
+  _bounceRandomAngle: 20
+  _leftMargin: 1
+  _rightMargin: 1
+  _bottomMargin: 2.5
+  _topMargin: 7
+  _visualScale: 1
+  _touchHitboxScale: 1.5
+  _lifetimeMin: 60
+  _lifetimeMax: 120
+  _rewardMin: 1
+  _rewardMax: 3
+  _enableTouchHint: 1
+  _touchHintInterval: 30
+  _touchHintDuration: 2
+  _touchHintBlinkCount: 3

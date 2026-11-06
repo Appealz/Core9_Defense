@@ -9,7 +9,7 @@ public sealed class RewardBalanceDataTests
     private const string GameStartDataPath = "Assets/Script/Game/GameStartData.asset";
 
     [Test]
-    public void GameStartData_RegistersAllFortyOneRewardAssetsExactlyOnce()
+    public void RewardCatalog_RegistersAllFortyOneRewardAssetsExactlyOnce()
     {
         GameStartData gameStartData = AssetDatabase.LoadAssetAtPath<GameStartData>(GameStartDataPath);
         Assert.That(gameStartData, Is.Not.Null);
@@ -21,19 +21,19 @@ public sealed class RewardBalanceDataTests
             .ToArray();
 
         Assert.That(allRewardAssets, Has.Length.EqualTo(41));
-        Assert.That(gameStartData.RewardDataList, Has.Count.EqualTo(41));
-        Assert.That(gameStartData.RewardDataList.Distinct().Count(), Is.EqualTo(41));
-        CollectionAssert.AreEquivalent(allRewardAssets, gameStartData.RewardDataList);
+        Assert.That(gameStartData.Rewards.Rewards, Has.Count.EqualTo(41));
+        Assert.That(gameStartData.Rewards.Rewards.Distinct().Count(), Is.EqualTo(41));
+        CollectionAssert.AreEquivalent(allRewardAssets, gameStartData.Rewards.Rewards);
 
-        Assert.That(gameStartData.RewardDataList.Count(reward => reward.Category == RewardCategory.NewTower),
+        Assert.That(gameStartData.Rewards.Rewards.Count(reward => reward.Category == RewardCategory.NewTower),
             Is.EqualTo(6));
-        Assert.That(gameStartData.RewardDataList.Count(reward => reward.Category == RewardCategory.GlobalStat),
+        Assert.That(gameStartData.Rewards.Rewards.Count(reward => reward.Category == RewardCategory.GlobalStat),
             Is.EqualTo(7));
-        Assert.That(gameStartData.RewardDataList.Count(reward => reward.Category == RewardCategory.CoreSlot),
+        Assert.That(gameStartData.Rewards.Rewards.Count(reward => reward.Category == RewardCategory.CoreSlot),
             Is.EqualTo(7));
-        Assert.That(gameStartData.RewardDataList.Count(reward => reward.Category == RewardCategory.TowerType),
+        Assert.That(gameStartData.Rewards.Rewards.Count(reward => reward.Category == RewardCategory.TowerType),
             Is.EqualTo(18));
-        Assert.That(gameStartData.RewardDataList.Count(reward => reward.Category == RewardCategory.Gold),
+        Assert.That(gameStartData.Rewards.Rewards.Count(reward => reward.Category == RewardCategory.Gold),
             Is.EqualTo(3));
     }
 
