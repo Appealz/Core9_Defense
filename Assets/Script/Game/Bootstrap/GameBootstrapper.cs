@@ -10,20 +10,34 @@ public sealed class GameBootstrapper : SceneBootstrapper
     [SerializeField] private Transform _objectPoolsRoot;
     [SerializeField] private RectTransform _combatTextRoot;
     [SerializeField] private BattleSettingsView _settingsView;
+    [SerializeField] private BattleExitConfirmationView _exitConfirmationView;
     [SerializeField] private BattleSettingsInput _settingsInput;
     [SerializeField] private RewardSelectionView _rewardSelectionView;
     [SerializeField] private CoreRearrangementView _rearrangementView;
     [SerializeField] private WaveHUDView _waveHUDView;
     [SerializeField] private GoldHUDView _goldHUDView;
+    [SerializeField] private CoinsHUDView _coinsHUDView;
+    [SerializeField] private ScoreHUDView _scoreHUDView;
     [SerializeField] private RewardHUDView _rewardHUDView;
     [SerializeField] private CoreGoldUpgradeView _coreGoldUpgradeView;
     [SerializeField] private TowerGoldUpgradeView _towerGoldUpgradeView;
+    [SerializeField] private GameSpeedView _gameSpeedView;
+    [SerializeField] private PreparationAutoSkipView _preparationAutoSkipView;
+    [Header("Flying Gems")]
+    [SerializeField] private FlyingGem _flyingGemPrefab;
+    [SerializeField] private Transform _flyingGemPoolRoot;
+    [SerializeField] private FlyingGemSettings _flyingGemSettings = new();
     [SerializeField] private float _enemySpawnMargin = 1f;
+    [SerializeField, Min(0f)] private float _battleStartDelay = 1f;
+    [Header("Early Exit Reward")]
+    [SerializeField, Range(0f, 1f)] private float _earlyExitCoinsPenaltyRate = 0.2f;
 
     private RewardSelectionPresenter _rewardSelectionPresenter;
     private CoreRearrangementPresenter _rearrangementPresenter;
     private WaveHUDPresenter _waveHUDPresenter;
     private GoldHUDPresenter _goldHUDPresenter;
+    private CoinsHUDPresenter _coinsHUDPresenter;
+    private ScoreHUDPresenter _scoreHUDPresenter;
     private RewardHUDPresenter _rewardHUDPresenter;
     private CoreGoldUpgradePresenter _coreGoldUpgradePresenter;
     private TowerGoldUpgradePresenter _towerGoldUpgradePresenter;
@@ -34,8 +48,11 @@ public sealed class GameBootstrapper : SceneBootstrapper
     private GameEndPresenter _gameEndPresenter;
     private GameEndFlowManager _gameEndFlowManager;
     private GameTimePauseService _gameTimePauseService;
+    private GameSpeedPresenter _gameSpeedPresenter;
+    private PreparationAutoSkipPresenter _preparationAutoSkipPresenter;
     private BattleSettingsPresenter _settingsPresenter;
     private RunScoreCounter _runScoreCounter;
+    private FlyingGemService _flyingGemService;
 
     private GoldManager _goldManager;
     private EnemyGoldRewardService _enemyGoldRewardService;
@@ -44,6 +61,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
     protected override async UniTask ComposeAsync()
     {
+        Time.timeScale = 1f;
+
         if (_gameStartData == null)
         {
             Debug.LogError("GameStartData is missing.", this);
@@ -73,10 +92,19 @@ public sealed class GameBootstrapper : SceneBootstrapper
         }
 
         if (_objectPoolsRoot == null || _combatTextRoot == null || _settingsView == null || !_settingsView.IsConfigured ||
-            _settingsInput == null || _rewardSelectionView == null || _rearrangementView == null || _waveHUDView == null ||
-            _goldHUDView == null || !_goldHUDView.IsConfigured || _rewardHUDView == null || _coreGoldUpgradeView == null ||
+            _exitConfirmationView == null || !_exitConfirmationView.IsConfigured ||
+            _settingsInput == null || _rewardSelectionView == null || _rearrangementView == null || !_rearrangementView.IsConfigured ||
+            _waveHUDView == null ||
+            _goldHUDView == null || !_goldHUDView.IsConfigured ||
+            _coinsHUDView == null || !_coinsHUDView.IsConfigured ||
+            _scoreHUDView == null || !_scoreHUDView.IsConfigured ||
+            _rewardHUDView == null || _coreGoldUpgradeView == null ||
             _towerGoldUpgradeView == null || !_coreGoldUpgradeView.IsConfigured ||
-            !_towerGoldUpgradeView.IsConfigured || _gameStartData.PlayerLevelData == null)
+            !_towerGoldUpgradeView.IsConfigured || _gameSpeedView == null || !_gameSpeedView.IsConfigured ||
+            _preparationAutoSkipView == null || !_preparationAutoSkipView.IsConfigured ||
+            _flyingGemPrefab == null || !_flyingGemPrefab.IsConfigured ||
+            _flyingGemPoolRoot == null || _flyingGemSettings == null ||
+            _gameStartData.PlayerLevelData == null)
         {
             Debug.LogError("게임 UI 참조가 설정되지 않았습니다.", this);
             return;
@@ -129,6 +157,17 @@ public sealed class GameBootstrapper : SceneBootstrapper
             objectPoolManager.GetPool<FloatingCombatText>(),
             _combatTextRoot,
             _mainCamera);
+        var gemsWallet = new GemsWallet();
+        _flyingGemService = new FlyingGemService(
+            _flyingGemPrefab,
+            _flyingGemPoolRoot,
+            _flyingGemSettings,
+            gameStateManager,
+            _mainCamera,
+            combatBoundsProvider,
+            combatTextManager,
+            gemsWallet);
+        await _flyingGemService.InitializeAsync();
         var projectileManager = new ProjectileManager(objectPoolManager.GetPool<Projectile>());
         var explosionEffectManager = new ExplosionEffectManager(objectPoolManager.GetPool<ExplosionEffect>());
         var laserManager = new LaserManager(
@@ -257,6 +296,7 @@ public sealed class GameBootstrapper : SceneBootstrapper
         _deathBehaviorService = new EnemyDeathBehaviorService(enemyManager, spawnManager);
 
         var waveManager = new WaveManager(spawnManager, enemyManager);
+        var preparationAutoSkipSetting = new PreparationAutoSkipSetting();
         _gameManager = new GameManager(
             gameStateManager,
             waveManager,
@@ -264,12 +304,14 @@ public sealed class GameBootstrapper : SceneBootstrapper
             wavePlanGenerator,
             _gameStartData.WaveGenerationSettings,
             playerProgression,
-            towerManager);
+            towerManager,
+            preparationAutoSkipSetting);
         GameManager gameManager = _gameManager;
 
         var gameEndRewardPolicy = new GameEndRewardPolicy();
         _runScoreCounter = new RunScoreCounter(enemyManager, gameEndRewardPolicy);
-        _gameTimePauseService = new GameTimePauseService(gameStateManager);
+        var gameSpeedAccess = new GameSpeedAccess(hasRemoveAdsEntitlement: false);
+        _gameTimePauseService = new GameTimePauseService(gameStateManager, gameSpeedAccess);
         var combatCleanupService = new GameCombatCleanupService(
             enemyManager,
             projectileManager,
@@ -284,7 +326,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
             persistentCurrencyWallet,
             new MockRewardedAdService(),
             combatCleanupService,
-            _gameTimePauseService);
+            _gameTimePauseService,
+            _earlyExitCoinsPenaltyRate);
 
         GameEndView gameEndView = GetComponent<GameEndView>();
 
@@ -297,9 +340,18 @@ public sealed class GameBootstrapper : SceneBootstrapper
             gameStateManager);
         _settingsPresenter = new BattleSettingsPresenter(
             _settingsView,
+            _exitConfirmationView,
             _settingsInput,
             gameStateManager,
             _gameEndFlowManager);
+        _gameSpeedPresenter = new GameSpeedPresenter(
+            _gameSpeedView,
+            _gameTimePauseService,
+            gameStateManager);
+        _preparationAutoSkipPresenter = new PreparationAutoSkipPresenter(
+            _preparationAutoSkipView,
+            preparationAutoSkipSetting,
+            gameStateManager);
 
         towerManager.AllTowersDestroyed += gameManager.GameOver;
         towerSpawnTester.Initialize(towerManager);
@@ -316,6 +368,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
         _rearrangementPresenter = new CoreRearrangementPresenter(_rearrangementView, gameStateManager, gameManager);
         _waveHUDPresenter = new WaveHUDPresenter(_waveHUDView, gameManager, gameStateManager, playerProgression);
         _goldHUDPresenter = new GoldHUDPresenter(_goldHUDView, _goldManager);
+        _coinsHUDPresenter = new CoinsHUDPresenter(_coinsHUDView, gameManager, gameEndRewardPolicy);
+        _scoreHUDPresenter = new ScoreHUDPresenter(_scoreHUDView, _runScoreCounter);
         _rewardHUDPresenter = new RewardHUDPresenter(_rewardHUDView, playerProgression);
         _coreGoldUpgradePresenter = new CoreGoldUpgradePresenter(
             _coreGoldUpgradeView,
@@ -340,7 +394,8 @@ public sealed class GameBootstrapper : SceneBootstrapper
             coreManager,
             coreVisual,
             _towerSelectionManager,
-            _mainCamera);
+            _mainCamera,
+            _flyingGemService);
 
         CoreRearrangementInput rearrangementInput = GetComponent<CoreRearrangementInput>();
 
@@ -368,9 +423,32 @@ public sealed class GameBootstrapper : SceneBootstrapper
         Register(laserManager);
         Register(combatTextManager);
         Register(combatLayoutCoordinator);
+        Register(_flyingGemService);
         Register(gameManager);
 
+        Canvas.ForceUpdateCanvases();
+
+        SceneTransition sceneTransition = SceneTransition.Instance;
+
+        if (sceneTransition != null && sceneTransition.IsTransitioning)
+            await sceneTransition.FadeInAsync();
+
+        await WaitForBattleStartDelayAsync();
         gameManager.StartGame();
+        _gameSpeedPresenter.Synchronize();
+        _preparationAutoSkipPresenter.Synchronize();
+        Canvas.ForceUpdateCanvases();
+    }
+
+    private UniTask WaitForBattleStartDelayAsync()
+    {
+        if (_battleStartDelay <= 0f)
+            return UniTask.CompletedTask;
+
+        return UniTask.Delay(
+            System.TimeSpan.FromSeconds(_battleStartDelay),
+            DelayType.UnscaledDeltaTime,
+            cancellationToken: this.GetCancellationTokenOnDestroy());
     }
 
     protected override void OnDestroy()
@@ -379,13 +457,18 @@ public sealed class GameBootstrapper : SceneBootstrapper
             _towerManager.AllTowersDestroyed -= _gameManager.GameOver;
 
         _settingsPresenter?.Dispose();
+        _gameSpeedPresenter?.Dispose();
+        _preparationAutoSkipPresenter?.Dispose();
         _gameEndPresenter?.Dispose();
         _gameEndFlowManager?.Dispose();
         _gameTimePauseService?.Dispose();
         _runScoreCounter?.Dispose();
+        _flyingGemService?.Dispose();
         _towerGoldUpgradePresenter?.Dispose();
         _coreGoldUpgradePresenter?.Dispose();
         _rewardHUDPresenter?.Dispose();
+        _scoreHUDPresenter?.Dispose();
+        _coinsHUDPresenter?.Dispose();
         _goldHUDPresenter?.Dispose();
         _waveHUDPresenter?.Dispose();
         _rearrangementPresenter?.Dispose();
@@ -401,4 +484,14 @@ public sealed class GameBootstrapper : SceneBootstrapper
 
         base.OnDestroy();
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        _flyingGemSettings?.Validate();
+        _enemySpawnMargin = Mathf.Max(0f, _enemySpawnMargin);
+        _battleStartDelay = Mathf.Max(0f, _battleStartDelay);
+        _earlyExitCoinsPenaltyRate = Mathf.Clamp01(_earlyExitCoinsPenaltyRate);
+    }
+#endif
 }

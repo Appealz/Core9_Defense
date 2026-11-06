@@ -56,6 +56,24 @@ public sealed class FloatingCombatText : MonoBehaviour
         gameObject.SetActive(true);
     }
 
+    public void PlayMessage(Vector2 anchoredPosition, string message, Color color)
+    {
+        CacheComponents();
+
+        _startPosition = anchoredPosition + Random.insideUnitCircle * _randomOffset;
+        _elapsed = 0f;
+
+        _rectTransform.anchoredPosition = _startPosition;
+        _text.fontSize = _fontSize;
+        _text.color = color;
+        _text.outlineColor = _outlineColor;
+        _text.outlineWidth = _outlineWidth;
+        _text.SetText(message ?? string.Empty);
+        _canvasGroup.alpha = 1f;
+
+        gameObject.SetActive(true);
+    }
+
     public bool Tick(float deltaTime)
     {
         _elapsed = Mathf.Min(_duration, _elapsed + Mathf.Max(0f, deltaTime));

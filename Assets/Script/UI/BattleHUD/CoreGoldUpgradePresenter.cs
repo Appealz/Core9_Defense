@@ -62,7 +62,8 @@ public sealed class CoreGoldUpgradePresenter : IDisposable
 
     private void RefreshVisibility()
     {
-        _view.SetVisible(_gameStateManager.CurrentState == GameState.Playing);
+        GameState state = _gameStateManager.CurrentState;
+        _view.SetVisible(state == GameState.Initializing || state == GameState.Playing);
     }
 
     private void RefreshAll()

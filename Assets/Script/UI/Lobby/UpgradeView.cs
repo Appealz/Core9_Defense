@@ -30,6 +30,8 @@ public sealed class UpgradeView : MonoBehaviour
     public event Action<TowerType> TowerClicked;
     public event Action<PermanentUpgradeKind, TowerStatType> PurchaseClicked;
 
+    public bool IsVisible => _root != null && _root.activeSelf;
+
     public void Configure(
         GameObject root,
         Button backButton,

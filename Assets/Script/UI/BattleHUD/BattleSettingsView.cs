@@ -18,6 +18,8 @@ public sealed class BattleSettingsView : MonoBehaviour
     public event Action ReturnToLobbyClicked;
     public event Action RestartClicked;
     public event Action ResumeClicked;
+    public event Action<float> BgmVolumeChanged;
+    public event Action<float> SfxVolumeChanged;
 
     public bool IsConfigured =>
         _settingsButton != null && _overlayRoot != null &&
@@ -36,15 +38,25 @@ public sealed class BattleSettingsView : MonoBehaviour
         _returnToLobbyButton.onClick.AddListener(HandleReturnToLobbyClicked);
         _restartButton.onClick.AddListener(HandleRestartClicked);
         _resumeButton.onClick.AddListener(HandleResumeClicked);
+        ConfigureSlider(_bgmSlider);
+        ConfigureSlider(_sfxSlider);
+        _bgmSlider.onValueChanged.AddListener(HandleBgmVolumeChanged);
+        _sfxSlider.onValueChanged.AddListener(HandleSfxVolumeChanged);
 
-        _bgmSlider.interactable = false;
-        _sfxSlider.interactable = false;
         _overlayRoot.SetActive(false);
         _isInitialized = true;
     }
 
     public void SetOpen(bool isOpen)
     {
+        if (isOpen && _overlayRoot != null)
+        {
+            _overlayRoot.transform.SetAsLastSibling();
+
+            if (_settingsButton != null)
+                _settingsButton.transform.SetAsLastSibling();
+        }
+
         if (_overlayRoot != null && _overlayRoot.activeSelf != isOpen)
             _overlayRoot.SetActive(isOpen);
     }
@@ -55,10 +67,26 @@ public sealed class BattleSettingsView : MonoBehaviour
             _settingsButton.interactable = isInteractable;
     }
 
+    public void SetAudioVolumes(float bgmVolume, float sfxVolume)
+    {
+        _bgmSlider.SetValueWithoutNotify(Mathf.Clamp01(bgmVolume));
+        _sfxSlider.SetValueWithoutNotify(Mathf.Clamp01(sfxVolume));
+    }
+
+    private static void ConfigureSlider(Slider slider)
+    {
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.wholeNumbers = false;
+        slider.interactable = true;
+    }
+
     private void HandleSettingsClicked() => SettingsClicked?.Invoke();
     private void HandleReturnToLobbyClicked() => ReturnToLobbyClicked?.Invoke();
     private void HandleRestartClicked() => RestartClicked?.Invoke();
     private void HandleResumeClicked() => ResumeClicked?.Invoke();
+    private void HandleBgmVolumeChanged(float value) => BgmVolumeChanged?.Invoke(Mathf.Clamp01(value));
+    private void HandleSfxVolumeChanged(float value) => SfxVolumeChanged?.Invoke(Mathf.Clamp01(value));
 
     private void OnDestroy()
     {
@@ -76,5 +104,11 @@ public sealed class BattleSettingsView : MonoBehaviour
 
         if (_resumeButton != null)
             _resumeButton.onClick.RemoveListener(HandleResumeClicked);
+
+        if (_bgmSlider != null)
+            _bgmSlider.onValueChanged.RemoveListener(HandleBgmVolumeChanged);
+
+        if (_sfxSlider != null)
+            _sfxSlider.onValueChanged.RemoveListener(HandleSfxVolumeChanged);
     }
 }

@@ -15,6 +15,7 @@ public class GameManager : IUpdatable, IDisposable
     private readonly WaveGenerationSettings _waveGenerationSettings;
     private readonly PlayerProgression _playerProgression;
     private readonly TowerManager _towerManager;
+    private readonly PreparationAutoSkipSetting _preparationAutoSkipSetting;
 
     private CancellationTokenSource _waveCancellationSource;
     private int _waveRunVersion;
@@ -27,6 +28,7 @@ public class GameManager : IUpdatable, IDisposable
 
     public event Action<int> RearrangementTimeChanged;
     public event Action<IReadOnlyList<RewardData>, int, int> RewardChoicesChanged;
+    public event Action<int> WaveNumberChanged;
 
     public int CurrentWaveNumber => _currentWaveNumber;
     public int RearrangementRemainingSeconds => Mathf.CeilToInt(_rearrangementTimeRemaining);
@@ -38,7 +40,8 @@ public class GameManager : IUpdatable, IDisposable
         WavePlanGenerator wavePlanGenerator,
         WaveGenerationSettings waveGenerationSettings,
         PlayerProgression playerProgression,
-        TowerManager towerManager)
+        TowerManager towerManager,
+        PreparationAutoSkipSetting preparationAutoSkipSetting = null)
     {
         _gameStateManager = gameStateManager;
         _waveManager = waveManager;
@@ -49,6 +52,7 @@ public class GameManager : IUpdatable, IDisposable
             : throw new ArgumentNullException(nameof(waveGenerationSettings));
         _playerProgression = playerProgression ?? throw new ArgumentNullException(nameof(playerProgression));
         _towerManager = towerManager ?? throw new ArgumentNullException(nameof(towerManager));
+        _preparationAutoSkipSetting = preparationAutoSkipSetting ?? new PreparationAutoSkipSetting();
     }
 
     public void StartGame()
@@ -56,6 +60,7 @@ public class GameManager : IUpdatable, IDisposable
         CancelCurrentWave();
         _currentWaveNumber = 1;
         _towerManager.SetCurrentWaveNumber(_currentWaveNumber);
+        WaveNumberChanged?.Invoke(_currentWaveNumber);
         _playerProgression.Reset();
         _gameStateManager.ChangeState(GameState.Playing);
         BeginCurrentWave();
@@ -66,9 +71,15 @@ public class GameManager : IUpdatable, IDisposable
         if (_gameStateManager.CurrentState != GameState.Rearrangement)
             return;
 
+        AdvanceToNextWave();
+    }
+
+    private void AdvanceToNextWave()
+    {
         _rearrangementTimeRemaining = 0f;
         _currentWaveNumber++;
         _towerManager.SetCurrentWaveNumber(_currentWaveNumber);
+        WaveNumberChanged?.Invoke(_currentWaveNumber);
         _gameStateManager.ChangeState(GameState.Playing);
         BeginCurrentWave();
     }
@@ -99,7 +110,7 @@ public class GameManager : IUpdatable, IDisposable
             if (_playerProgression.PendingRewardCount > 0)
                 ShowNextRewardSelection();
             else
-                BeginRearrangement();
+                CompletePostWave();
         }
         catch (Exception exception)
         {
@@ -150,10 +161,12 @@ public class GameManager : IUpdatable, IDisposable
         CancelCurrentWave();
     }
 
-    public void Update(float deltaTime)
+    public void Update(float _)
     {
-        if (_gameStateManager.CurrentState == GameState.Rearrangement)
-            UpdateRearrangement(deltaTime);
+        if (_gameStateManager.CurrentState != GameState.Rearrangement || Time.timeScale <= 0f)
+            return;
+
+        UpdateRearrangement(Time.unscaledDeltaTime);
     }
 
     private void UpdateRearrangement(float deltaTime)
@@ -208,7 +221,7 @@ public class GameManager : IUpdatable, IDisposable
 
         if (_playerProgression.PendingRewardCount <= 0)
         {
-            BeginRearrangement();
+            CompletePostWave();
             return;
         }
 
@@ -234,7 +247,7 @@ public class GameManager : IUpdatable, IDisposable
         if (choices.Count == 0)
         {
             Debug.LogWarning("선택 가능한 보상이 없어 선택권을 보존하고 재배치 단계로 진행합니다.");
-            BeginRearrangement();
+            CompletePostWave();
             return;
         }
 
@@ -259,5 +272,16 @@ public class GameManager : IUpdatable, IDisposable
     {
         _rearrangementTimeRemaining = RearrangementDuration;
         _gameStateManager.ChangeState(GameState.Rearrangement);
+    }
+
+    private void CompletePostWave()
+    {
+        if (_preparationAutoSkipSetting.IsEnabled)
+        {
+            AdvanceToNextWave();
+            return;
+        }
+
+        BeginRearrangement();
     }
 }

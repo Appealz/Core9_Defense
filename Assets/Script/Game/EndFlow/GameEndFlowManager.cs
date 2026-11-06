@@ -18,10 +18,12 @@ public sealed class GameEndFlowManager : IDisposable
     private readonly IRewardedAdService _rewardedAdService;
     private readonly GameCombatCleanupService _combatCleanupService;
     private readonly GameTimePauseService _timePauseService;
+    private readonly float _earlyExitPenaltyRate;
     private readonly GameEndRunState _runState = new GameEndRunState();
 
     private GameRunSnapshot _currentSnapshot;
     private GameEndRewardSession _rewardSession;
+    private GameEndRewardSession _earlyExitRewardSession;
     private bool _isBusy;
 
     public event Action<GameRunSnapshot, bool> GameOverReady;
@@ -38,7 +40,8 @@ public sealed class GameEndFlowManager : IDisposable
         IPersistentCurrencyWallet wallet,
         IRewardedAdService rewardedAdService,
         GameCombatCleanupService combatCleanupService,
-        GameTimePauseService timePauseService)
+        GameTimePauseService timePauseService,
+        float earlyExitPenaltyRate = 0.2f)
     {
         _gameStateManager = gameStateManager ?? throw new ArgumentNullException(nameof(gameStateManager));
         _gameManager = gameManager ?? throw new ArgumentNullException(nameof(gameManager));
@@ -50,6 +53,7 @@ public sealed class GameEndFlowManager : IDisposable
         _combatCleanupService = combatCleanupService ??
             throw new ArgumentNullException(nameof(combatCleanupService));
         _timePauseService = timePauseService ?? throw new ArgumentNullException(nameof(timePauseService));
+        _earlyExitPenaltyRate = Math.Max(0f, Math.Min(1f, earlyExitPenaltyRate));
 
         _gameStateManager.StateChanged += HandleStateChanged;
     }
@@ -164,19 +168,40 @@ public sealed class GameEndFlowManager : IDisposable
 
     public bool RestartFromPause()
     {
-        if (_isBusy || _gameStateManager.CurrentState != GameState.Paused)
-            return false;
-
-        RestoreTimeAndLoad(BattleSceneName);
-        return true;
+        return TryFinishEarlyExit(BattleSceneName);
     }
 
     public bool GoToMainMenuFromPause()
     {
-        if (_isBusy || _gameStateManager.CurrentState != GameState.Paused)
-            return false;
+        return TryFinishEarlyExit(MainMenuSceneName);
+    }
 
-        RestoreTimeAndLoad(MainMenuSceneName);
+    public EarlyExitRewardQuote GetEarlyExitRewardQuote()
+    {
+        return _rewardPolicy.CalculateEarlyExitReward(
+            _gameManager.CurrentWaveNumber,
+            _earlyExitPenaltyRate);
+    }
+
+    private bool TryFinishEarlyExit(string sceneName)
+    {
+        if (_isBusy || _earlyExitRewardSession != null ||
+            _gameStateManager.CurrentState != GameState.Paused)
+        {
+            return false;
+        }
+
+        _isBusy = true;
+        EarlyExitRewardQuote quote = GetEarlyExitRewardQuote();
+        _earlyExitRewardSession = new GameEndRewardSession(_wallet, quote.ReceivedCoins);
+
+        if (!_earlyExitRewardSession.GrantBaseReward())
+        {
+            _isBusy = false;
+            return false;
+        }
+
+        RestoreTimeAndLoad(sceneName);
         return true;
     }
 
@@ -191,7 +216,7 @@ public sealed class GameEndFlowManager : IDisposable
 
     private void RestoreTimeAndLoad(string sceneName)
     {
-        _timePauseService.Restore();
+        _timePauseService.ResetToDefault();
         SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
     }
 

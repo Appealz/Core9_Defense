@@ -181,24 +181,55 @@ public sealed class CoreGoldUpgradeManagerTests
         EditorSceneManager.OpenScene("Assets/Scenes/Battle.unity", OpenSceneMode.Single);
         GameObject bootstrapObject = GameObject.Find("GameBootstrapper");
         GameObject panelObject = GameObject.Find("CoreGoldUpgradePanel");
+        GameObject speedControlObject = GameObject.Find("GameSpeedControl");
 
         Assert.That(bootstrapObject, Is.Not.Null);
         Assert.That(panelObject, Is.Not.Null);
+        Assert.That(speedControlObject, Is.Not.Null);
 
         CoreGoldUpgradeView view = panelObject.GetComponent<CoreGoldUpgradeView>();
         Assert.That(view, Is.Not.Null);
         Assert.That(view.IsConfigured, Is.True);
 
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
+        RectTransform viewportRect = panelObject.transform.Find("Viewport").GetComponent<RectTransform>();
         ScrollRect scrollRect = panelObject.GetComponent<ScrollRect>();
         Transform content = panelObject.transform.Find("Viewport/Content");
         Assert.That(panelRect.anchorMin, Is.EqualTo(new Vector2(0f, 0f)));
         Assert.That(panelRect.anchorMax, Is.EqualTo(new Vector2(1f, 0.25f)));
         Assert.That(panelRect.sizeDelta, Is.EqualTo(Vector2.zero));
+        Assert.That(viewportRect.anchoredPosition, Is.EqualTo(Vector2.zero));
+        Assert.That(viewportRect.sizeDelta, Is.EqualTo(new Vector2(-16f, -16f)));
         Assert.That(scrollRect.horizontal, Is.False);
         Assert.That(scrollRect.vertical, Is.True);
         Assert.That(content, Is.Not.Null);
         Assert.That(content.GetComponent<HorizontalLayoutGroup>(), Is.Null);
+
+        GameSpeedView speedView = speedControlObject.GetComponent<GameSpeedView>();
+        Assert.That(speedView, Is.Not.Null);
+        Assert.That(speedView.IsConfigured, Is.True);
+        Assert.That(speedControlObject.transform.parent.name, Is.EqualTo("BattleHUDCanvas"));
+        Assert.That(speedControlObject.transform.parent, Is.EqualTo(panelObject.transform.parent));
+        Assert.That(speedControlObject.transform.IsChildOf(panelObject.transform), Is.False);
+
+        RectTransform speedRect = speedControlObject.GetComponent<RectTransform>();
+        Assert.That(speedRect.anchorMin, Is.EqualTo(new Vector2(1f, 0.25f)));
+        Assert.That(speedRect.anchorMax, Is.EqualTo(new Vector2(1f, 0.25f)));
+        Assert.That(speedRect.pivot, Is.EqualTo(new Vector2(1f, 0f)));
+        Assert.That(speedRect.anchoredPosition, Is.EqualTo(new Vector2(-16f, 8f)));
+        Assert.That(speedRect.sizeDelta, Is.EqualTo(new Vector2(420f, 84f)));
+        Assert.That(speedControlObject.transform.Find("DecreaseButton/Label"), Is.Not.Null);
+        Assert.That(speedControlObject.transform.Find("SpeedText"), Is.Not.Null);
+        Assert.That(speedControlObject.transform.Find("IncreaseButton/Label"), Is.Not.Null);
+        Assert.That(speedControlObject.transform.Find("TripleSpeedLockText"), Is.Not.Null);
+
+        var serializedBootstrap = new SerializedObject(bootstrapObject.GetComponent<GameBootstrapper>());
+        Assert.That(
+            serializedBootstrap.FindProperty("_gameSpeedView").objectReferenceValue,
+            Is.EqualTo(speedView));
+        Assert.That(
+            serializedBootstrap.FindProperty("_battleStartDelay").floatValue,
+            Is.EqualTo(1f));
 
         GridLayoutGroup grid = content.GetComponent<GridLayoutGroup>();
         ContentSizeFitter sizeFitter = content.GetComponent<ContentSizeFitter>();

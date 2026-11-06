@@ -19,6 +19,8 @@ public sealed class UpgradePresenter : IDisposable
 
     public event Action BackRequested;
 
+    public bool IsVisible => _view.IsVisible;
+
     public UpgradePresenter(
         UpgradeView view,
         PersistentUpgradeCatalog catalog,

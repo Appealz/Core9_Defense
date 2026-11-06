@@ -16,6 +16,35 @@ public sealed class GameEndFlowTests
     }
 
     [Test]
+    public void RewardPolicy_EarlyExitAppliesPenaltyOnlyToCurrentRunReward()
+    {
+        var policy = new GameEndRewardPolicy(
+            baseCurrency: 30,
+            currencyPerWave: 10);
+
+        EarlyExitRewardQuote quote = policy.CalculateEarlyExitReward(7, 0.2f);
+
+        Assert.AreEqual(100, quote.EarnedCoins);
+        Assert.AreEqual(20, quote.PenaltyCoins);
+        Assert.AreEqual(80, quote.ReceivedCoins);
+        Assert.AreEqual(20, quote.PenaltyPercent);
+    }
+
+    [Test]
+    public void RewardPolicy_EarlyExitFloorsReceivedCoins()
+    {
+        var policy = new GameEndRewardPolicy(
+            baseCurrency: 91,
+            currencyPerWave: 10);
+
+        EarlyExitRewardQuote quote = policy.CalculateEarlyExitReward(1, 0.2f);
+
+        Assert.AreEqual(101, quote.EarnedCoins);
+        Assert.AreEqual(21, quote.PenaltyCoins);
+        Assert.AreEqual(80, quote.ReceivedCoins);
+    }
+
+    [Test]
     public void RewardSession_GrantsBaseAndAdBonusOnlyOnce()
     {
         var wallet = new MemoryWallet();

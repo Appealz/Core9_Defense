@@ -6,6 +6,8 @@ public sealed class RunScoreCounter : IDisposable
     private readonly GameEndRewardPolicy _rewardPolicy;
     private int _defeatedEnemyCount;
 
+    public event Action<int> ScoreChanged;
+
     public int DefeatedEnemyCount => _defeatedEnemyCount;
     public int Score => _rewardPolicy.CalculateScore(_defeatedEnemyCount);
 
@@ -19,7 +21,10 @@ public sealed class RunScoreCounter : IDisposable
     private void HandleEnemyKilled(Enemy enemy)
     {
         if (_defeatedEnemyCount < int.MaxValue)
+        {
             _defeatedEnemyCount++;
+            ScoreChanged?.Invoke(Score);
+        }
     }
 
     public void Dispose()

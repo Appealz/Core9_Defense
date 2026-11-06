@@ -10,20 +10,34 @@ public sealed class LobbySceneController : MonoBehaviour
     [SerializeField] private LobbyView _lobbyView;
     [SerializeField] private UpgradeView _upgradeView;
     [SerializeField] private PersistentUpgradeCatalog _upgradeCatalog;
+    [SerializeField] private SceneTransition _sceneTransition;
+    [SerializeField] private LobbyOptionsView _optionsView;
+    [SerializeField] private ExitConfirmationView _exitConfirmationView;
+    [SerializeField] private LobbyBackInput _backInput;
 
     private LobbyPresenter _lobbyPresenter;
     private UpgradePresenter _upgradePresenter;
+    private LobbyOptionsPresenter _optionsPresenter;
+    private LobbyExitPresenter _exitPresenter;
     private PersistentCurrencyWallet _wallet;
     private PersistentUpgradeService _upgradeService;
 
     public void Configure(
         LobbyView lobbyView,
         UpgradeView upgradeView,
-        PersistentUpgradeCatalog upgradeCatalog)
+        PersistentUpgradeCatalog upgradeCatalog,
+        SceneTransition sceneTransition = null,
+        LobbyOptionsView optionsView = null,
+        ExitConfirmationView exitConfirmationView = null,
+        LobbyBackInput backInput = null)
     {
         _lobbyView = lobbyView;
         _upgradeView = upgradeView;
         _upgradeCatalog = upgradeCatalog;
+        _sceneTransition = sceneTransition;
+        _optionsView = optionsView;
+        _exitConfirmationView = exitConfirmationView;
+        _backInput = backInput;
     }
 
     private void Awake()
@@ -35,10 +49,15 @@ public sealed class LobbySceneController : MonoBehaviour
             return;
         }
 
-        if (_lobbyView == null || _upgradeView == null)
+        if (SceneTransition.Instance != null)
+            _sceneTransition = SceneTransition.Instance;
+
+        if (_lobbyView == null || _upgradeView == null || _sceneTransition == null ||
+            _optionsView == null || !_optionsView.IsConfigured ||
+            _exitConfirmationView == null || !_exitConfirmationView.IsConfigured || _backInput == null)
         {
             Debug.LogError(
-                "LobbyView and UpgradeView must be assigned from the Lobby scene.",
+                "Lobby UI, options, exit confirmation, back input, and SceneTransition must be assigned from the Lobby scene.",
                 this);
             enabled = false;
             return;
@@ -46,13 +65,22 @@ public sealed class LobbySceneController : MonoBehaviour
 
         _wallet = new PersistentCurrencyWallet();
         _upgradeService = new PersistentUpgradeService(_upgradeCatalog, _wallet);
-        _lobbyPresenter = new LobbyPresenter(_lobbyView);
+        _lobbyPresenter = new LobbyPresenter(_lobbyView, _sceneTransition);
+        _optionsPresenter = new LobbyOptionsPresenter(
+            _optionsView,
+            new UserAudioSettings());
+        _exitPresenter = new LobbyExitPresenter(
+            _exitConfirmationView,
+            _backInput,
+            _sceneTransition,
+            TryCloseTopmostLobbyContent);
         _upgradePresenter = new UpgradePresenter(
             _upgradeView,
             _upgradeCatalog,
             _upgradeService,
             _wallet);
         _lobbyPresenter.UpgradeRequested += OpenUpgrade;
+        _lobbyPresenter.OptionsRequested += OpenOptions;
         _upgradePresenter.BackRequested += OpenLobby;
         OpenLobby();
     }
@@ -92,19 +120,42 @@ public sealed class LobbySceneController : MonoBehaviour
 
     private void OpenUpgrade()
     {
+        _optionsPresenter.Hide();
         _lobbyPresenter.Hide();
         _upgradePresenter.Show();
+    }
+
+    private void OpenOptions()
+    {
+        _optionsPresenter.Show();
+    }
+
+    private bool TryCloseTopmostLobbyContent()
+    {
+        if (_optionsPresenter != null && _optionsPresenter.TryClose())
+            return true;
+
+        if (_upgradePresenter == null || !_upgradePresenter.IsVisible)
+            return false;
+
+        OpenLobby();
+        return true;
     }
 
     private void OnDestroy()
     {
         if (_lobbyPresenter != null)
+        {
             _lobbyPresenter.UpgradeRequested -= OpenUpgrade;
+            _lobbyPresenter.OptionsRequested -= OpenOptions;
+        }
 
         if (_upgradePresenter != null)
             _upgradePresenter.BackRequested -= OpenLobby;
 
         _upgradePresenter?.Dispose();
+        _optionsPresenter?.Dispose();
+        _exitPresenter?.Dispose();
         _lobbyPresenter?.Dispose();
     }
 }

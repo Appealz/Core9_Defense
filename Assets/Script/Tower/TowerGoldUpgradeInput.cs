@@ -10,6 +10,7 @@ public sealed class TowerGoldUpgradeInput : MonoBehaviour
     private CoreManager _coreManager;
     private CoreVisual _coreVisual;
     private TowerSelectionManager _selectionManager;
+    private FlyingGemService _flyingGemService;
     private Camera _mainCamera;
     private InputAction _pressAction;
 
@@ -27,13 +28,15 @@ public sealed class TowerGoldUpgradeInput : MonoBehaviour
         CoreManager coreManager,
         CoreVisual coreVisual,
         TowerSelectionManager selectionManager,
-        Camera mainCamera)
+        Camera mainCamera,
+        FlyingGemService flyingGemService = null)
     {
         _gameStateManager = gameStateManager;
         _coreManager = coreManager;
         _coreVisual = coreVisual;
         _selectionManager = selectionManager;
         _mainCamera = mainCamera;
+        _flyingGemService = flyingGemService;
         _gameStateManager.StateChanged += HandleStateChanged;
         SetInputEnabled(_gameStateManager.CurrentState == GameState.Playing);
     }
@@ -49,6 +52,9 @@ public sealed class TowerGoldUpgradeInput : MonoBehaviour
         Vector2 screenPosition = pointer.position.ReadValue();
 
         if (IsPointerOverUI(screenPosition))
+            return;
+
+        if (_flyingGemService != null && _flyingGemService.TryCollect(screenPosition))
             return;
 
         if (_coreVisual.TryGetSlotNumber(ScreenToWorld(screenPosition), out int slotNumber) &&

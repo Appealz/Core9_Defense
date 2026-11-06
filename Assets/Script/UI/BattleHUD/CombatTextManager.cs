@@ -5,6 +5,8 @@ using UnityEngine;
 
 public sealed class CombatTextManager : IUpdatable
 {
+    private static readonly Color GemRewardColor = new(0.78f, 0.38f, 1f, 1f);
+
     private readonly ObjectPool<FloatingCombatText> _textPool;
     private readonly RectTransform _root;
     private readonly Canvas _canvas;
@@ -37,6 +39,15 @@ public sealed class CombatTextManager : IUpdatable
             ShowAsync(worldPosition, amount).Forget();
     }
 
+    public void ShowGemReward(Vector3 worldPosition, int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        string message = amount == 1 ? "+1 Gem" : $"+{amount:N0} Gems";
+        ShowMessageAsync(worldPosition, message, GemRewardColor).Forget();
+    }
+
     public void Update(float deltaTime)
     {
         for (int i = _activeTexts.Count - 1; i >= 0; i--)
@@ -52,25 +63,43 @@ public sealed class CombatTextManager : IUpdatable
 
     private async UniTaskVoid ShowAsync(Vector3 worldPosition, float signedAmount)
     {
-        Vector2 screenPosition = _worldCamera.WorldToScreenPoint(worldPosition);
-        Camera eventCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
-            ? null
-            : _worldCamera;
-
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _root,
-                screenPosition,
-                eventCamera,
-                out Vector2 anchoredPosition))
-        {
+        if (!TryGetAnchoredPosition(worldPosition, out Vector2 anchoredPosition))
             return;
-        }
 
         FloatingCombatText text = await _textPool.GetAsync();
         text.transform.SetParent(_root, false);
         text.transform.SetAsLastSibling();
         text.Play(anchoredPosition, signedAmount);
         _activeTexts.Add(text);
+    }
+
+    private async UniTaskVoid ShowMessageAsync(
+        Vector3 worldPosition,
+        string message,
+        Color color)
+    {
+        if (!TryGetAnchoredPosition(worldPosition, out Vector2 anchoredPosition))
+            return;
+
+        FloatingCombatText text = await _textPool.GetAsync();
+        text.transform.SetParent(_root, false);
+        text.transform.SetAsLastSibling();
+        text.PlayMessage(anchoredPosition, message, color);
+        _activeTexts.Add(text);
+    }
+
+    private bool TryGetAnchoredPosition(Vector3 worldPosition, out Vector2 anchoredPosition)
+    {
+        Vector2 screenPosition = _worldCamera.WorldToScreenPoint(worldPosition);
+        Camera eventCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
+            ? null
+            : _worldCamera;
+
+        return RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _root,
+            screenPosition,
+            eventCamera,
+            out anchoredPosition);
     }
 
     private void Release(int index, FloatingCombatText text)

@@ -14,6 +14,7 @@ public sealed class LobbyView : MonoBehaviour
 
     public event Action PlayClicked;
     public event Action UpgradeClicked;
+    public event Action OptionsClicked;
 
     public void Configure(
         GameObject root,
@@ -37,10 +38,10 @@ public sealed class LobbyView : MonoBehaviour
         _initialized = true;
         _playButton.onClick.AddListener(() => PlayClicked?.Invoke());
         _upgradeButton.onClick.AddListener(() => UpgradeClicked?.Invoke());
+        _settingsButton.onClick.AddListener(() => OptionsClicked?.Invoke());
 
-        // Rank and Settings are intentionally presentation-only for this milestone.
+        // Rank is intentionally presentation-only for this milestone.
         _rankButton.interactable = true;
-        _settingsButton.interactable = true;
     }
 
     public void SetVisible(bool visible)

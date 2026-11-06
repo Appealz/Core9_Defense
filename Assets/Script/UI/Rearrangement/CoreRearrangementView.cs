@@ -6,19 +6,31 @@ using UnityEngine.UI;
 
 public class CoreRearrangementView : MonoBehaviour
 {
+    [SerializeField] private TMP_Text _titleText;
+    [SerializeField] private TMP_Text _descriptionText;
     [SerializeField] private TMP_Text _remainingTimeText;
+    [SerializeField] private TMP_Text _autoAdvanceHintText;
+    [SerializeField] private TMP_Text _readyHintText;
     [SerializeField] private Button _readyButton;
 
     public event Action ReadyClicked;
 
+    public bool IsConfigured =>
+        _titleText != null && _descriptionText != null && _remainingTimeText != null &&
+        _autoAdvanceHintText != null && _readyHintText != null && _readyButton != null;
+
     private void Awake()
     {
-        if (_remainingTimeText == null || _readyButton == null)
+        if (!IsConfigured)
         {
-            Debug.LogError("Àç¹èÄ¡ UI ÂüÁ¶°¡ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+            Debug.LogError("ì¬ë°°ì¹˜ UI ì°¸ì¡°ê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
             return;
         }
 
+        _titleText.text = "PREPARATION PHASE";
+        _descriptionText.text = "Prepare for the next wave.";
+        _autoAdvanceHintText.text = "Next wave starts when time runs out.";
+        _readyHintText.text = "When ready, tap READY to start the next wave.";
         _readyButton.onClick.AddListener(HandleReadyClicked);
     }
 
@@ -38,7 +50,8 @@ public class CoreRearrangementView : MonoBehaviour
         if (_remainingTimeText == null)
             return;
 
-        _remainingTimeText.text = $"Timer : {seconds:00}sec";
+        int clampedSeconds = Mathf.Max(0, seconds);
+        _remainingTimeText.text = $"{clampedSeconds / 60:00}:{clampedSeconds % 60:00}";
     }
 
     private void HandleReadyClicked()
