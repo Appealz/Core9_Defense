@@ -47,7 +47,9 @@ public class SingleProjectileAttack : ITargetedTowerAttack
             _projectileManager.FireFixedAsync(
                 shotOrigin,
                 shotDirection,
-                stats.AttackRange,
+                // AttackRange limits target selection, not projectile travel.
+                // The projectile is released on impact or when its lifetime expires.
+                float.MaxValue,
                 _straightProjectileLifetime,
                 damage,
                 _projectileSpeed,
